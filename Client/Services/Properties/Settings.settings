@@ -1,0 +1,14 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Terrarium.Services.Properties" GeneratedClassName="Settings">
+  <Profiles>
+    <Profile Name="(Default)" />
+  </Profiles>
+  <Settings>
+    <Setting Name="Services_Usage_UsageService" Type="(Web Service URL)" Scope="Application">
+      <Value Profile="(Default)">http://localhost:1837/Website/Reporting/UsageService.asmx</Value>
+    </Setting>
+    <Setting Name="Services_BugReporting_BugService" Type="(Web Service URL)" Scope="Application">
+      <Value Profile="(Default)">http://localhost:1837/Website/BugReporting/BugService.asmx</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

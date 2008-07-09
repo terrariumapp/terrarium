@@ -1,0 +1,325 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B77AEBA6-F49D-45EE-BDE7-ABE95EF462D7}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>Game</AssemblyName>
+    <AssemblyOriginatorKeyFile>..\..\Keys\development.snk</AssemblyOriginatorKeyFile>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Terrarium.Game</RootNamespace>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <AssemblyOriginatorKeyMode>File</AssemblyOriginatorKeyMode>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DocumentationFile>Game.xml</DocumentationFile>
+    <DebugSymbols>true</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <Optimize>false</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile>TerrariumEngine.xml</DocumentationFile>
+    <DebugSymbols>false</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <Optimize>true</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System">
+      <Name>System</Name>
+      <HintPath>..\..\..\..\WINDOWS\Microsoft.NET\Framework\v1.0.3705\System.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+      <HintPath>..\..\..\..\WINDOWS\Microsoft.NET\Framework\v1.0.3705\System.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+      <HintPath>..\..\..\..\WINDOWS\Microsoft.NET\Framework\v1.0.3705\System.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Services">
+      <Name>System.Web.Services</Name>
+      <HintPath>..\..\..\..\WINDOWS\Microsoft.NET\Framework\v1.0.3705\System.Web.Services.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Name>System.Windows.Forms</Name>
+      <HintPath>..\..\..\..\WINDOWS\Microsoft.NET\Framework\v1.0.3705\System.Windows.Forms.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.XML</Name>
+      <HintPath>..\..\..\..\WINDOWS\Microsoft.NET\Framework\v1.0.3705\System.XML.dll</HintPath>
+    </Reference>
+    <ProjectReference Include="..\AsmCheck\asmcheck.vcproj">
+      <Project>{CB41592F-C650-4475-9BA3-70A387BFF25E}</Project>
+      <Package>{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}</Package>
+      <Name>asmcheck</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Configuration\Configuration.csproj">
+      <Name>Configuration</Name>
+      <Project>{A7445FEE-D531-460F-99F9-80FD7345072A}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\Controls\Controls.csproj">
+      <Name>Controls</Name>
+      <Project>{78CF0F3B-AE88-4DD9-854C-E199E3C985CD}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\Glass\Glass.csproj">
+      <Project>{B3B0B9AB-03ED-433F-841E-9AEBEE934BF3}</Project>
+      <Name>Glass</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OrganismBase\OrganismBase.csproj">
+      <Name>OrganismBase</Name>
+      <Project>{692FC657-3EAA-4EF9-B10F-3558A7E5916D}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\Services\Services.csproj">
+      <Name>Services</Name>
+      <Project>{6A2A6B54-D211-4766-82A6-0B8E2072BEF9}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\HttpListener\HttpListener.csproj">
+      <Name>HttpListener</Name>
+      <Project>{E3EC9E4B-7AA9-4DA9-B6FE-A5E73FE1A8D0}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\VersionInfo.cs">
+      <Link>VersionInfo.cs</Link>
+    </Compile>
+    <Compile Include="AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Creature\AnimalSpecies.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Creature\AnimalWorldBoundary.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Creature\KilledOrganism.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Creature\NewOrganism.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Creature\OrganismWorldBoundary.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Creature\PlantSpecies.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Creature\PlantWorldBoundary.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Creature\Species.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\EngineStateChangeType.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\EventArgs\EngineStateChangeEventArgs.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\EventArgs\WorldVectorChangedEventArgs.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Events\EngineStateChangeEventHandler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Events\PacAssembliesChangedEventHandler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Events\WorldVectorChangedEventHandler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Exceptions\AbortPeerDiscussionException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Exceptions\AttributeRequiredException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Exceptions\InvalidPeerException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Exceptions\MaliciousOrganismException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Exceptions\OrganismAlreadyExistsException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Exceptions\OrganismAssemblyFailedValidationException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Exceptions\OrganismBlacklistedException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Exceptions\OrganismBlacklistException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Exceptions\ShutdownFailureException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Exceptions\StateCorruptedException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Exceptions\StateTimedOutException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\GameEngine.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Movement\GridIndex.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Movement\MovementSegment.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\OrganismAssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\OrganismBaseBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\OrganismQuanta.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\PopulationData.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\PrivateAssemblyCache.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\Teleporter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\TeleportZone.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\TerrariumSprite.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\TickActions.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\WorldState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Engine\WorldVector.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Hosting\AppMgr.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Hosting\GameObjectCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Hosting\GameScheduler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Hosting\IGameScheduler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Hosting\OrganismWrapper.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Hosting\OrganismWrapperBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Hosting\SecurityUtils.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Hosting\SimpleSequentialEnumerator.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Hosting\StrongNameVerificationState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Hosting\TerrariumOrganism.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\PeerToPeer\LeaseComparer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\PeerToPeer\NetworkEngine.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\PeerToPeer\OrganismNamespaceHandler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\PeerToPeer\Peer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\PeerToPeer\PeerManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\PeerToPeer\TeleportDelegate.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\PeerToPeer\TeleportState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\PeerToPeer\TeleportStateBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\PeerToPeer\TeleportWorkItem.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\PeerToPeer\VersionNamespaceHandler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>
