@@ -1,0 +1,60 @@
+<InstallerInfo>
+	<PerformanceCounterCategoryInfos>
+		<PerformanceCounterCategoryInfo categoryHelp="Terrarium Discovery Webservices Counters" categoryName="Terrarium Discovery Webservices">
+			<CounterCreationDataInfos>
+				<CounterCreationDataInfo id="AllDiscovery" counterHelp="Counts activity in all discovery webservice methods." counterName="All Discovery Calls/Sec" instanceName="_Total" counterType="RateOfCountsPerSecond32" />
+				<CounterCreationDataInfo id="AllDiscoveryErrors" counterHelp="Counts exceptions thrown in any discovery webservice method." counterName="All Failed Discovery Calls/Sec" instanceName="_Total" counterType="RateOfCountsPerSecond32"></CounterCreationDataInfo>
+				<CounterCreationDataInfo id="Registration" counterHelp="Registration" counterName="Registrations/Sec" instanceName="_Total" counterType="RateOfCountsPerSecond32"></CounterCreationDataInfo>
+				<CounterCreationDataInfo id="RegistrationErrors" counterHelp="Registration Failures" counterName="Registration Failures/Sec" instanceName="_Total" counterType="RateOfCountsPerSecond32"></CounterCreationDataInfo>
+			</CounterCreationDataInfos>
+		</PerformanceCounterCategoryInfo>
+		<PerformanceCounterCategoryInfo categoryHelp="Terrarium Deployment Webservices Counters" categoryName="Terrarium Deployment Webservices">
+			<CounterCreationDataInfos>
+				<CounterCreationDataInfo id="AllDeployment" counterHelp="Counts activity in all deployment webservice methods." counterName="All Deployment Calls/Sec" instanceName="_Total" counterType="RateOfCountsPerSecond32" />
+				<CounterCreationDataInfo id="AllFailedDeployment" counterHelp="Counts activity in all deployment webservice methods." counterName="All Failed Deployment Calls/Sec" instanceName="_Total" counterType="RateOfCountsPerSecond32" />
+				<CounterCreationDataInfo id="ClientsNotified" counterHelp="How many clients we notified of a new build." counterName="Total Clients Notified of New Build" instanceName="_Total" counterType="NumberOfItems32" />
+			</CounterCreationDataInfos>
+		</PerformanceCounterCategoryInfo>
+		<PerformanceCounterCategoryInfo categoryHelp="Terrarium Reporting Webservices Counters" categoryName="Terrarium Reporting Webservices">
+			<CounterCreationDataInfos>
+				<CounterCreationDataInfo id="AllReporting" counterHelp="Counts activity in all reporting webservice methods." counterName="All Reporting Calls/Sec" instanceName="_Total" counterType="RateOfCountsPerSecond32" />
+				<CounterCreationDataInfo id="AllFailedReporting" counterHelp="Counts activity in all reporting webservice methods." counterName="All Failed Reporting Calls/Sec" instanceName="_Total" counterType="RateOfCountsPerSecond32" />
+			</CounterCreationDataInfos>
+		</PerformanceCounterCategoryInfo>
+		<PerformanceCounterCategoryInfo categoryHelp="Terrarium Species Webservices Counters" categoryName="Terrarium Species Webservices">
+			<CounterCreationDataInfos>
+				<CounterCreationDataInfo id="AllSpecies" counterHelp="" counterName="All Species Calls/Sec" instanceName="_Total" counterType="RateOfCountsPerSecond32" />
+				<CounterCreationDataInfo id="AllFailedSpecies" counterHelp="" counterName="All Failed Species Calls/Sec" instanceName="_Total" counterType="RateOfCountsPerSecond32" />
+			</CounterCreationDataInfos>
+		</PerformanceCounterCategoryInfo>
+		<PerformanceCounterCategoryInfo categoryHelp="Terrarium Webservices Counters" categoryName="Terrarium Webservices">
+			<CounterCreationDataInfos>
+				<CounterCreationDataInfo id="RollupExecution" counterHelp="How long did the last rollup take in mSec." counterName="Last Report Rollup Execution Time (mSec)" instanceName="_Total" counterType="NumberOfItems32" />
+			</CounterCreationDataInfos>
+		</PerformanceCounterCategoryInfo>
+	</PerformanceCounterCategoryInfos>
+	<EventLogInfos>
+		<EventLogInfo id="PerformanceCounters" source="Terrarium Performance Counters" />
+		<EventLogInfo id="RegisterUser" source="Terrarium PeerToPeer Webservice - RegisterUser"></EventLogInfo>
+		<EventLogInfo id="UnRegisterPeer" source="Terrarium PeerToPeer WebService - UnRegisterPeer"></EventLogInfo>
+		<EventLogInfo id="GetNumPeers" source="Terrarium PeerToPeer WebService - GetNumPeers"></EventLogInfo>
+		<EventLogInfo id="RegisterPeerResult" source="Terrarium PeerToPeer WebService - RegisterPeerResult"></EventLogInfo>
+		<EventLogInfo id="GetAllPeers" source="Terrarium PeerToPeer WebService - GetAllPeers"></EventLogInfo>
+		<EventLogInfo id="RegisterMyPeerGetCountAndPeerList" source="Terrarium PeerToPeer WebService - RegisterMyPeerGetCountAndPeerList"></EventLogInfo>
+		<EventLogInfo id="Deploy" source="Terrarium Deployment Webservice"></EventLogInfo>
+		<EventLogInfo id="Report" source="Terrarium Reporting WebService - ReportPopulation"></EventLogInfo>
+		<EventLogInfo id="AddSpecies" source="Terrarium Species WebService - AddSpecies"></EventLogInfo>
+		<EventLogInfo id="GetExtinctSpecies" source="Terrarium Species WebService - GetExtinctSpecies"></EventLogInfo>
+		<EventLogInfo id="GetAllSpecies" source="Terrarium Species WebService - GetAllSpecies"></EventLogInfo>
+		<EventLogInfo id="GetSpeciesAssembly" source="Terrarium Species WebService - GetSpeciesAssembly"></EventLogInfo>
+		<EventLogInfo id="ReintroduceSpecies" source="Terrarium Species WebService - ReintroduceSpecies"></EventLogInfo>
+		<EventLogInfo id="GetBlacklistedSpecies" source="Terrarium Species Webservice - GetBlacklistedSpecies"></EventLogInfo>
+		<EventLogInfo id="Watson" source="Terrarium Watson Webservice - Report Error"></EventLogInfo>
+		<EventLogInfo id="Webservice" source="Terrarium Webservices"></EventLogInfo>
+        <EventLogInfo id="WordFilter" source="Terrarium Website - WordFilter"></EventLogInfo>
+		<EventLogInfo id="BlackBox" source="Terrarium ResetBlackBox.aspx"></EventLogInfo>	
+		<EventLogInfo id="SpeciesList" source="Terrarium ResetSpeciesList.aspx"></EventLogInfo>	
+		<EventLogInfo id="Admin" source="Terrarium AdministrationService WebService"></EventLogInfo>	
+		<EventLogInfo id="BlackBoxService" source="Blackbox Service"></EventLogInfo>	
+	</EventLogInfos>
+</InstallerInfo>

@@ -1,0 +1,8 @@
+<settings>
+  <webRoot>http://LHSDKTER1/Terrarium</webRoot>
+  <styleName>Graphite</styleName>
+  <startFullscreen>False</startFullscreen>
+  <screenSaverSpanMonitors>False</screenSaverSpanMonitors>
+  <largeGraphicsMode>False</largeGraphicsMode>
+  <skipVersionCheck>false</skipVersionCheck>
+</settings>

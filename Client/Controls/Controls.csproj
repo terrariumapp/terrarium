@@ -1,0 +1,200 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{78CF0F3B-AE88-4DD9-854C-E199E3C985CD}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>Controls</AssemblyName>
+    <AssemblyOriginatorKeyFile>..\..\Keys\development.snk</AssemblyOriginatorKeyFile>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Terrarium.Forms</RootNamespace>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <AssemblyOriginatorKeyMode>File</AssemblyOriginatorKeyMode>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DocumentationFile>Controls.xml</DocumentationFile>
+    <DebugSymbols>true</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <Optimize>false</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile>TerrariumControls.xml</DocumentationFile>
+    <DebugSymbols>false</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <Optimize>true</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System">
+      <Name>System</Name>
+      <HintPath>..\..\..\..\..\WINNT\Microsoft.NET\Framework\v1.0.3705\System.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+      <HintPath>..\..\..\..\..\WINNT\Microsoft.NET\Framework\v1.0.3705\System.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+      <HintPath>..\..\..\..\..\WINNT\Microsoft.NET\Framework\v1.0.3705\System.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Name>System.Windows.Forms</Name>
+      <HintPath>..\..\..\..\..\WINNT\Microsoft.NET\Framework\v1.0.3705\System.Windows.Forms.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.XML</Name>
+      <HintPath>..\..\..\..\..\WINNT\Microsoft.NET\Framework\v1.0.3705\System.XML.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\VersionInfo.cs">
+      <Link>VersionInfo.cs</Link>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\Controls\DeveloperPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Classes\Controls\DeveloperPanel.Designer.cs">
+      <DependentUpon>DeveloperPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Classes\Controls\GlassTitleBar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Classes\Controls\GlassBottomPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Classes\Controls\ResizeBar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Classes\Controls\TerrariumForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Classes\Controls\TerrariumLed.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Classes\Controls\TickerBar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Classes\TickerHistoryForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Classes\TickerHistoryForm.Designer.cs">
+      <DependentUpon>TickerHistoryForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Enumerations\GameModes.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Enumerations\LedIndicators.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Enumerations\LedStates.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Enumerations\ScreenSaverMode.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="Classes\Controls\DeveloperPanel.resx">
+      <DependentUpon>DeveloperPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Classes\Controls\GlassTitleBar.resx">
+      <DependentUpon>GlassTitleBar.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Classes\Controls\GlassBottomPanel.resx">
+      <DependentUpon>GlassBottomPanel.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Classes\Controls\ResizeBar.resx">
+      <DependentUpon>ResizeBar.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Classes\Controls\TerrariumForm.resx">
+      <DependentUpon>TerrariumForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Classes\Controls\TickerBar.resx">
+      <DependentUpon>TickerBar.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Classes\TickerHistoryForm.resx">
+      <DependentUpon>TickerHistoryForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Configuration\Configuration.csproj">
+      <Project>{A7445FEE-D531-460F-99F9-80FD7345072A}</Project>
+      <Name>Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Glass\Glass.csproj">
+      <Project>{B3B0B9AB-03ED-433F-841E-9AEBEE934BF3}</Project>
+      <Name>Glass</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\play_16.png" />
+    <None Include="Resources\playButton.Image.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>

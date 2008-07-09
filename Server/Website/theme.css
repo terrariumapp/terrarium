@@ -1,0 +1,326 @@
+BODY
+{
+	font-family: Tahoma, Arial;
+	font-size: 0.75em;
+	font-weight: normal;
+	background-color: #d4d4d4;
+	padding: 0 0 0 0;
+	margin: 0 0 0 0;
+}
+
+.MsoNormal
+{
+	font-family: Tahoma, Arial;
+	font-weight: normal;
+	color: Black;
+	margin: 0px 24px 24px 24px;
+}
+
+P
+{
+	font-family: Tahoma, Arial;
+}
+	
+H4
+{
+	font-family: Tahoma, Arial;
+	font-size: 1.5em;
+	font-weight: Bold;
+	color: #8080C0;
+}
+
+H5
+{
+	font-family: Tahoma, Arial;
+	font-size: 1.15em;
+	font-weight: Bold;
+	color: Black;
+}
+
+H6
+{
+	font-family: Tahoma, Arial;
+	font-size: 1.0em;
+	font-weight: Bold;
+	color: #606060;
+}
+
+.NewsTopic
+{
+	font-family: Tahoma, Arial;
+	font-size: 1.5em;
+	font-weight: Bold;
+	color: #8080C0;
+	border-bottom: solid 1px Navy;
+}
+	
+.TitleBar
+{
+	background-color: #FFFFFF;
+}
+
+.NoticePanel
+{
+	background-color: #F0F0F0;
+	border: 1pt solid #C0C0C0;
+	color: #808080;
+	font-size: 0.65em;
+	padding: 24 24 24 24;
+}
+
+.MenuBar
+{
+	background-color: #F8F8FC;
+	width: 160px;
+	border: 1pt solid #C0C0C0;
+}
+
+.MenuPanel
+{
+	width: 152px;
+	padding-bottom: 8px;
+}
+
+.MenuPanelSpacer
+{
+	height: 4px;
+}
+
+.MenuTitle
+{
+	padding-left: 4px;
+	font-family: Tahoma, Arial;
+	font-size: 0.8em;
+	font-weight: bold;
+	color: #8080C0;
+}
+
+a.MenuItem
+{
+	font-family: Tahoma, Arial;
+	font-size: 0.7em;
+	color: #404040;
+	font-weight: normal;
+	text-decoration: none;
+}
+
+a.MenuItem:hover
+{
+	font-family: Tahoma, Arial;
+	font-size: 0.7em;
+	color: #C0C0FF;
+	font-weight: normal;
+	text-decoration: underline;
+}
+
+a.SmallLink
+{
+	font-family: Tahoma, Arial;
+	font-size: 0.7em;
+	color: #404040;
+	font-weight: bold;
+	text-decoration: none;
+	padding-left: 8px;
+}
+
+a.SmallLink:hover
+{
+	font-family: Tahoma, Arial;
+	font-size: 0.7em;
+	color: #C0C0FF;
+	font-weight: bold;
+	text-decoration: underline;
+	padding-left: 8px;
+}
+
+ul.MenuItemList 
+{ 
+	margin:0px; 
+	margin-left:15px; 
+	padding-left: 4px;
+	color: #404040;
+	list-style-type: square;
+}
+
+.MainBar
+{
+	vertical-align: text-top;
+	background-color: White;
+	font-family: Tahoma, Arial;
+	font-size: 0.7em;
+	font-weight: normal;
+	color: Black;
+	padding: 16px 8px 16px 8px;
+}
+
+.SubTitle
+{
+	font-family: Tahoma, Arial;
+	font-size: 0.7em;
+	color: #000080;
+	font-weight: bold;
+	padding-left: 8px;
+}
+
+.Error
+{
+	font-family: Tahoma, Arial;
+	font-size: 0.75em;
+	color: #C02020;
+	font-weight: bold;
+	padding-left: 8px;
+}
+
+ol.CritterList
+{
+	margin:0px; 
+	margin-left:15px; 
+	padding-left: 20px;
+	padding-bottom: 8px;
+	font-family: Tahoma, Arial;
+	font-size: 0.7em;
+	color: #404040;
+	font-weight: normal;
+}
+
+.DisabledLink
+{
+	font-family: Tahoma, Arial;
+	font-size: 0.7em;
+	color: #C0C0C0;
+	font-weight: normal;
+	cursor: hand
+}
+
+.Tip
+{
+	font-family: Tahoma, Arial;
+	font-size: 0.7em;
+	color: #404040;
+	padding-left: 8px;
+}
+
+.FootNote
+{
+	font-family: Tahoma, Arial;
+	font-size: 0.65em;
+	color: #808080;
+}
+
+.ChartTitle
+{
+	font-family: Tahoma, Arial;
+	font-size: 0.9em;
+	font-weight: bold;
+	color: #8080C0;
+}
+
+.ChartLabel
+{
+	font-family: Tahoma, Arial;
+	font-size: 0.7em;
+	font-weight: bold;
+	color: Black;
+}
+
+.ChartValue
+{
+	font-family: Tahoma, Arial;
+	font-size: 0.7em;
+	font-weight: normal;
+	color: Black;
+}
+
+.MainTitle
+{
+	font-family: Tahoma, Arial;
+	font-size: 2.0em;
+	font-weight: Bold;
+	color: #40F040;
+}
+
+.MainSubTitle
+{
+	font-family: Tahoma, Arial;
+	font-size: 1.0em;
+	font-weight: Bold;
+	color: #404040;
+}
+
+.MenuItemSeperator
+{
+	padding-left: 2px;
+	padding-right: 2px;
+	font-weight: bold;
+	color: White;
+	font-size: 0.75em;
+}
+
+A.MenuItem
+{
+	padding-left: 8px;
+	padding-right: 8px;
+	font-weight: bold;
+	color: White;
+	text-decoration: none;
+}
+
+A.MenuItem:hover
+{
+	cursor: hand;
+	padding-left: 8px;
+	padding-right: 8px;
+	font-weight: bold;
+	color: White;
+	text-decoration: underline;
+}
+
+A.DarkMenuItem
+{
+	font-size: 0.65em;
+	padding-left: 8px;
+	padding-right: 8px;
+	font-weight: bold;
+	color: #404040;
+	text-decoration: none;
+}
+
+A.DarkMenuItem:hover
+{
+	cursor: hand;
+	padding-left: 8px;
+	padding-right: 8px;
+	font-weight: bold;
+	color: #4040FF;
+	text-decoration: underline;
+}
+
+.SectionPanel
+{
+	background-color: #F8F8FC;
+	border: 1pt solid #C0C0C0;
+	color: #303040;
+	font-size: 0.70em;
+	padding: 8 8 8 8;
+}
+
+.SectionTitle
+{
+	font-size: 1.15em;
+	font-weight: bold;
+	color: #000080;
+}
+
+.SectionText
+{
+	color: #606060;
+	font-size: 0.70em;
+}
+
+.ReportHeader
+{
+	background-color: #808080;
+	color: White;
+	font-weight: bold;
+	font-size: 1.0em;
+}

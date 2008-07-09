@@ -1,0 +1,266 @@
+﻿<%@ register tagprefix="controls" tagname="FooterBar" src="~/Controls/FooterBar.ascx" %>
+<%@ register tagprefix="controls" tagname="HeaderBar" src="~/Controls/HeaderBar.ascx" %>
+<%@ register tagprefix="controls" tagname="InfoBar" src="~/Controls/InfoBar.ascx" %>
+<%@ register tagprefix="controls" tagname="MenuBar" src="~/Controls/MenuBar.ascx" %>
+<%@ Page Language="c#" %>
+<%--
+//------------------------------------------------------------------------------
+//      Copyright (c) Microsoft Corporation.  All rights reserved.                                                          
+//------------------------------------------------------------------------------
+--%>
+<HTML>
+  <HEAD>
+    <TITLE>Terrarium Whidbey</TITLE>
+    <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../theme.css">
+    <STYLE TYPE="text/css">
+<!--
+TD
+{
+    font-size: 1.0em;
+}
+
+
+.divTag {border:1px; border-style:solid; background-color:#FFFFFF; text-decoration:none; height:auto; width:auto; background-color:#cecece}
+.BannerColumn {background-color:#000000}
+.Banner {border:0; padding:0; height:8px; margin-top:0px; color:#ffffff; filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=1,StartColorStr='#1c5280',EndColorStr='#FFFFFF');}
+.BannerTextCompany {font:bold; font-size:18pt; color:#cecece; font-family:Tahoma; height:0px; margin-top:0; margin-left:8px; margin-bottom:0; padding:0px; white-space:nowrap; filter:progid:DXImageTransform.Microsoft.dropshadow(OffX=2,OffY=2,Color='black',Positive='true');}
+.BannerTextApplication {font:bold; font-size:18pt; font-family:Tahoma; height:0px; margin-top:0; margin-left:8px; margin-bottom:0; padding:0px; white-space:nowrap; filter:progid:DXImageTransform.Microsoft.dropshadow(OffX=2,OffY=2,Color='black',Positive='true');}
+.BannerText {font:bold; font-size:18pt; font-family:Tahoma; height:0px; margin-top:0; margin-left:8px; margin-bottom:0; padding:0px; filter:progid:DXImageTransform.Microsoft.dropshadow(OffX=2,OffY=2,Color='black',Positive='true');}
+.BannerSubhead {border:0; padding:0; height:16px; margin-top:0px; margin-left:10px; color:#ffffff; filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=1,StartColorStr='#4B3E1A',EndColorStr='#FFFFFF');}
+.BannerSubheadText {font:bold; height:11px; font-size:11px; font-family:Tahoma; margin-top:1; margin-left:10; filter:progid:DXImageTransform.Microsoft.dropshadow(OffX=2,OffY=2,Color='black',Positive='true');}
+.FooterRule {border:0; padding:0; height:1px; margin:0px; color:#ffffff; filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=1,StartColorStr='#4B3E1A',EndColorStr='#FFFFFF');}
+.FooterText {font-size:11px; font-weight:normal; text-decoration:none; font-family:Verdana; margin-top:10; margin-left:0px; margin-bottom:2; padding:0px; color:#999999; white-space:nowrap}
+.FooterText A:link {font-weight:normal; color:#999999; text-decoration:underline}
+.FooterText A:visited {font-weight:normal; color:#999999; text-decoration:underline}
+.FooterText A:active {font-weight:normal; color:#999999; text-decoration:underline}
+.FooterText A:hover {font-weight:normal; color:#FF6600; text-decoration:underline}
+.ClickOnceInfoText {font-size:11px; font-weight:normal; text-decoration:none; font-family:Tahoma; margin-top:0; margin-right:2px; margin-bottom:0; padding:0px; color:#000000}
+.InstallTextStyle {font:bold; font-size:14pt; font-family:Tahoma; a:#FF0000; text-decoration:None}
+.DetailsStyle {margin-left:30px}
+.ItemStyle {margin-left:-15px; font-weight:bold}
+.StartColorStr {background-color:#4B3E1A}
+.JustThisApp A:link {font-weight:normal; color:#000066; text-decoration:underline}
+.JustThisApp A:visited {font-weight:normal; color:#000066; text-decoration:underline}
+.JustThisApp A:active {font-weight:normal; text-decoration:underline}
+.JustThisApp A:hover {font-weight:normal; color:#FF6600; text-decoration:underline}
+-->
+
+</STYLE>
+
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+runtimeVersion = "2.0.0";
+directLink = "Terrarium.application";
+
+
+function window::onload()
+{
+  if (HasRuntimeVersion(runtimeVersion))
+  {
+    InstallButton.href = directLink;
+    BootstrapperSection.style.display = "none";
+  }
+}
+function HasRuntimeVersion(v)
+{
+  var va = GetVersion(v);
+  var i;
+  var a = navigator.userAgent.match(/\.NET CLR [0-9.]+/g);
+  if (a != null)
+    for (i = 0; i < a.length; ++i)
+      if (CompareVersions(va, GetVersion(a[i])) <= 0)
+		return true;
+  return false;
+}
+function GetVersion(v)
+{
+  var a = v.match(/([0-9]+)\.([0-9]+)\.([0-9]+)/i);
+    return a.slice(1);
+}
+function CompareVersions(v1, v2)
+{
+  for (i = 0; i < v1.length; ++i)
+  {
+    var n1 = new Number(v1[i]);
+    var n2 = new Number(v2[i]);
+    if (n1 < n2)
+      return -1;
+    if (n1 > n2)
+      return 1;
+  }
+  return 0;
+}
+
+-->
+</SCRIPT>
+
+</HEAD>
+	<body>
+		<!-- BEGIN CENTER ALIGNMENT TABLE -->
+		<table border="0" cellpadding="0" cellspacing="0" width="100%" height="100%">
+			<tr>
+				<td align="center" valign="top">
+								
+					<table width="80%" height="100%" border="0" cellpadding="0" cellspacing="0">
+						<tr>
+						
+							<!-- LEFT SHADOW -->
+							<td width="30px"><asp:Image ImageUrl="~/images/border_left.png" Width="30px" Height="100%" Runat="server" ID="Image2"/></td>
+						
+							<td bgcolor="#FFFFFF" width="*" valign="top">
+							
+								<!-- MAIN LAYOUT -->
+								
+								<table width="100%" height="100%" border="0" cellspacing="0" cellpadding="0">
+									<!-- BEGIN TITLE BAR AREA -->
+									<tr>
+										<td colspan="4" class="TitleBar">
+											<controls:HeaderBar id="HeaderBar1" RunAt="server" height="64px"/>
+										</td>
+									</tr>
+									<tr><td colspan="4" height="16px">&nbsp;</td></tr>
+									<!-- END TITLE BAR AREA -->
+									<tr>
+										<td width="24px" height="100%">&nbsp;</td>
+
+										<!-- BEGIN CONTENT AREA -->
+                                            
+										<td width="*" valign="top">
+
+											<table border="0" cellspacing="0" cellpadding="0" style="padding-left: 0px; padding-right: 16px;" width="00%">
+												<tr>
+													<td width="30000px" align="left" valign="top">
+														<table class="SectionPanel" border="0" cellpadding="0" cellspacing="0" width="100%" >
+															<tr>
+																<td>
+																	<div align="left" class="SectionTitle">Install Terrarium Whidbey</div>
+																	<br/>
+																	<div align="left">From this page you can install Terrarium Whidbey by using Click-Once. Once deployed, the application will keep itself updated automatically.</div>
+																	<br />
+																	<div><b>NOTE:</b> You must be running .NET 2.0 Beta 2 (50215.44).  Later builds may work, so go ahead and try it.</div>
+																	<br />
+                                                                    <TABLE WIDTH="100%" CELLPADDING="0" CELLSPACING="2" BORDER="0">
+                                                                    <!-- Begin Dialog -->
+                                                                        <TR>
+                                                                            <TD ALIGN="LEFT">
+                                                                                <TABLE CELLPADDING="2" CELLSPACING="0" BORDER="0" WIDTH="540">
+                                                                                    <TR>
+                                                                                        <TD WIDTH="496">
+                                                                                            <TABLE>
+                                                                                                <TR>
+                                                                                                    <TD style="font-size: 0.75em;"><B>Name:</B></TD>
+                                                                                                    <TD WIDTH="5"><SPACER TYPE="block" WIDTH="10" /></TD>
+                                                                                                    <TD style="font-size: 0.75em;">Terrarium Whidbey</TD>
+                                                                                                </TR>
+                                                                                                <TR>
+                                                                                                    <TD style="font-size: 0.75em;"><B>Version:</B></TD>
+                                                                                                    <TD WIDTH="5"><SPACER TYPE="block" WIDTH="10" /></TD>
+                                                                                                    <TD style="font-size: 0.75em;">2.0.50522.8</TD>
+                                                                                                </TR>
+                                                                                                <TR>
+                                                                                                    <TD style="font-size: 0.75em;"><B>Publisher:</B></TD>
+                                                                                                    <TD WIDTH="5"><SPACER TYPE="block" WIDTH="10" /></TD>
+                                                                                                    <TD style="font-size: 0.75em;">Terrarium Whidbey</TD>
+                                                                                                </TR>
+                                                                                            </TABLE>
+                                                                    <!-- End AppInfo -->
+                                                                                            <br />
+
+                                                                    <!-- Begin Prerequisites -->
+                                                                                            <TABLE ID="BootstrapperSection" BORDER="0">
+                                                                                                <TR>
+                                                                                                    <TD  style="font-size: 0.75em;" COLSPAN="2">The following prerequisites are required:</TD>
+                                                                                                </TR>
+                                                                                                <TR>
+                                                                                                    <TD WIDTH="10">&nbsp;</TD>
+                                                                                                    <TD style="font-size: 0.75em;">
+                                                                                                        <UL>
+                                                                                                            <LI>.NET Framework 2.0 Beta</LI>
+                                                                                                        </UL>
+                                                                                                    </TD>
+                                                                                                </TR>
+                                                                                                <TR>
+                                                                                                    <TD style="font-size: 0.75em;" COLSPAN="2">
+                                                                                                        If these components are already installed, you can <SPAN CLASS="JustThisApp"><A HREF="Terrarium.application">launch</A></SPAN> the application now. Otherwise, click the button below to install the prerequisites and run the application.
+                                                                                                    </TD>
+                                                                                                </TR>
+                                                                                                <TR><TD COLSPAN="2">&nbsp;</TD></TR>
+                                                                                           </TABLE>
+                                                                    <!-- End Prerequisites -->
+                                                                                        </TD>
+                                                                                    </TR>
+                                                                                </TABLE>
+                                                                            </TD>
+                                                                    <!-- Begin Buttons -->
+                                                                        <TR>
+                                                                            <TD ALIGN="LEFT">
+                                                                                <TABLE CELLPADDING="2" CELLSPACING="0" BORDER="0" WIDTH="540" STYLE="cursor:hand" ONCLICK="window.navigate(InstallButton.href)">
+                                                                                    <TR>
+                                                                                        <TD WIDTH="75" ALIGN="LEFT">
+                                                                                            <TABLE CELLPADDING="1" BGCOLOR="#333333" CELLSPACING="0" BORDER="0">
+                                                                                                <TR>
+                                                                                                    <TD>
+                                                                                                        <TABLE CELLPADDING="1" BGCOLOR="#cecece" CELLSPACING="0" BORDER="0">
+                                                                                                            <TR>
+                                                                                                                <TD>
+                                                                                                                    <TABLE CELLPADDING="1" BGCOLOR="#efefef" CELLSPACING="0" BORDER="0">
+                                                                                                                        <TR>
+                                                                                                                            <TD WIDTH="20"><SPACER TYPE="block" WIDTH="20" HEIGHT="1" /></TD>
+                                                                                                                            <TD style="font-size: 0.70em; height: 24px;"><A ID="InstallButton" HREF="setup.exe"><b>Install</b></A>
+                                                                                                                            </TD>
+                                                                                                                            <TD width="20"><SPACER TYPE="block" WIDTH="20" HEIGHT="1" /></TD>
+                                                                                                                        </TR>
+                                                                                                                    </TABLE>
+                                                                                                                </TD>
+                                                                                                            </TR>
+                                                                                                        </TABLE>
+                                                                                                    </TD>
+                                                                                                </TR>
+                                                                                            </TABLE>
+                                                                                        </TD>
+                                                                                        <TD WIDTH="15%" ALIGN="right" />
+                                                                                    </TR>
+                                                                                </TABLE>
+                                                                            </TD>
+                                                                        </TR>
+                                                                    <!-- End Buttons -->
+                                                                    </TD>
+                                                                </TR>
+                                                                    <!-- End Dialog -->
+                                                            </TABLE>
+														</td>
+													</tr>
+												</table>
+											</td>
+										</tr>
+                                    </table>
+
+								</td>
+										<!-- END CONTENT AREA -->
+
+										<!-- BEGIN RIGHT MENU BAR -->
+										<td class="MenuBar" align="center" valign="top" width="32px">
+											<controls:InfoBar id="InfoBar1" runat="server" />
+										</td>
+										<td width="24px" height="100%">&nbsp;</td>
+										<!-- END RIGHT MENU BAR -->
+									</tr>
+									<tr>
+										<td colspan="4">
+											<controls:FooterBar id="FooterBar1" runat="server" />
+										</td>
+									</tr>
+								</table>
+							</td>
+							<td width="30px"><asp:Image ImageUrl="~/images/border_right.png" Width="30px" Height="100%" Runat="server"/></td>
+
+							</tr>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+		<!-- END CENTER ALIGNMENT TABLE -->
+	</body>
+</HTML>

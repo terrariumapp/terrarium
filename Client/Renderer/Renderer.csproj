@@ -1,0 +1,181 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{228FD808-F488-426E-9015-F5557AD44A40}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>Renderer</AssemblyName>
+    <AssemblyOriginatorKeyFile>..\..\Keys\development.snk</AssemblyOriginatorKeyFile>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Terrarium.Graphics</RootNamespace>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyMode>File</AssemblyOriginatorKeyMode>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DocumentationFile>Renderer.xml</DocumentationFile>
+    <DebugSymbols>true</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <Optimize>false</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile>TerrariumDirectX.xml</DocumentationFile>
+    <DebugSymbols>false</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <Optimize>true</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DxVBLib">
+      <Name>DxVBLib</Name>
+      <HintPath>..\DXVBLib\DxVBLib.DLL</HintPath>
+    </Reference>
+    <Reference Include="System">
+      <Name>System</Name>
+      <HintPath>..\..\..\..\WINDOWS\Microsoft.NET\Framework\v1.0.3705\System.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+      <HintPath>..\..\..\..\WINDOWS\Microsoft.NET\Framework\v1.0.3705\System.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+      <HintPath>..\..\..\..\WINDOWS\Microsoft.NET\Framework\v1.0.3705\System.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Name>System.Windows.Forms</Name>
+      <HintPath>..\..\..\..\WINDOWS\Microsoft.NET\Framework\v1.0.3705\System.Windows.Forms.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.XML</Name>
+      <HintPath>..\..\..\..\WINDOWS\Microsoft.NET\Framework\v1.0.3705\System.XML.dll</HintPath>
+    </Reference>
+    <ProjectReference Include="..\Configuration\Configuration.csproj">
+      <Name>Configuration</Name>
+      <Project>{A7445FEE-D531-460F-99F9-80FD7345072A}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\Game\Game.csproj">
+      <Name>Game</Name>
+      <Project>{B77AEBA6-F49D-45EE-BDE7-ABE95EF462D7}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\OrganismBase\OrganismBase.csproj">
+      <Name>OrganismBase</Name>
+      <Project>{692FC657-3EAA-4EF9-B10F-3558A7E5916D}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\VersionInfo.cs">
+      <Link>VersionInfo.cs</Link>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\DirectX\DirectDrawClippedRect.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\DirectX\DirectDrawPictureBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Classes\DirectX\DirectDrawSpriteSurface.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\DirectX\DirectDrawSurface.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\DirectX\DirectXException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\DirectX\ManagedDirectX.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\HeightMap.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\MiniMapUpdatedEventArgs.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\MiniMapUpdatedEventHandler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\OrganismClickedEventArgs.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\OrganismClickedEventHandler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\TerrariumDirectDrawGameView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Classes\TerrariumSpriteSurface.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\TerrariumSpriteSurfaceManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\TerrariumTextSurfaceManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\TileInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Classes\World.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>

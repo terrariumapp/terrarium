@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://tempuri.org/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://tempuri.org/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://tempuri.org/">
+      <s:element name="ReportUsage">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="data" type="tns:UsageData" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="UsageData">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Alias" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Domain" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="GameVersion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="PeerChannel" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="PeerCount" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="AnimalCount" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="MaxAnimalCount" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="WorldWidth" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="WorldHeight" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="MachineName" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="OSVersion" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="ProcessorCount" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="ClrVersion" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="WorkingSet" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="MaxWorkingSet" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="MinWorkingSet" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="ProcessorTimeInSeconds" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="ProcessStartTime" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ReportUsageResponse">
+        <s:complexType />
+      </s:element>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="ReportUsageSoapIn">
+    <wsdl:part name="parameters" element="tns:ReportUsage" />
+  </wsdl:message>
+  <wsdl:message name="ReportUsageSoapOut">
+    <wsdl:part name="parameters" element="tns:ReportUsageResponse" />
+  </wsdl:message>
+  <wsdl:portType name="UsageServiceSoap">
+    <wsdl:operation name="ReportUsage">
+      <wsdl:input message="tns:ReportUsageSoapIn" />
+      <wsdl:output message="tns:ReportUsageSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="UsageServiceSoap" type="tns:UsageServiceSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ReportUsage">
+      <soap:operation soapAction="http://tempuri.org/ReportUsage" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="UsageServiceSoap12" type="tns:UsageServiceSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ReportUsage">
+      <soap12:operation soapAction="http://tempuri.org/ReportUsage" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="UsageService">
+    <wsdl:port name="UsageServiceSoap" binding="tns:UsageServiceSoap">
+      <soap:address location="http://localhost:1837/Website/Reporting/UsageService.asmx" />
+    </wsdl:port>
+    <wsdl:port name="UsageServiceSoap12" binding="tns:UsageServiceSoap12">
+      <soap12:address location="http://localhost:1837/Website/Reporting/UsageService.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
