@@ -46,8 +46,9 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <InstallUrl>http://localhost/Terrarium/</InstallUrl>
-    <ProductName>Terrarium Whidbey</ProductName>
-    <PublisherName>Terrarium Whidbey</PublisherName>
+    <SupportUrl>http://www.codeplex.com/terrarium2</SupportUrl>
+    <ProductName>Terrarium</ProductName>
+    <PublisherName>Terrarium</PublisherName>
     <WebPage>default.aspx</WebPage>
     <TrustUrlParameters>true</TrustUrlParameters>
     <ApplicationVersion>2.0.50522.8</ApplicationVersion>
@@ -369,16 +370,6 @@
       <PublishState>Exclude</PublishState>
       <FileType>Assembly</FileType>
     </PublishFile>
-  </ItemGroup>
-  <ItemGroup>
-    <COMReference Include="ProductStudio">
-      <Guid>{F66AF47A-03D8-4CEA-A78C-F1AE2F84DD7D}</Guid>
-      <VersionMajor>2</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-    </COMReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="development.snk" />
