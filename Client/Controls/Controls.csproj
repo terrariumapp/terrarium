@@ -187,6 +187,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\OrganismBase\development.snk">
+      <Link>development.snk</Link>
+    </None>
     <None Include="Resources\play_16.png" />
     <None Include="Resources\playButton.Image.png" />
   </ItemGroup>
