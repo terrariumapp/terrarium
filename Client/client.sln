@@ -1,24 +1,70 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terrarium", "Terrarium\Terrarium.csproj", "{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpListener", "HttpListener\HttpListener.csproj", "{E3EC9E4B-7AA9-4DA9-B6FE-A5E73FE1A8D0}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrganismBase", "OrganismBase\OrganismBase.csproj", "{692FC657-3EAA-4EF9-B10F-3558A7E5916D}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Configuration", "Configuration\Configuration.csproj", "{A7445FEE-D531-460F-99F9-80FD7345072A}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Controls", "Controls\Controls.csproj", "{78CF0F3B-AE88-4DD9-854C-E199E3C985CD}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game", "Game\Game.csproj", "{B77AEBA6-F49D-45EE-BDE7-ABE95EF462D7}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Services", "Services\Services.csproj", "{6A2A6B54-D211-4766-82A6-0B8E2072BEF9}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "asmcheck", "AsmCheck\asmcheck.vcproj", "{CB41592F-C650-4475-9BA3-70A387BFF25E}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Glass", "Glass\Glass.csproj", "{B3B0B9AB-03ED-433F-841E-9AEBEE934BF3}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Renderer", "Renderer\Renderer.csproj", "{228FD808-F488-426E-9015-F5557AD44A40}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj", "{47A1A332-54B7-41B2-A6FD-C27CCD863569}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,6 +76,18 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Debug|Mixed platforms.ActiveCfg = Debug|Any CPU
+		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Debug|Mixed platforms.Build.0 = Debug|Any CPU
+		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Debug|Win32.Build.0 = Debug|Any CPU
+		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Release|Mixed platforms.ActiveCfg = Release|Any CPU
+		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Release|Mixed platforms.Build.0 = Release|Any CPU
+		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Release|Win32.ActiveCfg = Release|Any CPU
+		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Release|Win32.Build.0 = Release|Any CPU
 		{E3EC9E4B-7AA9-4DA9-B6FE-A5E73FE1A8D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E3EC9E4B-7AA9-4DA9-B6FE-A5E73FE1A8D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E3EC9E4B-7AA9-4DA9-B6FE-A5E73FE1A8D0}.Debug|Mixed platforms.ActiveCfg = Debug|Any CPU
@@ -90,18 +148,6 @@ Global
 		{B77AEBA6-F49D-45EE-BDE7-ABE95EF462D7}.Release|Mixed platforms.Build.0 = Release|Any CPU
 		{B77AEBA6-F49D-45EE-BDE7-ABE95EF462D7}.Release|Win32.ActiveCfg = Release|Any CPU
 		{B77AEBA6-F49D-45EE-BDE7-ABE95EF462D7}.Release|Win32.Build.0 = Release|Any CPU
-		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Debug|Mixed platforms.ActiveCfg = Debug|Any CPU
-		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Debug|Mixed platforms.Build.0 = Debug|Any CPU
-		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Debug|Win32.Build.0 = Debug|Any CPU
-		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Release|Mixed platforms.ActiveCfg = Release|Any CPU
-		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Release|Mixed platforms.Build.0 = Release|Any CPU
-		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Release|Win32.ActiveCfg = Release|Any CPU
-		{0F3C0D45-0DCC-43C9-BC43-C34C2029FFF4}.Release|Win32.Build.0 = Release|Any CPU
 		{6A2A6B54-D211-4766-82A6-0B8E2072BEF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6A2A6B54-D211-4766-82A6-0B8E2072BEF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A2A6B54-D211-4766-82A6-0B8E2072BEF9}.Debug|Mixed platforms.ActiveCfg = Debug|Any CPU
@@ -145,6 +191,12 @@ Global
 		{228FD808-F488-426E-9015-F5557AD44A40}.Release|Mixed platforms.ActiveCfg = Release|Any CPU
 		{228FD808-F488-426E-9015-F5557AD44A40}.Release|Mixed platforms.Build.0 = Release|Any CPU
 		{228FD808-F488-426E-9015-F5557AD44A40}.Release|Win32.ActiveCfg = Release|Any CPU
+		{47A1A332-54B7-41B2-A6FD-C27CCD863569}.Debug|Any CPU.ActiveCfg = Debug
+		{47A1A332-54B7-41B2-A6FD-C27CCD863569}.Debug|Mixed platforms.ActiveCfg = Debug
+		{47A1A332-54B7-41B2-A6FD-C27CCD863569}.Debug|Win32.ActiveCfg = Debug
+		{47A1A332-54B7-41B2-A6FD-C27CCD863569}.Release|Any CPU.ActiveCfg = Release
+		{47A1A332-54B7-41B2-A6FD-C27CCD863569}.Release|Mixed platforms.ActiveCfg = Release
+		{47A1A332-54B7-41B2-A6FD-C27CCD863569}.Release|Win32.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

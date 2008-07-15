@@ -35,7 +35,7 @@
     <ManifestKeyFile>
     </ManifestKeyFile>
     <TargetZone>LocalIntranet</TargetZone>
-    <PublishUrl>\\157.59.158.52\C%24\Inetpub\wwwroot\Terrrarium 2.0\Publish\</PublishUrl>
+    <PublishUrl>\\localhost\C%24\Inetpub\wwwroot\Terrrarium 2.0\Publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -352,24 +352,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <PublishFile Include="Terrarium.pdb">
-      <Visible>False</Visible>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <PublishState>Include</PublishState>
-      <FileType>File</FileType>
-    </PublishFile>
-    <PublishFile Include="TerrariumScreenSaver.exe">
-      <Visible>False</Visible>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <FileType>Assembly</FileType>
-    </PublishFile>
   </ItemGroup>
   <ItemGroup>
     <None Include="development.snk" />
