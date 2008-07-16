@@ -132,10 +132,6 @@
       <Name>System.XML</Name>
       <HintPath>..\..\..\..\..\WINNT\Microsoft.NET\Framework\v1.0.3705\System.XML.dll</HintPath>
     </Reference>
-    <ProjectReference Include="..\AsmCheck\asmcheck.vcproj">
-      <Project>{CB41592F-C650-4475-9BA3-70A387BFF25E}</Project>
-      <Name>asmcheck</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Configuration\Configuration.csproj">
       <Name>Configuration</Name>
       <Project>{A7445FEE-D531-460F-99F9-80FD7345072A}</Project>
