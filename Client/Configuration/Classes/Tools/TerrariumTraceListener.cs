@@ -6,12 +6,10 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Windows.Forms;
-
 using Terrarium.Configuration;
 
-namespace Terrarium.Tools 
+namespace Terrarium.Tools
 {
     /// <summary>
     ///  The TerrariumTraceListener is responsible for stopping the
@@ -24,24 +22,28 @@ namespace Terrarium.Tools
         ///  A trace buffer can be built of multiple tracings and this
         ///  value is responsible for controlling truncation of the buffer.
         /// </summary>
-        const int traceBufferMaxLength = 20000;
+        private const int TraceBufferMaxLength = 20000;
+
         /// <summary>
         ///  Holds an instance of the default trace listener
         /// </summary>
-        private DefaultTraceListener defaultListener = new DefaultTraceListener();
+        private readonly DefaultTraceListener _defaultListener = new DefaultTraceListener();
+
         /// <summary>
         ///  Enables logging traces to a debug text file
         /// </summary>
-        private Boolean enableLogging = false;
+        private readonly Boolean _enableLogging;
+
+        /// <summary>
+        ///  Builds a tracing string using a performance optimized string builder
+        /// </summary>
+        private readonly StringBuilder _traceBuilder = new StringBuilder();
+
         /// <summary>
         ///  Holds an instance of the drawing timer so that it can be stopped
         ///  when an error or assertion occurs.
         /// </summary>
-        private System.Windows.Forms.Timer timerToStop;
-        /// <summary>
-        ///  Builds a tracing string using a performance optimized string builder
-        /// </summary>
-        private StringBuilder traceBuilder = new StringBuilder();
+        private Timer _timerToStop;
 
         /// <summary>
         ///  Creates a default TerrariumTraceListener with logging turned off
@@ -54,25 +56,19 @@ namespace Terrarium.Tools
         ///  Creates a TerrariumTraceListener with a custom value for logging.
         /// </summary>
         /// <param name="loggingFlag">If True logging is turned on, off otherwise</param>
-        public TerrariumTraceListener(Boolean loggingFlag) 
+        public TerrariumTraceListener(Boolean loggingFlag)
         {
-            enableLogging = loggingFlag;
+            _enableLogging = loggingFlag;
         }
 
         /// <summary>
         ///  Retreives or sets the current drawing timer.
         /// </summary>
-        public System.Windows.Forms.Timer TimerToStop
+        public Timer TimerToStop
         {
-            get 
-            {
-                return timerToStop;
-            }
+            get { return _timerToStop; }
 
-            set 
-            {
-                timerToStop = value;
-            }
+            set { _timerToStop = value; }
         }
 
         /// <summary>
@@ -81,16 +77,16 @@ namespace Terrarium.Tools
         /// <param name="message">Message to log</param>
         public override void Fail(string message)
         {
-            if (timerToStop != null)
+            if (_timerToStop != null)
             {
-                timerToStop.Enabled = false;
+                _timerToStop.Enabled = false;
             }
-        
-            ErrorLog.LogFailedAssertion(message + "\r\n" + Environment.StackTrace, traceBuilder.ToString());
-            ShowErrorDialog("ASSERTION FAILURE: " + message, Environment.StackTrace);
-            if (timerToStop != null)
+
+            ErrorLog.LogFailedAssertion(string.Format("{0}\r\n{1}", message, Environment.StackTrace), _traceBuilder.ToString());
+            showErrorDialog(string.Format("ASSERTION FAILURE: {0}", message), Environment.StackTrace);
+            if (_timerToStop != null)
             {
-                timerToStop.Enabled = true;
+                _timerToStop.Enabled = true;
             }
         }
 
@@ -101,15 +97,16 @@ namespace Terrarium.Tools
         /// <param name="detailMessage">Detailed error message.</param>
         public override void Fail(string message, string detailMessage)
         {
-            if (timerToStop != null)
+            if (_timerToStop != null)
             {
-                timerToStop.Enabled = false;
+                _timerToStop.Enabled = false;
             }
-            ErrorLog.LogFailedAssertion(message + "\r\n" + detailMessage + "\r\n" + Environment.StackTrace, traceBuilder.ToString());
-            ShowErrorDialog("ASSERTION FAILURE: " + message + "\r\n" + detailMessage, Environment.StackTrace);
-            if (timerToStop != null)
+            ErrorLog.LogFailedAssertion(string.Format("{0}\r\n{1}\r\n{2}", message, detailMessage, Environment.StackTrace),
+                                        _traceBuilder.ToString());
+            showErrorDialog(string.Format("ASSERTION FAILURE: {0}\r\n{1}", message, detailMessage), Environment.StackTrace);
+            if (_timerToStop != null)
             {
-                timerToStop.Enabled = true;
+                _timerToStop.Enabled = true;
             }
         }
 
@@ -119,18 +116,20 @@ namespace Terrarium.Tools
         /// <param name="message">Message to log.</param>
         public override void Write(string message)
         {
-            if (traceBuilder.Length >= traceBufferMaxLength)
+            if (_traceBuilder.Length >= TraceBufferMaxLength)
             {
-                traceBuilder.Remove(0, message.Length);
+                _traceBuilder.Remove(0, message.Length);
             }
 
-            if (enableLogging)
+            if (_enableLogging)
             {
                 try
                 {
-                    using (FileStream logFileStream = File.Open("logfile.txt",FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
+                    using (
+                        FileStream logFileStream = File.Open("logfile.txt", FileMode.OpenOrCreate, FileAccess.Write,
+                                                             FileShare.ReadWrite))
                     {
-                        logFileStream.Seek(0, SeekOrigin.End);              
+                        logFileStream.Seek(0, SeekOrigin.End);
                         StreamWriter logFile = new StreamWriter(logFileStream);
                         logFile.WriteLine(message);
                         logFile.Close();
@@ -141,9 +140,9 @@ namespace Terrarium.Tools
                 }
             }
 
-            traceBuilder.Insert(0, message);
+            _traceBuilder.Insert(0, message);
 
-            defaultListener.Write(message); // If you leave this in it doubles messages.
+            _defaultListener.Write(message); // If you leave this in it doubles messages.
         }
 
         /// <summary>
@@ -153,7 +152,7 @@ namespace Terrarium.Tools
         /// <param name="category">Message category.</param>
         public override void Write(object o, string category)
         {
-            Write("Category: " + category + "Message: " + o.ToString());
+            Write(string.Format("Category: {0}Message: {1}", category, o));
         }
 
         /// <summary>
@@ -163,7 +162,7 @@ namespace Terrarium.Tools
         /// <param name="category">Message category.</param>
         public override void Write(string message, string category)
         {
-            Write("Category: " + category + "Message: " + message);
+            Write(string.Format("Category: {0}Message: {1}", category, message));
         }
 
         /// <summary>
@@ -182,7 +181,7 @@ namespace Terrarium.Tools
         /// <param name="category">Message category.</param>
         public override void WriteLine(object o, string category)
         {
-            WriteLine("Category: " + category + "Message: " + o.ToString());
+            WriteLine("Category: " + category + "Message: " + o);
         }
 
         /// <summary>
@@ -199,10 +198,9 @@ namespace Terrarium.Tools
         ///  Used for logging standard messages
         /// </summary>
         /// <param name="o">Object to log, ToString will be called.</param>
-        public override void WriteLine(object o) 
+        public override void WriteLine(object o)
         {
             WriteLine(o.ToString());
-
         }
 
         /// <summary>
@@ -221,7 +219,7 @@ namespace Terrarium.Tools
         /// </summary>
         /// <param name="message"></param>
         /// <param name="stackTrace"></param>
-        private void ShowErrorDialog(string message, string stackTrace)
+        private static void showErrorDialog(string message, string stackTrace)
         {
             // Disable Errors in Demo Mode
             if (!GameConfig.ShowErrors)
@@ -233,9 +231,11 @@ namespace Terrarium.Tools
             DialogResult result = DialogResult.Cancel;
             try
             {
-                string errorMsg = "An error occurred please contact the adminstrator with the following information:\n\n";
+                string errorMsg =
+                    "An error occurred please contact the adminstrator with the following information:\n\n";
                 errorMsg = errorMsg + message + "\r\n" + stackTrace;
-                result = MessageBox.Show(errorMsg, "Application Error", MessageBoxButtons.RetryCancel, MessageBoxIcon.Stop);
+                result = MessageBox.Show(errorMsg, "Application Error", MessageBoxButtons.RetryCancel,
+                                         MessageBoxIcon.Stop);
             }
             catch
             {

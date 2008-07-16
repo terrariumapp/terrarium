@@ -4,6 +4,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Security;
 
 namespace Terrarium.Tools
 {
@@ -15,24 +16,24 @@ namespace Terrarium.Tools
     public sealed class TimeMonitor
     {
         /// <summary>
-        ///  Number of ticks per second retrieved using QueryPerformanceFrequency
+        ///  The number of microseconds in a single second
         /// </summary>
-        private double _ticksPerSec  = 0;
+        private const int MicroSecondsPerSecond = 1000000;
 
         /// <summary>
         ///  A value representing the overhead of calling the time monitor class
         /// </summary>
-        private double _apiOverHead  = 0;
+        private readonly double _apiOverHead;
+
+        /// <summary>
+        ///  Number of ticks per second retrieved using QueryPerformanceFrequency
+        /// </summary>
+        private readonly double _ticksPerSec;
 
         /// <summary>
         ///  The starting value of the timer class, as set by a call to Start
         /// </summary>
         private double _startCounter = -1;
-
-        /// <summary>
-        ///  The number of microseconds in a single second
-        /// </summary>
-        const int MicroSecondsPerSecond = 1000000;
 
         /// <summary>
         ///  Initialize a new time monitor for computing small differences in time.
@@ -56,6 +57,14 @@ namespace Terrarium.Tools
         }
 
         /// <summary>
+        ///  Determines if the current time monitor has been started already.
+        /// </summary>
+        public Boolean IsStarted
+        {
+            get { return _startCounter != -1; }
+        }
+
+        /// <summary>
         ///  Used to retrieve the number of seconds elapsed in this counter.
         ///  This should only be called after a call to Start.
         /// </summary>
@@ -65,15 +74,15 @@ namespace Terrarium.Tools
             double counter = -1;
 
             QueryPerformanceCounter(ref counter);
-        
-            return (counter / _ticksPerSec);
+
+            return (counter/_ticksPerSec);
         }
 
         /// <summary>
         ///  Starts the timing class by making a call to QueryPerformanceCounter
         ///  for the current time.
         /// </summary>
-        public void Start() 
+        public void Start()
         {
             QueryPerformanceCounter(ref _startCounter);
         }
@@ -94,9 +103,9 @@ namespace Terrarium.Tools
             {
                 throw new ApplicationException("Start must be called before calling End.");
             }
-        
+
             Int64 elapsedTime = FreqToMicroSecs(endCounter - _startCounter);
-        
+
             // Make sure people don't call End multiple times since we only subtract out the
             // time of the calls once
             _startCounter = -1;
@@ -113,46 +122,24 @@ namespace Terrarium.Tools
         /// <returns>The number of elapsed microseconds</returns>
         private Int64 FreqToMicroSecs(double ticks)
         {
-            double secs = (ticks - _apiOverHead) / _ticksPerSec;
-            return(Int64)(secs * MicroSecondsPerSecond);
-        }
-    
-        /// <summary>
-        ///  The number of microseconds used by simply calling the API
-        /// </summary>
-        private Int64 ApiOverhead
-        {
-            get 
-            { 
-                return (Int64) ((_apiOverHead / _ticksPerSec) * MicroSecondsPerSecond);
-            }
-        }
-
-        /// <summary>
-        ///  Determines if the current time monitor has been started already.
-        /// </summary>
-        public Boolean IsStarted
-        {
-            get 
-            {
-                return _startCounter != -1;
-            }
+            double secs = (ticks - _apiOverHead)/_ticksPerSec;
+            return (Int64) (secs*MicroSecondsPerSecond);
         }
 
         /// <summary>
         ///  Used to query the system timer frequency.  Returns counts per
         ///  second.  Ref parameter is a LARGE_INTEGER
         /// </summary>
-        [System.Security.SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("kernel32", CharSet=CharSet.Auto)]
-        static extern int QueryPerformanceFrequency(ref double quadpart);
+        [SuppressUnmanagedCodeSecurity]
+        [DllImport("kernel32", CharSet = CharSet.Auto)]
+        private static extern int QueryPerformanceFrequency(ref double quadpart);
 
         /// <summary>
         ///  Used to query the number of elapsed intervals in the system
         ///  timer.
         /// </summary>
-        [System.Security.SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("kernel32", CharSet=CharSet.Auto)]
-        static extern int QueryPerformanceCounter(ref double quadpart);
+        [SuppressUnmanagedCodeSecurity]
+        [DllImport("kernel32", CharSet = CharSet.Auto)]
+        private static extern int QueryPerformanceCounter(ref double quadpart);
     }
 }
