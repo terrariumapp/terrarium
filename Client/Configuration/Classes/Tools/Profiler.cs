@@ -2,7 +2,6 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                       
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections;
 
 namespace Terrarium.Tools
@@ -16,7 +15,7 @@ namespace Terrarium.Tools
         /// <summary>
         ///  Contains named profiles
         /// </summary>
-        Hashtable profileKeys;
+        private Hashtable _profileKeys;
 
         /// <summary>
         ///  Creates a new DirectDrawProfiler and clears any
@@ -28,62 +27,12 @@ namespace Terrarium.Tools
         }
 
         /// <summary>
-        ///  Clears any profiler data.
-        /// </summary>
-        public void ClearProfiler()
-        {
-            profileKeys = new Hashtable();
-        }
-
-        /// <summary>
-        ///  Starts profiling the function or profile of the given name.
-        /// </summary>
-        /// <param name="functionName">Name of the function or profile to time.</param>
-        public void Start(string functionName)
-        {
-            if (profileKeys.ContainsKey(functionName))
-            {
-                ProfilerNode node = (ProfilerNode) profileKeys[functionName];
-                node.Start();
-            }
-            else
-            {
-                ProfilerNode node = new ProfilerNode(functionName);
-                profileKeys.Add(functionName, node);
-                node.Start();
-            }
-        }
-
-        /// <summary>
-        ///  Ends the profiling of a given function or profile node.
-        /// </summary>
-        /// <param name="functionName">Name of the function or profile node to stop timing.</param>
-        public void End(string functionName)
-        {
-            if (profileKeys.ContainsKey(functionName))
-            {
-                ProfilerNode node = (ProfilerNode) profileKeys[functionName];
-                node.End();
-            }
-        }
-
-        /// <summary>
         ///  Default indexed property that gives access to nodes by
         ///  their key name.
         /// </summary>
         public ProfilerNode this[string key]
         {
-            get
-            {
-                if (profileKeys.ContainsKey(key))
-                {
-                    return (ProfilerNode) profileKeys[key];
-                }
-                else
-                {
-                    return null;
-                }
-            }
+            get { return _profileKeys.ContainsKey(key) ? (ProfilerNode) _profileKeys[key] : null; }
         }
 
         /// <summary>
@@ -95,9 +44,9 @@ namespace Terrarium.Tools
             get
             {
                 int offset = 0;
-                ProfilerNode[] nodeArray = new ProfilerNode[profileKeys.Count];
+                ProfilerNode[] nodeArray = new ProfilerNode[_profileKeys.Count];
 
-                foreach (object node in profileKeys.Values)
+                foreach (object node in _profileKeys.Values)
                 {
                     nodeArray[offset] = (ProfilerNode) node;
                     offset++;
@@ -105,6 +54,44 @@ namespace Terrarium.Tools
 
                 return nodeArray;
             }
+        }
+
+        /// <summary>
+        ///  Clears any profiler data.
+        /// </summary>
+        public void ClearProfiler()
+        {
+            _profileKeys = new Hashtable();
+        }
+
+        /// <summary>
+        ///  Starts profiling the function or profile of the given name.
+        /// </summary>
+        /// <param name="functionName">Name of the function or profile to time.</param>
+        public void Start(string functionName)
+        {
+            if (_profileKeys.ContainsKey(functionName))
+            {
+                ProfilerNode node = (ProfilerNode) _profileKeys[functionName];
+                node.Start();
+            }
+            else
+            {
+                ProfilerNode node = new ProfilerNode(functionName);
+                _profileKeys.Add(functionName, node);
+                node.Start();
+            }
+        }
+
+        /// <summary>
+        ///  Ends the profiling of a given function or profile node.
+        /// </summary>
+        /// <param name="functionName">Name of the function or profile node to stop timing.</param>
+        public void End(string functionName)
+        {
+            if (!_profileKeys.ContainsKey(functionName)) return;
+            ProfilerNode node = (ProfilerNode) _profileKeys[functionName];
+            node.End();
         }
     }
 #endif

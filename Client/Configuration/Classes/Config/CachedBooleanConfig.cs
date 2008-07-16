@@ -1,8 +1,6 @@
-//----------------------------------------------------------------------------
-// Copyright (c) Microsoft Corporation.  All rights reserved.                                                             
-//----------------------------------------------------------------------------
-
-using System;
+//------------------------------------------------------------------------------  
+//      Copyright (c) Microsoft Corporation.  All rights reserved.                                                          
+//------------------------------------------------------------------------------
 
 namespace Terrarium.Configuration
 {
@@ -19,15 +17,17 @@ namespace Terrarium.Configuration
         /// <summary>
         ///  Field representing the name of the setting in the config file
         /// </summary>
-        private string booleanName = null;
+        private readonly string _booleanName;
+
         /// <summary>
         ///  Field representing the string or config representation of the setting
         /// </summary>
-        private string booleanString = null;
+        private string _booleanString;
+
         /// <summary>
         ///  Field representing the boolean value of the setting
         /// </summary>
-        private bool boolean = false;
+        private bool _booleanValue;
 
         /// <summary>
         ///  Initialize a new CachedBooleanConfig given the name of the configuration
@@ -46,8 +46,8 @@ namespace Terrarium.Configuration
         /// <param name="defaultValue">Initial default value.</param>
         public CachedBooleanConfig(string name, bool defaultValue)
         {
-            this.booleanName = name;
-            this.boolean = defaultValue;
+            _booleanName = name;
+            _booleanValue = defaultValue;
         }
 
         /// <summary>
@@ -58,13 +58,13 @@ namespace Terrarium.Configuration
         /// <returns>True/False value of the current setting.</returns>
         public bool Getter()
         {
-            if (this.booleanString == null)
+            if (_booleanString == null)
             {
-                this.booleanString = GameConfig.GetSetting(this.booleanName);
+                _booleanString = GameConfig.GetSetting(_booleanName);
 
                 try
                 {
-                    this.boolean = bool.Parse(this.booleanString);
+                    _booleanValue = bool.Parse(_booleanString);
                 }
                 catch
                 {
@@ -74,7 +74,7 @@ namespace Terrarium.Configuration
                 }
             }
 
-            return this.boolean;
+            return _booleanValue;
         }
 
         /// <summary>
@@ -84,9 +84,9 @@ namespace Terrarium.Configuration
         /// <param name="value">New True/False value for the setting.</param>
         public void Setter(bool value)
         {
-            this.booleanString = value.ToString();
-            this.boolean = value;
-            GameConfig.SetSetting(this.booleanName, this.booleanString);
+            _booleanString = value.ToString();
+            _booleanValue = value;
+            GameConfig.SetSetting(_booleanName, _booleanString);
         }
     }
 }

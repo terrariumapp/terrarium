@@ -1,16 +1,15 @@
 //------------------------------------------------------------------------------
-//      Copyright (c) Microsoft Corporation.  All rights reserved.                                                        
+//      Copyright (c) Microsoft Corporation.  All rights reserved.                                                       
 //------------------------------------------------------------------------------
 
 using System;
 using System.Data;
 using System.Diagnostics;
+using System.Globalization;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Threading;
-using System.Globalization;
 using Terrarium.Configuration;
-using Terrarium.Forms;
 
 namespace Terrarium.Tools
 {
@@ -23,15 +22,26 @@ namespace Terrarium.Tools
     public class ErrorLog
     {
         /// <summary>
-        ///  The name of the machine the client is running on
-        /// </summary>
-        static string machineName = "<not set>";
-
-        /// <summary>
         ///  A Mutex object used to make the ErrorLog class threadsafe and to synchronize
         ///  access to certain methods and resources.
         /// </summary>
-        static Mutex syncObject = new Mutex(false);
+        private static readonly Mutex _syncObject = new Mutex(false);
+
+        /// <summary>
+        ///  The name of the machine the client is running on
+        /// </summary>
+        private static string _machineName = "<not set>";
+
+        /// <summary>
+        ///  Used to set and retrieve the name of the machine the client is running
+        ///  on.
+        /// </summary>
+        public static string MachineName
+        {
+            get { return _machineName; }
+
+            set { _machineName = value; }
+        }
 
         /// <summary>
         ///  Log handled exceptions.  This can be used in order to review handled
@@ -52,23 +62,6 @@ namespace Terrarium.Tools
         }
 
         /// <summary>
-        ///  Used to set and retrieve the name of the machine the client is running
-        ///  on.
-        /// </summary>
-        public static string MachineName
-        {
-            get
-            {
-                return machineName;
-            }
-        
-            set
-            {
-                machineName = value;
-            }
-        }
-
-        /// <summary>
         ///  Formats and exception object.  Currently, only the SocketException
         ///  makes use fo the custom formatting logic.  Other formats can easily
         ///  be added.
@@ -79,12 +72,10 @@ namespace Terrarium.Tools
         {
             if (e is SocketException)
             {
-                return String.Format("SocketException({0}): {1}\r\n{2}", ((SocketException)e).NativeErrorCode.ToString(), e.Message, e.StackTrace);
+                return String.Format("SocketException({0}): {1}\r\n{2}", ((SocketException) e).NativeErrorCode,
+                                     e.Message, e.StackTrace);
             }
-            else
-            {
-                return e.ToString();            
-            }
+            return e.ToString();
         }
 
         /// <summary>
@@ -96,7 +87,7 @@ namespace Terrarium.Tools
         /// <param name="traces">A series of cached previous tracings</param>
         public static void LogFailedAssertion(string message, string traces)
         {
-            syncObject.WaitOne();
+            _syncObject.WaitOne();
 
             try
             {
@@ -104,11 +95,6 @@ namespace Terrarium.Tools
                 {
                     Debug.WriteLine("Not showing watson dialog since ShowErrors == false");
                     return;
-                }
-
-                if (traces == null)
-                {
-                    traces = "";
                 }
             }
             catch (Exception exception)
@@ -119,11 +105,10 @@ namespace Terrarium.Tools
             }
             finally
             {
-                syncObject.ReleaseMutex();
+                _syncObject.ReleaseMutex();
             }
         }
 
-  
         /// <summary>
         ///  Logs a failed assertion.  Any failed assertions launch the Watson
         ///  dialog which is then used to submit an error report to the Terrarium
@@ -149,16 +134,18 @@ namespace Terrarium.Tools
             data.Locale = CultureInfo.InvariantCulture;
 
             DataTable watsonTable = data.Tables.Add("Watson");
-            watsonTable.Columns.Add("LogType", typeof(System.String));  
-            watsonTable.Columns.Add("OSVersion", typeof(System.String));    
-            watsonTable.Columns.Add("GameVersion", typeof(System.String));  
-            watsonTable.Columns.Add("CLRVersion", typeof(System.String));   
-            watsonTable.Columns.Add("UserEmail", typeof(System.String));    
-            DataColumn dcComment = new DataColumn("UserComment", typeof(System.String)); dcComment.MaxLength = Int32.MaxValue;
-            watsonTable.Columns.Add(dcComment); 
-            DataColumn dcErrorLog = new DataColumn("ErrorLog", typeof(System.String)); dcErrorLog.MaxLength = Int32.MaxValue;
-            watsonTable.Columns.Add(dcErrorLog);    
-        
+            watsonTable.Columns.Add("LogType", typeof (String));
+            watsonTable.Columns.Add("OSVersion", typeof (String));
+            watsonTable.Columns.Add("GameVersion", typeof (String));
+            watsonTable.Columns.Add("CLRVersion", typeof (String));
+            watsonTable.Columns.Add("UserEmail", typeof (String));
+            DataColumn dcComment = new DataColumn("UserComment", typeof (String));
+            dcComment.MaxLength = Int32.MaxValue;
+            watsonTable.Columns.Add(dcComment);
+            DataColumn dcErrorLog = new DataColumn("ErrorLog", typeof (String));
+            dcErrorLog.MaxLength = Int32.MaxValue;
+            watsonTable.Columns.Add(dcErrorLog);
+
             DataRow row = watsonTable.NewRow();
             row["LogType"] = logType;
             row["ErrorLog"] = errorLog;
@@ -167,8 +154,8 @@ namespace Terrarium.Tools
             row["UserComment"] = "";
             row["GameVersion"] = Assembly.GetExecutingAssembly().GetName().Version;
             row["CLRVersion"] = Environment.Version;
-        
             watsonTable.Rows.Add(row);
+
             return data;
         }
     }
