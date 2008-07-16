@@ -42,12 +42,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Services", "Services\Servic
 		Release.AspNetCompiler.Debug = "False"
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "asmcheck", "AsmCheck\asmcheck.vcproj", "{CB41592F-C650-4475-9BA3-70A387BFF25E}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Glass", "Glass\Glass.csproj", "{B3B0B9AB-03ED-433F-841E-9AEBEE934BF3}"
 	ProjectSection(WebsiteProperties) = preProject
 		Debug.AspNetCompiler.Debug = "True"
@@ -160,16 +154,6 @@ Global
 		{6A2A6B54-D211-4766-82A6-0B8E2072BEF9}.Release|Mixed platforms.Build.0 = Release|Any CPU
 		{6A2A6B54-D211-4766-82A6-0B8E2072BEF9}.Release|Win32.ActiveCfg = Release|Any CPU
 		{6A2A6B54-D211-4766-82A6-0B8E2072BEF9}.Release|Win32.Build.0 = Release|Any CPU
-		{CB41592F-C650-4475-9BA3-70A387BFF25E}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{CB41592F-C650-4475-9BA3-70A387BFF25E}.Debug|Mixed platforms.ActiveCfg = Debug|Win32
-		{CB41592F-C650-4475-9BA3-70A387BFF25E}.Debug|Mixed platforms.Build.0 = Debug|Win32
-		{CB41592F-C650-4475-9BA3-70A387BFF25E}.Debug|Win32.ActiveCfg = Debug|Win32
-		{CB41592F-C650-4475-9BA3-70A387BFF25E}.Debug|Win32.Build.0 = Debug|Win32
-		{CB41592F-C650-4475-9BA3-70A387BFF25E}.Release|Any CPU.ActiveCfg = Release|Win32
-		{CB41592F-C650-4475-9BA3-70A387BFF25E}.Release|Mixed platforms.ActiveCfg = Release|Win32
-		{CB41592F-C650-4475-9BA3-70A387BFF25E}.Release|Mixed platforms.Build.0 = Release|Win32
-		{CB41592F-C650-4475-9BA3-70A387BFF25E}.Release|Win32.ActiveCfg = Release|Win32
-		{CB41592F-C650-4475-9BA3-70A387BFF25E}.Release|Win32.Build.0 = Release|Win32
 		{B3B0B9AB-03ED-433F-841E-9AEBEE934BF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B3B0B9AB-03ED-433F-841E-9AEBEE934BF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B3B0B9AB-03ED-433F-841E-9AEBEE934BF3}.Debug|Mixed platforms.ActiveCfg = Debug|Any CPU
