@@ -1,1 +1,0 @@
-This directory is just here for chart data, don't add anything to it.
