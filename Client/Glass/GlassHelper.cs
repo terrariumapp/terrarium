@@ -2,69 +2,28 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                               
 //------------------------------------------------------------------------------
 
-using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.ComponentModel;
-using System.ComponentModel.Design;
-using System.Drawing.Design;
 
 namespace Terrarium.Glass
 {
-	public sealed class GlassHelper
+	public static class GlassHelper
 	{
-        private GlassHelper(){}
-
-        static GlassHelper()
-        {
-            //Bitmap bitmap = new Bitmap(128, 96);
-            //Graphics graphics = Graphics.FromImage(bitmap);
-            //Font font = new Font("Verdana", 16, FontStyle.Regular);
-            //SizeF stringSize = graphics.MeasureString("Whidbey Beta 1", font);
-            //graphics.Dispose();
-            //bitmap.Dispose();
-
-            //bitmap = new Bitmap((int)(2.0f*stringSize.Width), (int)(2.0f * stringSize.Height));
-            //graphics = Graphics.FromImage(bitmap);
-
-            //Brush fontBrush = new SolidBrush(Color.FromArgb(16, 0, 0, 0));
-
-            //graphics.DrawString("Whidbey Beta 2", font, fontBrush, 0, 0);
-            //graphics.DrawString("Whidbey Beta 2", font, fontBrush, (int)(1.0f*stringSize.Width), (int)(1.0f*stringSize.Height));
-            //fontBrush.Dispose();
-
-            //font.Dispose();
-            //graphics.Dispose();
-
-            //bitmap.Dispose();
-        }
-
-		public static void FillRectangle(Rectangle rectangle, GlassGradient gradient, bool isSunk, bool isGlass, Graphics graphics)
+	    public static void FillRectangle(Rectangle rectangle, GlassGradient gradient, bool isSunk, bool isGlass, Graphics graphics)
 		{
             if (rectangle.Width == 0 || rectangle.Height == 0)
                 return;
 
-			GlassGradient activeGradient = null;
-			if (isSunk == true)
-				activeGradient = new GlassGradient(gradient.Bottom, gradient.Top);
-			else
-				activeGradient = new GlassGradient(gradient.Top, gradient.Bottom);
-
+	        GlassGradient activeGradient = isSunk ? new GlassGradient(gradient.Bottom, gradient.Top) : new GlassGradient(gradient.Top, gradient.Bottom);
 			Brush brush = activeGradient.GetBrush(rectangle);
 			graphics.FillRectangle(brush, rectangle);
 			brush.Dispose();
 
-			if (isGlass == true)
+			if (isGlass)
 			{
 				graphics.SetClip(rectangle);
 
-				Rectangle glassRectangle;
-
-				if (isSunk == true)
-					glassRectangle = new Rectangle(new Point(rectangle.Left, rectangle.Height / 2), new Size(rectangle.Width, rectangle.Height / 2));
-				else
-					glassRectangle = new Rectangle(rectangle.Location, new Size(rectangle.Width, rectangle.Height / 2));
-
+			    Rectangle glassRectangle = isSunk ? new Rectangle(new Point(rectangle.Left, rectangle.Height / 2), new Size(rectangle.Width, rectangle.Height / 2)) : new Rectangle(rectangle.Location, new Size(rectangle.Width, rectangle.Height / 2));
 				Brush glassBrush = new LinearGradientBrush(glassRectangle, Color.Transparent, Color.FromArgb(32, 255, 255, 255), 90.0f);
 
 				graphics.FillRectangle(glassBrush, glassRectangle);
@@ -80,26 +39,17 @@ namespace Terrarium.Glass
             
             GraphicsPath path = GetRoundedRectanglePath(rectangle);
 
-			GlassGradient activeGradient = null; 
-			if (isSunk == true)
-				activeGradient = new GlassGradient(gradient.Bottom, gradient.Top);
-			else
-				activeGradient = new GlassGradient(gradient.Top, gradient.Bottom);
+		    GlassGradient activeGradient = isSunk ? new GlassGradient(gradient.Bottom, gradient.Top) : new GlassGradient(gradient.Top, gradient.Bottom);
 
 			Brush brush = activeGradient.GetBrush(rectangle);
 			graphics.FillPath(brush, path);
 			brush.Dispose();
 
-			if (isGlass == true)
+			if (isGlass)
 			{
 				graphics.SetClip(path);
 
-				Rectangle glassRectangle ;//= new Rectangle(rectangle.Location, new Size(rectangle.Width, rectangle.Height / 2));
-				if (isSunk == true)
-					glassRectangle = new Rectangle(new Point(rectangle.Left, rectangle.Height / 2), new Size(rectangle.Width, rectangle.Height / 2));
-				else
-					glassRectangle = new Rectangle(rectangle.Location, new Size(rectangle.Width, rectangle.Height / 2));
-				
+			    Rectangle glassRectangle = isSunk ? new Rectangle(new Point(rectangle.Left, rectangle.Height / 2), new Size(rectangle.Width, rectangle.Height / 2)) : new Rectangle(rectangle.Location, new Size(rectangle.Width, rectangle.Height / 2));
 				GraphicsPath glassPath = GetRoundedRectanglePath(glassRectangle);
 				Brush glassBrush = new LinearGradientBrush(glassRectangle, Color.Transparent, Color.FromArgb(32, 255, 255, 255), 90.0f);
 
@@ -168,7 +118,7 @@ namespace Terrarium.Glass
 			graphics.FillRectangle(textureBrush, rectangle);
 			textureBrush.Dispose();
 
-			if (drawGradient == true)
+			if (drawGradient)
 			{
 				Brush gradientBrush = new LinearGradientBrush(rectangle, Color.FromArgb(96, Color.White), Color.FromArgb(160, Color.Black), 90.0f);
 				graphics.FillRectangle(gradientBrush, rectangle);
@@ -278,12 +228,12 @@ namespace Terrarium.Glass
 				}
 			}
 
-			if ( noWrap == true )
+			if ( noWrap )
 				stringFormat.FormatFlags |= StringFormatFlags.NoWrap;
 
 			stringFormat.Trimming = StringTrimming.EllipsisCharacter;
 
-			if ( GlassStyleManager.Active.FontShadow == true )
+			if ( GlassStyleManager.Active.FontShadow )
 			{
 				RectangleF shadowRectangle = new RectangleF( rectangle.X+1, rectangle.Y+1, rectangle.Width, rectangle.Height );
 				
@@ -292,7 +242,6 @@ namespace Terrarium.Glass
 				graphics.DrawString( text, GlassStyleManager.Active.Font, shadowBrush, shadowRectangle, stringFormat );
 
 				shadowBrush.Dispose();
-				shadowBrush = null;
 			}
 
 			RectangleF normalRectangle = new RectangleF( rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height );

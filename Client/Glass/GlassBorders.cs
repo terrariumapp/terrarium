@@ -3,11 +3,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.ComponentModel;
-using System.ComponentModel.Design;
-using System.Drawing.Design;
 
 namespace Terrarium.Glass
 {
