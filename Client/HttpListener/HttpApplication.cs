@@ -2,7 +2,6 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                               
 //------------------------------------------------------------------------------
 
-using System;
 using System.IO;
 
 namespace Terrarium.Net
@@ -12,88 +11,61 @@ namespace Terrarium.Net
     // for queueing up listeners and encapsulating their state.
     public class HttpApplication
     {
-        private byte[] readBuffer = new byte[4096];
-        private HttpListenerWebRequest httpRequest;
-        private Stream requestStream;
-        private HttpListenerWebResponse httpResponse;
-        private int readBytes;
-        private MemoryStream buffer = new MemoryStream();
+        private readonly byte[] _readBuffer = new byte[4096];
+        private MemoryStream _buffer = new MemoryStream();
+        private HttpListenerWebRequest _httpRequest;
+        private HttpListenerWebResponse _httpResponse;
+        private int _readBytes;
+        private Stream _requestStream;
 
         public HttpListenerWebRequest HttpRequest
         {
-            get
-            {
-                return httpRequest;
-            }
-
-            set
-            {
-                httpRequest = value;
-            }
+            get { return _httpRequest; }
+            set { _httpRequest = value; }
         }
 
         public HttpListenerWebResponse HttpResponse
         {
             get
             {
-                if (httpResponse == null && httpRequest != null)
+                if (_httpResponse == null && _httpRequest != null)
                 {
-                    httpResponse = httpRequest.GetResponse();
+                    _httpResponse = _httpRequest.GetResponse();
                 }
 
-                return httpResponse;
+                return _httpResponse;
             }
         }
 
-        public byte[] ReadBuffer 
+        public byte[] ReadBuffer
         {
-            get 
-            {
-                return readBuffer;
-            }
+            get { return _readBuffer; }
         }
 
         public Stream RequestStream
         {
-            get
-            {
-                return requestStream;
-            }
-
-            set
-            {
-                requestStream = value;
-            }
+            get { return _requestStream; }
+            set { _requestStream = value; }
         }
 
         public int ReadBytes
         {
-            get
-            {
-                return readBytes;
-            }
-
-            set
-            {
-                readBytes = value;
-            }
+            get { return _readBytes; }
+            set { _readBytes = value; }
         }
 
         public MemoryStream Buffer
         {
-            get
-            {
-                return buffer;
-            }
+            get { return _buffer; }
         }
 
         public void Reset()
         {
-            httpRequest = null;
-            requestStream = null;
-            httpResponse = null;
-            readBytes = 0;
-            buffer = new MemoryStream();
+            _httpRequest = null;
+            _requestStream = null;
+            _httpResponse = null;
+            _readBytes = 0;
+            _buffer = new MemoryStream();
         }
     }
 }

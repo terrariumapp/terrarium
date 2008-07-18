@@ -18,22 +18,33 @@ namespace Terrarium.Net
     /// </summary>
     public class HttpNamespaceManager
     {
-        Hashtable nsModules = new Hashtable();
-        AsyncCallback getRequestCB = null;
-        AsyncCallback readCB = null;
-        HttpWebListener listener;
-
-        EventHandler beforeProcessRequest;
-        EventHandler afterProcessRequest;
+        private readonly AsyncCallback _getRequestCB;
+        private readonly Hashtable _nsModules = new Hashtable();
+        private readonly AsyncCallback _readCB;
+        private EventHandler _afterProcessRequest;
+        private EventHandler _beforeProcessRequest;
+        private HttpWebListener _listener;
 
         /// <summary>
         ///  Don't create a new HttpNamespaceManager this way, use the
         ///  static methods instead.
         /// </summary>
-        public HttpNamespaceManager() 
+        public HttpNamespaceManager()
         {
-            getRequestCB = new AsyncCallback(GetRequestCallback);
-            readCB = new AsyncCallback(ReadCallback);
+            _getRequestCB = GetRequestCallback;
+            _readCB = ReadCallback;
+        }
+
+        public EventHandler BeforeProcessRequest
+        {
+            get { return _beforeProcessRequest; }
+            set { _beforeProcessRequest = value; }
+        }
+
+        public EventHandler AfterProcessRequest
+        {
+            get { return _afterProcessRequest; }
+            set { _afterProcessRequest = value; }
         }
 
         /// <summary>
@@ -44,32 +55,26 @@ namespace Terrarium.Net
         /// <param name="port">The port to bind on.</param>
         public void Start(string hostIP, int port)
         {
-
             HttpTraceHelper.ExceptionCaught.Level = TraceLevel.Verbose;
-            //TraceHelper.Api.Level = TraceLevel.Verbose;
-            //TraceHelper.ExceptionThrown.Level = TraceLevel.Verbose;
-            //TraceHelper.InternalLog.Level = TraceLevel.Verbose;
-            //TraceHelper.Protocol.Level = TraceLevel.Verbose;
-            //TraceHelper.Socket.Level = TraceLevel.Verbose;
-        
-            listener = new HttpWebListener();
-            listener.Start(port);
+
+            _listener = new HttpWebListener();
+            _listener.Start(port);
 
             // Put this in a loop if we want more listeners in the pool
             HttpApplication stateObject = new HttpApplication();
-            listener.BeginGetRequest(getRequestCB, stateObject);
+            _listener.BeginGetRequest(_getRequestCB, stateObject);
         }
 
         /// <summary>
         ///  Shuts down the namespace manager by shutting down the
-        ///  listener.  Cleans up any references to the listener.
+        ///  _listener.  Cleans up any references to the _listener.
         /// </summary>
         public void Stop()
         {
-            if (listener != null)
+            if (_listener != null)
             {
-                listener.Stop();
-                listener = null;
+                _listener.Stop();
+                _listener = null;
             }
         }
 
@@ -82,13 +87,13 @@ namespace Terrarium.Net
         /// <param name="nsHandler">The IHttpNamespaceHandler implementation that will handle the request.</param>
         public void RegisterNamespace(string ns, IHttpNamespaceHandler nsHandler)
         {
-            if (nsModules.Contains(ns))
+            if (_nsModules.Contains(ns))
             {
                 throw new Exception("The " + ns + " namespace is already registered.");
             }
             else
             {
-                nsModules.Add(ns, nsHandler);
+                _nsModules.Add(ns, nsHandler);
             }
         }
 
@@ -98,9 +103,9 @@ namespace Terrarium.Net
         /// <param name="ns">The namespace or path of the resource to be removed.</param>
         public void UnregisterNamespace(string ns)
         {
-            if (nsModules.Contains(ns))
+            if (_nsModules.Contains(ns))
             {
-                nsModules.Remove(ns);
+                _nsModules.Remove(ns);
             }
         }
 
@@ -118,14 +123,14 @@ namespace Terrarium.Net
                 OnBeforeProcessRequest();
 
                 HttpApplication stateObject = asyncResult.AsyncState as HttpApplication;
-                stateObject.HttpRequest = listener.EndGetRequest(asyncResult);
+                stateObject.HttpRequest = _listener.EndGetRequest(asyncResult);
 
                 if (stateObject.HttpRequest.Method == "GET")
                 {
                     string ns = stateObject.HttpRequest.RequestUri.Segments[1];
-                    if (nsModules.Contains(ns))
+                    if (_nsModules.Contains(ns))
                     {
-                        IHttpNamespaceHandler nsHandler = (IHttpNamespaceHandler)nsModules[ns];
+                        IHttpNamespaceHandler nsHandler = (IHttpNamespaceHandler) _nsModules[ns];
                         nsHandler.ProcessRequest(stateObject);
                     }
                     else
@@ -135,7 +140,7 @@ namespace Terrarium.Net
                 }
                 else if (stateObject.HttpRequest.Method == "POST")
                 {
-                    if (stateObject.HttpRequest.ContentLength<=0)
+                    if (stateObject.HttpRequest.ContentLength <= 0)
                     {
                         string message = "<html><body>Bad Request - POST with no data";
                         message += "</body></html>";
@@ -146,14 +151,15 @@ namespace Terrarium.Net
                         stateObject.RequestStream = stateObject.HttpRequest.GetRequestStream();
                         try
                         {
-                            stateObject.RequestStream.BeginRead(stateObject.ReadBuffer, 0, stateObject.ReadBuffer.Length, readCB, stateObject);
+                            stateObject.RequestStream.BeginRead(stateObject.ReadBuffer, 0, stateObject.ReadBuffer.Length,
+                                                                _readCB, stateObject);
                         }
                         catch (Exception exception)
                         {
 #if DEBUG
                             if (HttpTraceHelper.ExceptionCaught.TraceVerbose)
                             {
-                                HttpTraceHelper.WriteLine("Caught exception:" + exception.ToString());
+                                HttpTraceHelper.WriteLine("Caught exception:" + exception);
                             }
 #endif
                         }
@@ -164,21 +170,21 @@ namespace Terrarium.Net
                     HandleUnsupportedNamespace(stateObject);
                 }
 
-                // Queue up another listener
+                // Queue up another _listener
                 HttpApplication newStateObject = new HttpApplication();
-                listener.BeginGetRequest(getRequestCB, newStateObject);
+                _listener.BeginGetRequest(_getRequestCB, newStateObject);
             }
             catch (Exception ex)
             {
 #if DEBUG
                 if (HttpTraceHelper.ExceptionCaught.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("Caught exception:" + ex.ToString());
+                    HttpTraceHelper.WriteLine("Caught exception:" + ex);
                 }
 #endif
                 HttpApplication stateObject = asyncResult.AsyncState as HttpApplication;
                 stateObject.Reset();
-                listener.BeginGetRequest(getRequestCB, stateObject);
+                _listener.BeginGetRequest(_getRequestCB, stateObject);
             }
             finally
             {
@@ -200,16 +206,17 @@ namespace Terrarium.Net
                 HttpApplication stateObject = asyncResult.AsyncState as HttpApplication;
                 readBytes = stateObject.RequestStream.EndRead(asyncResult);
 
-                if (readBytes>0)
+                if (readBytes > 0)
                 {
                     stateObject.ReadBytes += readBytes;
 
-					if ( stateObject.ReadBytes > 262144 /* 256k */ ) 
-						throw new Exception("Request exceeded limit");
+                    if (stateObject.ReadBytes > 262144 /* 256k */)
+                        throw new Exception("Request exceeded limit");
 
                     // Write data received to the memory stream buffer
                     stateObject.Buffer.Write(stateObject.ReadBuffer, 0, readBytes);
-                    stateObject.RequestStream.BeginRead(stateObject.ReadBuffer, 0, stateObject.ReadBuffer.Length, readCB, stateObject);
+                    stateObject.RequestStream.BeginRead(stateObject.ReadBuffer, 0, stateObject.ReadBuffer.Length, _readCB,
+                                                        stateObject);
                 }
                 else
                 {
@@ -217,9 +224,9 @@ namespace Terrarium.Net
                     // Rewind the stream
                     stateObject.Buffer.Position = 0;
                     string ns = stateObject.HttpRequest.RequestUri.Segments[1];
-                    if (nsModules.Contains(ns))
+                    if (_nsModules.Contains(ns))
                     {
-                        IHttpNamespaceHandler nsHandler = (IHttpNamespaceHandler)nsModules[ns];
+                        IHttpNamespaceHandler nsHandler = (IHttpNamespaceHandler) _nsModules[ns];
                         nsHandler.ProcessRequest(stateObject);
                     }
                     else
@@ -233,7 +240,7 @@ namespace Terrarium.Net
 #if DEBUG
                 if (HttpTraceHelper.ExceptionCaught.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("Caught exception:" + exception.ToString());
+                    HttpTraceHelper.WriteLine("Caught exception:" + exception);
                 }
 #endif
             }
@@ -263,7 +270,7 @@ namespace Terrarium.Net
             body += " is not allowed.</BODY></HTML>";
 
             byte[] bodyBytes = Encoding.ASCII.GetBytes(body);
-            state.HttpResponse.ContentLength = (long)bodyBytes.Length;
+            state.HttpResponse.ContentLength = bodyBytes.Length;
             state.HttpResponse.Close(bodyBytes);
         }
 
@@ -288,7 +295,7 @@ namespace Terrarium.Net
             body = "<HTML><BODY>Unsupported URI.</BODY></HTML>";
 
             byte[] bodyBytes = Encoding.ASCII.GetBytes(body);
-            state.HttpResponse.ContentLength = (long)bodyBytes.Length;
+            state.HttpResponse.ContentLength = bodyBytes.Length;
             state.HttpResponse.Close(bodyBytes);
         }
 
@@ -299,7 +306,7 @@ namespace Terrarium.Net
         /// </summary>
         /// <param name="state">The web application state object for this request.</param>
         /// <param name="message">The message to be sent to the client to describe the failure.</param>
-        public  void HandleBadRequest(HttpApplication state, string message)
+        public void HandleBadRequest(HttpApplication state, string message)
         {
             state.HttpResponse.StatusCode = HttpStatusCode.BadRequest;
             state.HttpResponse.StatusDescription = "Bad Request";
@@ -309,37 +316,11 @@ namespace Terrarium.Net
             state.HttpResponse.KeepAlive = false;
             string body = message;
             byte[] bodyBytes = Encoding.ASCII.GetBytes(body);
-            state.HttpResponse.ContentLength = (long)bodyBytes.Length;
+            state.HttpResponse.ContentLength = bodyBytes.Length;
             state.HttpResponse.Close(bodyBytes);
         }
 
-        public EventHandler BeforeProcessRequest
-        {
-            get
-            {
-                return beforeProcessRequest;
-            }
-
-            set
-            {
-                beforeProcessRequest = value;
-            }
-        }
-
-        public EventHandler AfterProcessRequest
-        {
-            get
-            {
-                return afterProcessRequest;
-            }
-
-            set
-            {
-                afterProcessRequest = value;
-            }
-        }
-
-        void OnBeforeProcessRequest()
+        private void OnBeforeProcessRequest()
         {
             if (BeforeProcessRequest != null)
             {
@@ -347,7 +328,7 @@ namespace Terrarium.Net
             }
         }
 
-        void OnAfterProcessRequest()
+        private void OnAfterProcessRequest()
         {
             if (AfterProcessRequest != null)
             {

@@ -2,13 +2,9 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                               
 //------------------------------------------------------------------------------
 
-using System;
 using System.Diagnostics;
-using System.Text;
-using System.Threading;
 using System.Runtime.InteropServices;
-
-using Terrarium.Tools;
+using System.Security;
 
 namespace Terrarium.Net
 {
@@ -21,15 +17,13 @@ namespace Terrarium.Net
     // of how to get this output to go to a file instead.
     public sealed class HttpTraceHelper
     {
-        private static double millisecondsPerTicks;
-        private static double startTickCountMicroseconds;
-
-        private static TraceSwitch api;
-        private static TraceSwitch internalLog;
-        private static TraceSwitch protocol;
-        private static TraceSwitch socket;
-        private static TraceSwitch exceptionThrown;
-        private static TraceSwitch exceptionCaught;
+        private static readonly double _startTickCountMicroseconds;
+        private static TraceSwitch _api;
+        private static TraceSwitch _exceptionCaught;
+        private static TraceSwitch _exceptionThrown;
+        private static TraceSwitch _internalLog;
+        private static TraceSwitch _protocol;
+        private static TraceSwitch _socket;
 
         static HttpTraceHelper()
         {
@@ -40,19 +34,19 @@ namespace Terrarium.Net
 
             double ticksPerSecond = 0;
             QueryPerformanceFrequency(ref ticksPerSecond);
-            millisecondsPerTicks = 1000.0/(double)ticksPerSecond;
-            QueryPerformanceCounter(ref startTickCountMicroseconds);
+            QueryPerformanceCounter(ref _startTickCountMicroseconds);
         }
 
         public static TraceSwitch Api
         {
             get
             {
-                if (api == null)
+                if (_api == null)
                 {
-                    api = new TraceSwitch("WebListener.Api", "Enable tracing for calls made to the System.Net WebListener public APIs");
+                    _api = new TraceSwitch("WebListener.Api",
+                                          "Enable tracing for calls made to the System.Net WebListener public APIs");
                 }
-                return api;
+                return _api;
             }
         }
 
@@ -60,11 +54,12 @@ namespace Terrarium.Net
         {
             get
             {
-                if (internalLog == null)
+                if (_internalLog == null)
                 {
-                    internalLog = new TraceSwitch("WebListener.InternalLog", "Enable tracing for public logging made by the System.Net WebListener classes");
+                    _internalLog = new TraceSwitch("WebListener.InternalLog",
+                                                  "Enable tracing for public logging made by the System.Net WebListener classes");
                 }
-                return internalLog;
+                return _internalLog;
             }
         }
 
@@ -72,11 +67,12 @@ namespace Terrarium.Net
         {
             get
             {
-                if (protocol == null)
+                if (_protocol == null)
                 {
-                    protocol = new TraceSwitch("WebListener.Protocol", "Enable tracing for Protocol handling made by the System.Net WebListener classes");
+                    _protocol = new TraceSwitch("WebListener.Protocol",
+                                               "Enable tracing for Protocol handling made by the System.Net WebListener classes");
                 }
-                return protocol;
+                return _protocol;
             }
         }
 
@@ -84,11 +80,12 @@ namespace Terrarium.Net
         {
             get
             {
-                if (socket == null)
+                if (_socket == null)
                 {
-                    socket = new TraceSwitch("WebListener.Socket", "Enable tracing for Socket calls made by the System.Net WebListener classes");
+                    _socket = new TraceSwitch("WebListener.Socket",
+                                             "Enable tracing for Socket calls made by the System.Net WebListener classes");
                 }
-                return socket;
+                return _socket;
             }
         }
 
@@ -96,11 +93,12 @@ namespace Terrarium.Net
         {
             get
             {
-                if (exceptionThrown == null)
+                if (_exceptionThrown == null)
                 {
-                    exceptionThrown = new TraceSwitch("WebListener.Exception", "Enable tracing for all Exceptions thrown by the System.Net WebListener classes");
+                    _exceptionThrown = new TraceSwitch("WebListener.Exception",
+                                                      "Enable tracing for all Exceptions thrown by the System.Net WebListener classes");
                 }
-                return exceptionThrown;
+                return _exceptionThrown;
             }
         }
 
@@ -108,11 +106,12 @@ namespace Terrarium.Net
         {
             get
             {
-                if (exceptionCaught == null)
+                if (_exceptionCaught == null)
                 {
-                    exceptionCaught = new TraceSwitch("WebListener.Exception", "Enable tracing for all Exceptions caught by the System.Net WebListener classes");
+                    _exceptionCaught = new TraceSwitch("WebListener.Exception",
+                                                      "Enable tracing for all Exceptions caught by the System.Net WebListener classes");
                 }
-                return exceptionCaught;
+                return _exceptionCaught;
             }
         }
 
@@ -121,7 +120,7 @@ namespace Terrarium.Net
         //
         public static bool IsBlankString(string stringValue)
         {
-            return stringValue==null||stringValue.Length==0;
+            return stringValue == null || stringValue.Length == 0;
         }
 
         public static string MakeStringNull(string stringValue)
@@ -134,13 +133,13 @@ namespace Terrarium.Net
             return IsBlankString(stringValue) ? string.Empty : stringValue;
         }
 
-        public static string ToString(object objectValue) 
+        public static string ToString(object objectValue)
         {
             if (objectValue == null)
             {
                 return "(null)";
             }
-            else if (objectValue is string && ((string)objectValue).Length == 0)
+            else if (objectValue is string && ((string) objectValue).Length == 0)
             {
                 return "(string.empty)";
             }
@@ -150,13 +149,13 @@ namespace Terrarium.Net
             }
         }
 
-        public static string HashString(object objectValue) 
+        public static string HashString(object objectValue)
         {
             if (objectValue == null)
             {
                 return "(null)";
             }
-            else if (objectValue is string && ((string)objectValue).Length == 0)
+            else if (objectValue is string && ((string) objectValue).Length == 0)
             {
                 return "(string.empty)";
             }
@@ -166,48 +165,25 @@ namespace Terrarium.Net
             }
         }
 
-        public static void WriteLine(string msg) 
+        public static void WriteLine(string msg)
         {
             Debug.WriteLine(msg);
         }
-
-        //public static void WriteLine(bool suppressHeader, string msg)
-        //{
-        //    if (!suppressHeader)
-        //    {
-        //        double counter = 0;
-        //        QueryPerformanceCounter(ref counter);
-        //        if (startTickCountMicroseconds > counter)
-        //        {
-        //            // counter reset, restart from 0
-        //            startTickCountMicroseconds = counter;
-        //        }
-        //        counter -= startTickCountMicroseconds;
-        //        string tickString = new TimeSpan((long) (counter/100D)).ToString();
-        //        if (tickString.Length < 16)
-        //        {
-        //            tickString += ".0000000";
-        //        }
-        //        msg = "["+ tickString + "@" + Thread.CurrentThread.GetHashCode().ToString() + "] " + msg;
-        //    }
-
-        //    Debug.WriteLine(msg);
-        //}
 
         /// <summary>
         ///  Used to query the system timer frequency.  Returns counts per
         ///  second.  Ref parameter is a LARGE_INTEGER
         /// </summary>
-        [System.Security.SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("kernel32", CharSet=CharSet.Auto)]
-        static extern int QueryPerformanceFrequency(ref double quadpart);
+        [SuppressUnmanagedCodeSecurity]
+        [DllImport("kernel32", CharSet = CharSet.Auto)]
+        private static extern int QueryPerformanceFrequency(ref double quadpart);
 
         /// <summary>
         ///  Used to query the number of elapsed intervals in the system
         ///  timer.
         /// </summary>
-        [System.Security.SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("kernel32", CharSet=CharSet.Auto)]
-        static extern int QueryPerformanceCounter(ref double quadpart);
+        [SuppressUnmanagedCodeSecurity]
+        [DllImport("kernel32", CharSet = CharSet.Auto)]
+        private static extern int QueryPerformanceCounter(ref double quadpart);
     }
 }

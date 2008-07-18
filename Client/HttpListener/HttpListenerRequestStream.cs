@@ -11,95 +11,79 @@ namespace Terrarium.Net
     // The stream that is the body of an HTTP request to this Terrarium
     public class HttpListenerRequestStream : Stream
     {
-        private long m_ContentLength;
-        private long m_LeftToRead;
-        private bool m_MoreToRead;
-        private bool m_ReadChunked;
-        private long m_Read;
-        private bool m_CloseCalled;
-        private int m_CurrentChunkSize;
-        private ParseState m_ChunkParserState;
-        private HttpConnectionState m_ConnectionState;
         private const int DrainBufferSize = 1024;
-        private static readonly byte[] DrainBuffer = new byte[DrainBufferSize];
+        private static readonly byte[] _drainBuffer = new byte[DrainBufferSize];
+        private readonly HttpConnectionState _connectionState;
+        private readonly long _contentLength;
+        private readonly bool _readChunked;
+        private ParseState _chunkParserState;
+        private bool _closeCalled;
+        private int _currentChunkSize;
+        private long _leftToRead;
+        private bool _moreToRead;
+        private long _read;
 
         public HttpListenerRequestStream(HttpConnectionState connectionState, long contentLength, bool readChunked)
         {
 #if DEBUG
             if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::.ctor() contentLength:" + contentLength.ToString() + " readChunked:" + readChunked.ToString());
+                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                          "::.ctor() contentLength:" + contentLength + " readChunked:" + readChunked);
             }
 #endif
-            m_ConnectionState = connectionState;
-            m_ContentLength = contentLength;
-            m_LeftToRead = contentLength;
-            m_ChunkParserState = ParseState.ChunkSize;
-            m_ReadChunked = readChunked;
-            m_MoreToRead = m_ConnectionState.Request.Uploading;
+            _connectionState = connectionState;
+            _contentLength = contentLength;
+            _leftToRead = contentLength;
+            _chunkParserState = ParseState.ChunkSize;
+            _readChunked = readChunked;
+            _moreToRead = _connectionState.Request.Uploading;
         }
 
         public override bool CanRead
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
 
         public override bool CanSeek
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         public override bool CanWrite
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         public bool DataAvailable
         {
-            get
-            {
-                return m_MoreToRead;
-            }
-        }
-
-        public override void Flush()
-        {
+            get { return _moreToRead; }
         }
 
         public override long Length
         {
-            get
-            {
-                return m_ContentLength>=0 ? m_ContentLength : -1;
-            }
+            get { return _contentLength >= 0 ? _contentLength : -1; }
         }
 
         public override long Position
         {
-            get
-            {
-                return m_Read;
-            }
-            set 
+            get { return _read; }
+            set
             {
                 Exception exception = new NotSupportedException();
 #if DEBUG
                 if (HttpTraceHelper.ExceptionThrown.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::set_Position() throwing: " + exception.ToString());
+                    HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                              "::set_Position() throwing: " + exception);
                 }
 #endif
                 throw exception;
             }
+        }
+
+        public override void Flush()
+        {
         }
 
         public override void Write(byte[] buffer, int offset, int count)
@@ -114,7 +98,8 @@ namespace Terrarium.Net
 #if DEBUG
             if (HttpTraceHelper.ExceptionThrown.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Write() throwing: " + exception.ToString());
+                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                          "::Write() throwing: " + exception);
             }
 #endif
             throw exception;
@@ -125,27 +110,30 @@ namespace Terrarium.Net
 #if DEBUG
             if (HttpTraceHelper.Api.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Read() count:" + count.ToString() + " m_ReadChunked:" + m_ReadChunked.ToString() + " m_LeftToRead:" + m_LeftToRead.ToString() + " m_MoreToRead:" + m_MoreToRead.ToString() + " m_CurrentChunkSize:" + m_CurrentChunkSize.ToString());
+                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                          "::Read() count:" + count + " _readChunked:" + _readChunked +
+                                          " _leftToRead:" + _leftToRead + " _moreToRead:" + _moreToRead +
+                                          " _currentChunkSize:" + _currentChunkSize);
             }
 #endif
             //
             // if reading 0 or past EOF, just return 0
             //
-            if (count == 0 || !m_MoreToRead)
+            if (count == 0 || !_moreToRead)
             {
                 return 0;
             }
 
             int read = 0;
 
-            if (!m_ReadChunked)
+            if (!_readChunked)
             {
                 //
                 // make sure we don't try reading more than content length
                 //
-                if (m_LeftToRead > 0 && count > m_LeftToRead)
+                if (_leftToRead > 0 && count > _leftToRead)
                 {
-                    count = (int)m_LeftToRead;
+                    count = (int) _leftToRead;
                 }
                 //
                 // make sure there's data in the buffer
@@ -158,44 +146,50 @@ namespace Terrarium.Net
 #if DEBUG
                 if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Read() m_ConnectionState.EndOfOffset:" + m_ConnectionState.EndOfOffset.ToString() + " m_ConnectionState.m_ParsedOffset:" + m_ConnectionState.ParsedOffset.ToString());
+                    HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                              "::Read() _connectionState.EndOfOffset:" + _connectionState.EndOfOffset +
+                                              " _connectionState.m_ParsedOffset:" + _connectionState.ParsedOffset);
                 }
 #endif
                 read = Math.Min(available, count);
 #if DEBUG
                 if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Read() read:" + read.ToString());
+                    HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                              "::Read() read:" + read);
                 }
 #endif
 
                 if (read > 0)
                 {
                     Buffer.BlockCopy(
-                        m_ConnectionState.ConnectionBuffer,
-                        m_ConnectionState.ParsedOffset,
+                        _connectionState.ConnectionBuffer,
+                        _connectionState.ParsedOffset,
                         buffer,
                         offset,
-                        read );
+                        read);
 
                     //
                     // update the offset for the buffered data for subsequent calls
                     // this is needed for pipelining support, since in the buffered
                     // data we could already have another request
                     //
-                    m_ConnectionState.ParsedOffset += read;
+                    _connectionState.ParsedOffset += read;
 
 #if DEBUG
                     if (HttpTraceHelper.InternalLog.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Read() after copy m_ConnectionState.EndOfOffset:" + m_ConnectionState.EndOfOffset.ToString() + " m_ConnectionState.m_ParsedOffset:" + m_ConnectionState.ParsedOffset.ToString());
+                        HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                                  "::Read() after copy _connectionState.EndOfOffset:" +
+                                                  _connectionState.EndOfOffset + " _connectionState.m_ParsedOffset:" +
+                                                  _connectionState.ParsedOffset);
                     }
 #endif
 
-                    if (m_LeftToRead > 0)
+                    if (_leftToRead > 0)
                     {
-                        m_LeftToRead -= read;
-                        m_MoreToRead = m_LeftToRead>0;
+                        _leftToRead -= read;
+                        _moreToRead = _leftToRead > 0;
                     }
                 }
             }
@@ -204,8 +198,8 @@ namespace Terrarium.Net
                 //
                 // we're going to read chunked data first figure out what the size of the current
                 // chunk is. note that everytime we reach the end of a chunk we must and will set
-                // m_ChunkParserState to ParseState.ChunkSize, and that when we see the final 0 size
-                // chunk we must and will m_MoreToRead to false.
+                // _chunkParserState to ParseState.ChunkSize, and that when we see the final 0 size
+                // chunk we must and will _moreToRead to false.
                 // Our parsing code will be based on a state machine that sits in a while loop until:
                 // 1) we have read at least 1 byte of data.
                 // 2) we have reached the end of the the data.
@@ -216,39 +210,47 @@ namespace Terrarium.Net
                 // Chunk : we know the size of the current chunk, but we have more data to read from it
                 // Error : error while parsing chunks
                 //
-                while (read == 0 && m_MoreToRead && m_ChunkParserState != ParseState.Error)
+                while (read == 0 && _moreToRead && _chunkParserState != ParseState.Error)
                 {
-
 #if DEBUG
                     if (HttpTraceHelper.InternalLog.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Read() main while loop m_ChunkParserState:" + m_ChunkParserState.ToString() + " m_CurrentChunkSize:" + m_CurrentChunkSize.ToString());
+                        HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                                  "::Read() main while loop _chunkParserState:" + _chunkParserState +
+                                                  " _currentChunkSize:" + _currentChunkSize);
                     }
 #endif
 
-                    switch (m_ChunkParserState)
+                    switch (_chunkParserState)
                     {
                         case ParseState.ChunkSize:
                             int thisByte;
-                            int thisChunkDigit;
-                            while (m_ConnectionState.ParsedOffset < m_ConnectionState.EndOfOffset && (thisByte=(int)m_ConnectionState.ConnectionBuffer[m_ConnectionState.ParsedOffset]) != (int)'\r')
+                            while (_connectionState.ParsedOffset < _connectionState.EndOfOffset &&
+                                   (thisByte = _connectionState.ConnectionBuffer[_connectionState.ParsedOffset]) !=
+                                   '\r')
                             {
 #if DEBUG
                                 if (HttpTraceHelper.InternalLog.TraceVerbose)
                                 {
-                                    HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Read() current byte:" + thisByte.ToString() + " at:" + m_ConnectionState.ParsedOffset.ToString() + " m_CurrentChunkSize:" + m_CurrentChunkSize.ToString());
+                                    HttpTraceHelper.WriteLine("ListenerRequestStream#" +
+                                                              HttpTraceHelper.HashString(this) +
+                                                              "::Read() current byte:" + thisByte + " at:" +
+                                                              _connectionState.ParsedOffset + " _currentChunkSize:" +
+                                                              _currentChunkSize);
                                 }
 #endif
-                                thisChunkDigit = (thisByte<=(int)'9') ? (thisByte-(int)'0') : (((thisByte<=(int)'F') ? (thisByte-(int)'A') : (thisByte-(int)'a')) + 10);
+                                int thisChunkDigit = (thisByte <= '9')
+                                                         ? (thisByte - '0')
+                                                         : (((thisByte <= 'F') ? (thisByte - 'A') : (thisByte - 'a')) + 10);
                                 if (thisChunkDigit < 0 || thisChunkDigit > 15)
                                 {
-                                    m_ChunkParserState = ParseState.Error;
+                                    _chunkParserState = ParseState.Error;
                                     break;
                                 }
-                                m_CurrentChunkSize = m_CurrentChunkSize*16 + thisChunkDigit;
-                                m_ConnectionState.ParsedOffset++;
+                                _currentChunkSize = _currentChunkSize*16 + thisChunkDigit;
+                                _connectionState.ParsedOffset++;
                             }
-                            if (m_ConnectionState.ParsedOffset == m_ConnectionState.EndOfOffset)
+                            if (_connectionState.ParsedOffset == _connectionState.EndOfOffset)
                             {
                                 //
                                 // need more data.
@@ -259,36 +261,37 @@ namespace Terrarium.Net
                             //
                             // skip the '\r'
                             //
-                            m_ConnectionState.ParsedOffset++;
+                            _connectionState.ParsedOffset++;
                             //
                             // we have parsed the chunk size. make sure we also have the final '\n'
                             // otherwise we'll need to read that as well. if we can't error out.
                             //
-                            if (m_ConnectionState.ConnectionBuffer[m_ConnectionState.ParsedOffset] != (int)'\n')
+                            if (_connectionState.ConnectionBuffer[_connectionState.ParsedOffset] != '\n')
                             {
-                                m_ChunkParserState=ParseState.Error;
+                                _chunkParserState = ParseState.Error;
                                 break;
                             }
                             //
                             // skip the '\n'
                             //
-                            m_ConnectionState.ParsedOffset++;
-                            m_ChunkParserState=ParseState.Chunk;
+                            _connectionState.ParsedOffset++;
+                            _chunkParserState = ParseState.Chunk;
                             goto case ParseState.Chunk;
                         case ParseState.Chunk:
-                            if (m_CurrentChunkSize == 0)
+                            if (_currentChunkSize == 0)
                             {
                                 //
                                 // this is the last chunk.
                                 //
-                                m_MoreToRead = false;
+                                _moreToRead = false;
                                 break;
                             }
-                            int available = m_ConnectionState.EndOfOffset-m_ConnectionState.ParsedOffset;
+                            int available = _connectionState.EndOfOffset - _connectionState.ParsedOffset;
 #if DEBUG
                             if (HttpTraceHelper.InternalLog.TraceVerbose)
                             {
-                                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Read() ParseState.Chunk available:" + available.ToString());
+                                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                                          "::Read() ParseState.Chunk available:" + available);
                             }
 #endif
                             if (available == 0)
@@ -296,7 +299,7 @@ namespace Terrarium.Net
                                 available = ReadMore(false);
                                 if (available == 0)
                                 {
-                                    m_ChunkParserState=ParseState.Error;
+                                    _chunkParserState = ParseState.Error;
                                     break;
                                 }
                             }
@@ -304,41 +307,48 @@ namespace Terrarium.Net
                             // copy all data available up to count without exceeding the current chunk
                             //
                             read = Math.Min(available, count);
-                            read = Math.Min(read, m_CurrentChunkSize);
+                            read = Math.Min(read, _currentChunkSize);
 #if DEBUG
                             if (HttpTraceHelper.InternalLog.TraceVerbose)
                             {
-                                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Read() will read:" + read.ToString() + " available:" + available.ToString() + " count:" + count.ToString() + " m_CurrentChunkSize:" + m_CurrentChunkSize.ToString());
+                                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                                          "::Read() will read:" + read + " available:" + available +
+                                                          " count:" + count + " _currentChunkSize:" +
+                                                          _currentChunkSize);
                             }
 #endif
                             Buffer.BlockCopy(
-                                m_ConnectionState.ConnectionBuffer,
-                                m_ConnectionState.ParsedOffset,
+                                _connectionState.ConnectionBuffer,
+                                _connectionState.ParsedOffset,
                                 buffer,
                                 offset,
-                                read );
+                                read);
 
                             //
                             // update the offset for the buffered data for subsequent calls
                             // this is needed for pipelining support, since in the buffered
                             // data we could already have another request
                             //
-                            m_ConnectionState.ParsedOffset += read;
+                            _connectionState.ParsedOffset += read;
 #if DEBUG
                             if (HttpTraceHelper.InternalLog.TraceVerbose)
                             {
-                                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Read() after copy m_ConnectionState.EndOfOffset:" + m_ConnectionState.EndOfOffset.ToString() + " m_ConnectionState.m_ParsedOffset:" + m_ConnectionState.ParsedOffset.ToString());
+                                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                                          "::Read() after copy _connectionState.EndOfOffset:" +
+                                                          _connectionState.EndOfOffset +
+                                                          " _connectionState.m_ParsedOffset:" +
+                                                          _connectionState.ParsedOffset);
                             }
 #endif
 
-                            m_CurrentChunkSize -= read;
-                            if (m_CurrentChunkSize==0)
+                            _currentChunkSize -= read;
+                            if (_currentChunkSize == 0)
                             {
                                 //
                                 // need to swallow the extra '\r\n' here.
                                 //
-                                int i=0;
-                                available = m_ConnectionState.EndOfOffset-m_ConnectionState.ParsedOffset;
+                                int i = 0;
+                                available = _connectionState.EndOfOffset - _connectionState.ParsedOffset;
                                 while (available < 2)
                                 {
                                     available = ReadMore(false);
@@ -347,24 +357,25 @@ namespace Terrarium.Net
                                         //
                                         // can't read more data but need to skip the '\r\n' at the end of the chunk
                                         //
-                                        m_ChunkParserState=ParseState.Error;
+                                        _chunkParserState = ParseState.Error;
                                         break;
                                     }
                                 }
-                                m_ConnectionState.ParsedOffset+=2;
-                                m_ChunkParserState=ParseState.ChunkSize;
+                                _connectionState.ParsedOffset += 2;
+                                _chunkParserState = ParseState.ChunkSize;
                             }
                             break;
                     }
                 }
 
-                if (m_ChunkParserState == ParseState.Error)
+                if (_chunkParserState == ParseState.Error)
                 {
                     Exception exception = new Exception("Error parsing chunked request stream");
 #if DEBUG
                     if (HttpTraceHelper.ExceptionThrown.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Read() throwing: " + exception.ToString());
+                        HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                                  "::Read() throwing: " + exception);
                     }
 #endif
                     throw exception;
@@ -372,14 +383,16 @@ namespace Terrarium.Net
 #if DEBUG
                 if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Read() exiting the while loop m_ChunkParserState:" + m_ChunkParserState.ToString() + " m_CurrentChunkSize:" + m_CurrentChunkSize.ToString());
+                    HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                              "::Read() exiting the while loop _chunkParserState:" + _chunkParserState +
+                                              " _currentChunkSize:" + _currentChunkSize);
                 }
 #endif
             }
 
-            m_Read += read;
+            _read += read;
 
-            if (!m_MoreToRead)
+            if (!_moreToRead)
             {
                 //
                 // if we read all the data, we'll call Close() so that we start
@@ -391,7 +404,9 @@ namespace Terrarium.Net
 #if DEBUG
             if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Read() returning read:" + read.ToString() + " m_LeftToRead:" + m_LeftToRead.ToString() + " m_MoreToRead:" + m_MoreToRead.ToString());
+                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                          "::Read() returning read:" + read + " _leftToRead:" + _leftToRead +
+                                          " _moreToRead:" + _moreToRead);
             }
 #endif
 
@@ -403,11 +418,12 @@ namespace Terrarium.Net
 #if DEBUG
             if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::ReadMore() reading forceRead:" + forceRead.ToString());
+                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                          "::ReadMore() reading forceRead:" + forceRead);
             }
 #endif
 
-            int dataAvailable = m_ConnectionState.EndOfOffset - m_ConnectionState.ParsedOffset;
+            int dataAvailable = _connectionState.EndOfOffset - _connectionState.ParsedOffset;
 
             if (dataAvailable == 0)
             {
@@ -415,23 +431,23 @@ namespace Terrarium.Net
                 // we don't have buffered data read more from the socket.
                 // we can move to the beginning of the buffer
                 //
-                m_ConnectionState.ParsedOffset = 0;
-                m_ConnectionState.EndOfOffset = 0;
+                _connectionState.ParsedOffset = 0;
+                _connectionState.EndOfOffset = 0;
             }
-            else if (forceRead && m_ConnectionState.EndOfOffset == m_ConnectionState.ConnectionBuffer.Length)
+            else if (forceRead && _connectionState.EndOfOffset == _connectionState.ConnectionBuffer.Length)
             {
                 //
                 // we have buffered data but buffer is full. move data to the head
                 //
                 Buffer.BlockCopy(
-                    m_ConnectionState.ConnectionBuffer,
-                    m_ConnectionState.ParsedOffset,
-                    m_ConnectionState.ConnectionBuffer,
+                    _connectionState.ConnectionBuffer,
+                    _connectionState.ParsedOffset,
+                    _connectionState.ConnectionBuffer,
                     0,
-                    dataAvailable );
+                    dataAvailable);
 
-                m_ConnectionState.ParsedOffset = 0;
-                m_ConnectionState.EndOfOffset = dataAvailable;
+                _connectionState.ParsedOffset = 0;
+                _connectionState.EndOfOffset = dataAvailable;
             }
 
             if (dataAvailable == 0 || forceRead)
@@ -443,18 +459,19 @@ namespace Terrarium.Net
                 // these will be held in our public buffer and we will need to kick off parsing
                 // after we complete reading the stream.
                 //
-                int dataToRead = m_ConnectionState.ConnectionBuffer.Length - m_ConnectionState.EndOfOffset;
+                int dataToRead = _connectionState.ConnectionBuffer.Length - _connectionState.EndOfOffset;
 #if DEBUG
                 if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::ReadMore() dataToRead:" + dataToRead.ToString());
+                    HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                              "::ReadMore() dataToRead:" + dataToRead);
                 }
 #endif
                 int dataRead = 0;
 
                 // we null out the Socket when we cleanup
                 // make a local copy to avoid null reference exceptions
-                Socket checkSocket = m_ConnectionState.ConnectionSocket;
+                Socket checkSocket = _connectionState.ConnectionSocket;
                 if (checkSocket != null)
                 {
                     try
@@ -462,20 +479,23 @@ namespace Terrarium.Net
 #if DEBUG
                         if (HttpTraceHelper.Socket.TraceVerbose)
                         {
-                            HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::ReadMore() calling Socket.Receive()");
+                            HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                                      "::ReadMore() calling Socket.Receive()");
                         }
 #endif
-                        dataRead = checkSocket.Receive(m_ConnectionState.ConnectionBuffer, m_ConnectionState.EndOfOffset, dataToRead, SocketFlags.None);
+                        dataRead = checkSocket.Receive(_connectionState.ConnectionBuffer, _connectionState.EndOfOffset,
+                                                       dataToRead, SocketFlags.None);
 
                         dataAvailable += dataRead;
-                        m_ConnectionState.EndOfOffset += dataRead;
+                        _connectionState.EndOfOffset += dataRead;
                     }
                     catch (Exception exception)
                     {
 #if DEBUG
                         if (HttpTraceHelper.ExceptionCaught.TraceVerbose)
                         {
-                            HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::ReadMore() Socket.Receive() threw:" + exception.ToString());
+                            HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                                      "::ReadMore() Socket.Receive() threw:" + exception);
                         }
 #endif
                     }
@@ -488,14 +508,16 @@ namespace Terrarium.Net
 #if DEBUG
                 if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::ReadMore() Socket.Receive() returned:" + m_ConnectionState.EndOfOffset.ToString());
+                    HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                              "::ReadMore() Socket.Receive() returned:" + _connectionState.EndOfOffset);
                 }
 #endif
             }
 #if DEBUG
             if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::ReadMore() returning dataAvailable:" + dataAvailable.ToString());
+                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                          "::ReadMore() returning dataAvailable:" + dataAvailable);
             }
 #endif
 
@@ -508,7 +530,8 @@ namespace Terrarium.Net
 #if DEBUG
             if (HttpTraceHelper.ExceptionThrown.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Seek() throwing: " + exception.ToString());
+                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                          "::Seek() throwing: " + exception);
             }
 #endif
             throw exception;
@@ -520,7 +543,8 @@ namespace Terrarium.Net
 #if DEBUG
             if (HttpTraceHelper.ExceptionThrown.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Seek() throwing: " + exception.ToString()); 
+                HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                          "::Seek() throwing: " + exception);
             }
 #endif
             throw exception;
@@ -529,40 +553,42 @@ namespace Terrarium.Net
         public override void Close()
         {
 #if DEBUG
-            if (HttpTraceHelper.Api.TraceVerbose) 
+            if (HttpTraceHelper.Api.TraceVerbose)
             {
                 HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Close()");
             }
 #endif
-            if (m_CloseCalled)
+            if (_closeCalled)
             {
 #if DEBUG
                 if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Close() stream already closed returning");
+                    HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                              "::Close() stream already closed returning");
                 }
 #endif
                 return;
             }
 
-            m_CloseCalled = true;
-            if (m_MoreToRead)
+            _closeCalled = true;
+            if (_moreToRead)
             {
                 //
                 // drain stream data
                 //
-                int read;
                 for (;;)
                 {
 #if DEBUG
                     if (HttpTraceHelper.InternalLog.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Close() draining LeftToRead:" + m_LeftToRead.ToString());
+                        HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                                  "::Close() draining LeftToRead:" + _leftToRead);
                     }
 #endif
+                    int read;
                     try
                     {
-                        read = Read(DrainBuffer, 0, DrainBuffer.Length);
+                        read = Read(_drainBuffer, 0, _drainBuffer.Length);
                     }
                     catch (Exception exception)
                     {
@@ -570,7 +596,8 @@ namespace Terrarium.Net
 #if DEBUG
                         if (HttpTraceHelper.ExceptionCaught.TraceVerbose)
                         {
-                            HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) + "::Close() caught exception in Stream.Read(): " + exception.ToString());
+                            HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
+                                                      "::Close() caught exception in Stream.Read(): " + exception);
                         }
 #endif
                     }
@@ -581,7 +608,7 @@ namespace Terrarium.Net
                 }
             }
 
-            m_ConnectionState.Request.Close();
+            _connectionState.Request.Close();
         }
     }
 }
