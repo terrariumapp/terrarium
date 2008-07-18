@@ -3,370 +3,277 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.ComponentModel;
-using System.ComponentModel.Design;
-using System.Drawing.Design;
-using System.Runtime.Serialization;
+using System.Drawing;
+using System.Globalization;
 using System.Xml;
+using System.Xml.Schema;
 using System.Xml.Serialization;
 
 namespace Terrarium.Glass
 {
-	[ Serializable() ]
-	public class GlassStyle : IXmlSerializable
-	{
-		protected string			name = "GlassStyle1";
+    [Serializable]
+    public class GlassStyle : IXmlSerializable
+    {
+        protected Color borderColor = Color.FromArgb(32, 32, 32);
 
-		//protected GlassGradient panel = new GlassGradient(Color.FromArgb(192,192,192), Color.FromArgb(96,96,96));
-        //protected GlassGradient panel = new GlassGradient(Color.FromArgb(120, 200, 120), Color.FromArgb(0, 80, 0));
-        //protected GlassGradient panel = new GlassGradient(Color.FromArgb(255, 128, 128), Color.FromArgb(96, 0, 0));
-        protected GlassGradient panel = new GlassGradient(Color.FromArgb(128, 128, 255), Color.FromArgb(0, 0, 96));
-        //protected GlassGradient panel = new GlassGradient(Color.FromArgb(255, 255, 128), Color.FromArgb(96, 96, 0));
-        //protected GlassGradient panel = new GlassGradient(Color.FromArgb(216,216,216), Color.FromArgb(152,152,152));
-        //protected GlassGradient panel = new GlassGradient(Color.FromArgb(255, 128, 255), Color.FromArgb(96, 0, 96));
+        protected GlassGradient buttonDisabled = new GlassGradient(Color.FromArgb(64, 64, 64),
+                                                                   Color.FromArgb(96, 96, 96));
 
-		protected GlassGradient buttonNormal = new GlassGradient(Color.FromArgb(160,160,160), Color.FromArgb(64,64,64));
+        protected GlassGradient buttonHighlight = new GlassGradient(Color.FromArgb(216, 216, 216),
+                                                                    Color.FromArgb(128, 128, 128));
 
         protected GlassGradient buttonHover = new GlassGradient(Color.FromArgb(128, 255, 128), Color.FromArgb(0, 96, 0));
+        protected bool buttonIsGlass = true;
+
+        protected GlassGradient buttonNormal = new GlassGradient(Color.FromArgb(160, 160, 160),
+                                                                 Color.FromArgb(64, 64, 64));
+
         protected GlassGradient buttonPressed = new GlassGradient(Color.FromArgb(0, 64, 0), Color.FromArgb(96, 160, 96));
-        //protected GlassGradient buttonHover = new GlassGradient(Color.FromArgb(255, 160, 32), Color.FromArgb(160, 80, 0));
-        //protected GlassGradient buttonPressed = new GlassGradient(Color.FromArgb(160, 80, 0), Color.FromArgb(255,128,0));
-        
-        protected GlassGradient buttonDisabled = new GlassGradient(Color.FromArgb(64, 64, 64), Color.FromArgb(96, 96, 96));
-		
-        protected GlassGradient		buttonHighlight = new GlassGradient( Color.FromArgb( 216,216,216 ), Color.FromArgb( 128,128,128 ) );
-		
-		protected Font				font = new Font( "Verdana", 6.75f, FontStyle.Bold );
-		protected Color				foreColor = Color.White;
-		protected bool				fontShadow = true;
+        protected Color dialogColor = Color.FromArgb(16, 16, 16);
 
-		protected Color				dialogColor = Color.FromArgb(16,16,16);
-		protected Color borderColor = Color.FromArgb(32, 32, 32);
+        protected Font font = new Font("Verdana", 6.75f, FontStyle.Bold);
+        protected bool fontShadow = true;
+        protected Color foreColor = Color.White;
+        protected string name = "GlassStyle1";
 
-		protected bool				panelIsGlass = true;
-		protected bool buttonIsGlass = true;
+        protected GlassGradient panel = new GlassGradient(Color.FromArgb(128, 128, 255), Color.FromArgb(0, 0, 96));
 
-		public string Name
-		{
-			get
-			{
-				return this.name;
-			}
-			set
-			{
-				this.name = value;
-			}
-		}
+        protected bool panelIsGlass = true;
 
-		[ Category( "Panel" ) ]
-		public GlassGradient Panel
-		{
-			get
-			{
-				return this.panel;
-			}
-			set
-			{
-				this.panel = value;
-			}
-		}
+        public string Name
+        {
+            get { return name; }
+            set { name = value; }
+        }
 
-		[ Category( "Button" ) ]
-		public GlassGradient ButtonNormal
-		{
-			get
-			{
-				return this.buttonNormal;
-			}
-			set
-			{
-				this.buttonNormal = value;
-			}
-		}
+        [Category("Panel")]
+        public GlassGradient Panel
+        {
+            get { return panel; }
+            set { panel = value; }
+        }
 
-		[ Category( "Button" ) ]
-		public GlassGradient ButtonHover
-		{
-			get
-			{
-				return this.buttonHover;
-			}
-			set
-			{
-				this.buttonHover = value;
-			}
-		}
+        [Category("Button")]
+        public GlassGradient ButtonNormal
+        {
+            get { return buttonNormal; }
+            set { buttonNormal = value; }
+        }
 
-		[ Category( "Button" ) ]
-		public GlassGradient ButtonPressed
-		{
-			get
-			{
-				return this.buttonPressed;
-			}
-			set
-			{
-				this.buttonPressed = value;
-			}
-		}
+        [Category("Button")]
+        public GlassGradient ButtonHover
+        {
+            get { return buttonHover; }
+            set { buttonHover = value; }
+        }
 
-		[ Category( "Button" ) ]
-		public GlassGradient ButtonDisabled
-		{
-			get
-			{
-				return this.buttonDisabled;
-			}
-			set
-			{
-				this.buttonDisabled = value;
-			}
-		}
+        [Category("Button")]
+        public GlassGradient ButtonPressed
+        {
+            get { return buttonPressed; }
+            set { buttonPressed = value; }
+        }
 
-		[ Category( "Button" ) ]
-		public GlassGradient ButtonHighlight
-		{
-			get
-			{
-				return this.buttonHighlight;
-			}
-			set
-			{
-				this.buttonHighlight = value;
-			}
-		}
+        [Category("Button")]
+        public GlassGradient ButtonDisabled
+        {
+            get { return buttonDisabled; }
+            set { buttonDisabled = value; }
+        }
 
-		public Font Font
-		{
-			get
-			{
-				return this.font;
-			}
-			set
-			{
-				this.font = value;
-			}
-		}
-		
-		public Color ForeColor
-		{
-			get
-			{
-				return this.foreColor;
-			}
-			set
-			{
-				this.foreColor = value;
-			}
-		}
+        [Category("Button")]
+        public GlassGradient ButtonHighlight
+        {
+            get { return buttonHighlight; }
+            set { buttonHighlight = value; }
+        }
 
-		public bool FontShadow
-		{
-			get
-			{
-				return this.fontShadow;
-			}
-			set
-			{
-				this.fontShadow = value;
-			}
-		}
+        public Font Font
+        {
+            get { return font; }
+            set { font = value; }
+        }
 
-		public Color DialogColor
-		{
-			get
-			{
-				return this.dialogColor;
-			}
-			set
-			{
-				this.dialogColor = value;
-			}
-		}
-		
-		public Color BorderColor
-		{
-			get
-			{
-				return this.borderColor;
-			}
-			set
-			{
-				this.borderColor = value;
-			}
-		}
+        public Color ForeColor
+        {
+            get { return foreColor; }
+            set { foreColor = value; }
+        }
 
-		public bool PanelIsGlass
-		{
-			get
-			{
-				return this.panelIsGlass;
-			}
-			set
-			{
-				this.panelIsGlass = value;
-			}
-		}
+        public bool FontShadow
+        {
+            get { return fontShadow; }
+            set { fontShadow = value; }
+        }
 
-		public bool ButtonIsGlass
-		{
-			get
-			{
-				return this.buttonIsGlass;
-			}
-			set
-			{
-				this.buttonIsGlass = value;
-			}
-		}
+        public Color DialogColor
+        {
+            get { return dialogColor; }
+            set { dialogColor = value; }
+        }
 
-		#region IXmlSerializable Members
+        public Color BorderColor
+        {
+            get { return borderColor; }
+            set { borderColor = value; }
+        }
 
-		private void WriteGradient(XmlWriter writer, string gradientName, GlassGradient gradient)
-		{
-			writer.WriteStartElement(gradientName);
+        public bool PanelIsGlass
+        {
+            get { return panelIsGlass; }
+            set { panelIsGlass = value; }
+        }
 
-			writer.WriteStartElement("Top");
+        public bool ButtonIsGlass
+        {
+            get { return buttonIsGlass; }
+            set { buttonIsGlass = value; }
+        }
 
-			writer.WriteString(String.Format("#{0:X2}{1:X2}{2:X2}{3:X2}", gradient.Top.A, gradient.Top.R, gradient.Top.G, gradient.Top.B));
+        public void WriteXml(XmlWriter writer)
+        {
+            writer.WriteAttributeString("Name", name);
 
-			writer.WriteEndElement();
+            writeGradient(writer, "Panel", Panel);
 
-			writer.WriteStartElement("Bottom");
+            writeGradient(writer, "ButtonNormal", buttonNormal);
+            writeGradient(writer, "ButtonHover", buttonHover);
+            writeGradient(writer, "ButtonPressed", buttonPressed);
+            writeGradient(writer, "ButtonDisabled", buttonDisabled);
+            writeGradient(writer, "ButtonHighlight", buttonHighlight);
 
-			writer.WriteString(String.Format("#{0:X2}{1:X2}{2:X2}{3:X2}", gradient.Bottom.A, gradient.Bottom.R, gradient.Bottom.G, gradient.Bottom.B));
+            writer.WriteStartElement("Font");
+            writer.WriteAttributeString("Name", font.Name);
 
-			writer.WriteEndElement();
+            writer.WriteAttributeString("Size", font.Size.ToString(NumberFormatInfo.InvariantInfo));
 
-			writer.WriteEndElement();
-		}
+            writer.WriteAttributeString("Style", Convert.ToString((int) font.Style));
+            writer.WriteAttributeString("Color",
+                                        String.Format("#{0:X2}{1:X2}{2:X2}{3:X2}", foreColor.A, foreColor.R, foreColor.G,
+                                                      foreColor.B));
+            writer.WriteAttributeString("Shadow", Convert.ToString(fontShadow));
+            writer.WriteEndElement();
 
-		public void WriteXml(XmlWriter writer)
-		{
-			writer.WriteAttributeString("Name", this.name);
+            writer.WriteStartElement("BorderColor");
+            writer.WriteString(String.Format("#{0:X2}{1:X2}{2:X2}{3:X2}", BorderColor.A, BorderColor.R, BorderColor.G,
+                                             BorderColor.B));
+            writer.WriteEndElement();
 
-			this.WriteGradient(writer, "Panel", this.Panel);
+            writer.WriteStartElement("DialogColor");
+            writer.WriteString(String.Format("#{0:X2}{1:X2}{2:X2}{3:X2}", DialogColor.A, DialogColor.R, DialogColor.G,
+                                             DialogColor.B));
+            writer.WriteEndElement();
 
-			this.WriteGradient(writer, "ButtonNormal", this.buttonNormal);
-			this.WriteGradient(writer, "ButtonHover", this.buttonHover);
-			this.WriteGradient(writer, "ButtonPressed", this.buttonPressed);
-			this.WriteGradient(writer, "ButtonDisabled", this.buttonDisabled);
-			this.WriteGradient(writer, "ButtonHighlight", this.buttonHighlight);
+            writer.WriteStartElement("PanelIsGlass");
+            writer.WriteString(PanelIsGlass.ToString());
+            writer.WriteEndElement();
 
-			writer.WriteStartElement("Font");
-			writer.WriteAttributeString("Name", this.font.Name);
+            writer.WriteStartElement("ButtonIsGlass");
+            writer.WriteString(ButtonIsGlass.ToString());
+            writer.WriteEndElement();
+        }
 
+        public XmlSchema GetSchema()
+        {
+            // Need to add GlassStyle.GetSchema implementation
+            return null;
+        }
 
-			writer.WriteAttributeString("Size", this.font.Size.ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
+        public void ReadXml(XmlReader reader)
+        {
+            if (reader.Name != "GlassStyle") return;
+            name = reader.GetAttribute("Name");
 
-			writer.WriteAttributeString("Style", Convert.ToString((int)this.font.Style));
-			writer.WriteAttributeString("Color", String.Format("#{0:X2}{1:X2}{2:X2}{3:X2}", this.foreColor.A, this.foreColor.R, this.foreColor.G, this.foreColor.B));
-			writer.WriteAttributeString("Shadow", Convert.ToString(this.fontShadow));
-			writer.WriteEndElement();
+            reader.ReadStartElement();
 
-			writer.WriteStartElement("BorderColor");
-			writer.WriteString(String.Format("#{0:X2}{1:X2}{2:X2}{3:X2}", this.BorderColor.A, this.BorderColor.R, this.BorderColor.G, this.BorderColor.B));
-			writer.WriteEndElement();
+            readGradient(reader, "Panel", Panel);
 
-			writer.WriteStartElement("DialogColor");
-			writer.WriteString(String.Format("#{0:X2}{1:X2}{2:X2}{3:X2}", this.DialogColor.A, this.DialogColor.R, this.DialogColor.G, this.DialogColor.B));
-			writer.WriteEndElement();
+            readGradient(reader, "ButtonNormal", buttonNormal);
+            readGradient(reader, "ButtonHover", buttonHover);
+            readGradient(reader, "ButtonPressed", buttonPressed);
+            readGradient(reader, "ButtonDisabled", buttonDisabled);
+            readGradient(reader, "ButtonHighlight", buttonHighlight);
 
-			writer.WriteStartElement("PanelIsGlass");
-			writer.WriteString(this.PanelIsGlass.ToString());
-			writer.WriteEndElement();
+            string fontName = reader.GetAttribute("Name");
 
-			writer.WriteStartElement("ButtonIsGlass");
-			writer.WriteString(this.ButtonIsGlass.ToString());
-			writer.WriteEndElement();
+            // Fixes regional number formatting problem
+            float fontSize = Single.Parse(reader.GetAttribute("Size"), NumberFormatInfo.InvariantInfo);
 
-		}
+            FontStyle fontStyle = (FontStyle) Convert.ToInt32(reader.GetAttribute("Style"));
+            ForeColor = parseColor(reader.GetAttribute("Color"));
+            FontShadow = Convert.ToBoolean(reader.GetAttribute("Shadow"));
 
-		public System.Xml.Schema.XmlSchema GetSchema()
-		{
-			// Need to add GlassStyle.GetSchema implementation
-			return null;
-		}
+            reader.Read();
+            BorderColor = parseColor(reader.ReadString());
+            reader.ReadEndElement();
 
-		private Color ParseColor(string colorString)
-		{
-			int alpha = Convert.ToByte(colorString.Substring(1, 2), 16);
-			int red = Convert.ToByte(colorString.Substring(3, 2), 16);
-			int green = Convert.ToByte(colorString.Substring(5, 2), 16);
-			int blue = Convert.ToByte(colorString.Substring(7, 2), 16);
+            reader.Read();
+            DialogColor = parseColor(reader.ReadString());
+            reader.ReadEndElement();
 
-			return Color.FromArgb(alpha, red, green, blue);
-		}
+            reader.Read();
+            PanelIsGlass = Convert.ToBoolean(reader.ReadString());
+            reader.ReadEndElement();
 
-		private void ReadGradient(XmlReader reader, string gradientName, GlassGradient gradient)
-		{
-			try
-			{
-				reader.ReadStartElement(gradientName);
+            reader.Read();
+            ButtonIsGlass = Convert.ToBoolean(reader.ReadString());
+            reader.ReadEndElement();
 
-				reader.ReadStartElement("Top");
-				gradient.Top = this.ParseColor(reader.ReadString());
-				reader.ReadEndElement();
+            reader.ReadEndElement();
 
-				reader.ReadStartElement("Bottom");
-				gradient.Bottom = this.ParseColor(reader.ReadString());
-				reader.ReadEndElement();
+            Font = new Font(fontName, fontSize, fontStyle);
+        }
 
-				reader.ReadEndElement();
-			}
-			catch { }
-		}
+        private static void writeGradient(XmlWriter writer, string gradientName, GlassGradient gradient)
+        {
+            writer.WriteStartElement(gradientName);
 
-		public void ReadXml(XmlReader reader)
-		{
-			if (reader.Name == "GlassStyle")
-			{
-				this.name = reader.GetAttribute("Name");
+            writer.WriteStartElement("Top");
 
-				reader.ReadStartElement();
+            writer.WriteString(String.Format("#{0:X2}{1:X2}{2:X2}{3:X2}", gradient.Top.A, gradient.Top.R, gradient.Top.G,
+                                             gradient.Top.B));
 
-				ReadGradient(reader, "Panel", this.Panel);
+            writer.WriteEndElement();
 
-				ReadGradient(reader, "ButtonNormal", this.buttonNormal);
-				ReadGradient(reader, "ButtonHover", this.buttonHover);
-				ReadGradient(reader, "ButtonPressed", this.buttonPressed);
-				ReadGradient(reader, "ButtonDisabled", this.buttonDisabled);
-				ReadGradient(reader, "ButtonHighlight", this.buttonHighlight);
+            writer.WriteStartElement("Bottom");
 
-				string fontName = reader.GetAttribute("Name");
+            writer.WriteString(String.Format("#{0:X2}{1:X2}{2:X2}{3:X2}", gradient.Bottom.A, gradient.Bottom.R,
+                                             gradient.Bottom.G, gradient.Bottom.B));
 
-				// Fixes regional number formatting problem
-				float fontSize = Single.Parse(reader.GetAttribute("Size"), System.Globalization.NumberFormatInfo.InvariantInfo);
+            writer.WriteEndElement();
 
-				FontStyle fontStyle = (FontStyle)Convert.ToInt32(reader.GetAttribute("Style"));
-				this.ForeColor = ParseColor(reader.GetAttribute("Color"));
-				this.FontShadow = Convert.ToBoolean(reader.GetAttribute("Shadow"));
+            writer.WriteEndElement();
+        }
 
-				reader.Read();
-				this.BorderColor = ParseColor(reader.ReadString());
-				reader.ReadEndElement();
+        private static Color parseColor(string colorString)
+        {
+            int alpha = Convert.ToByte(colorString.Substring(1, 2), 16);
+            int red = Convert.ToByte(colorString.Substring(3, 2), 16);
+            int green = Convert.ToByte(colorString.Substring(5, 2), 16);
+            int blue = Convert.ToByte(colorString.Substring(7, 2), 16);
+            return Color.FromArgb(alpha, red, green, blue);
+        }
 
-				reader.Read();
-				this.DialogColor = ParseColor(reader.ReadString());
-				reader.ReadEndElement();
+        private void readGradient(XmlReader reader, string gradientName, GlassGradient gradient)
+        {
+            try
+            {
+                reader.ReadStartElement(gradientName);
 
-				reader.Read();
-				this.PanelIsGlass = Convert.ToBoolean(reader.ReadString());
-				reader.ReadEndElement();
+                reader.ReadStartElement("Top");
+                gradient.Top = parseColor(reader.ReadString());
+                reader.ReadEndElement();
 
-				reader.Read();
-				this.ButtonIsGlass = Convert.ToBoolean(reader.ReadString());
-				reader.ReadEndElement();
+                reader.ReadStartElement("Bottom");
+                gradient.Bottom = parseColor(reader.ReadString());
+                reader.ReadEndElement();
 
-				reader.ReadEndElement();
-
-				this.Font = new Font(fontName, fontSize, (FontStyle)fontStyle);
-			}
-		}
-
-		#endregion
-	}
-
+                reader.ReadEndElement();
+            }
+            catch
+            {
+            }
+        }
+    }
 }

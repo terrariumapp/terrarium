@@ -2,44 +2,35 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                               
 //------------------------------------------------------------------------------
 
-using System;
-using System.Windows.Forms;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.ComponentModel;
-using System.ComponentModel.Design;
-using System.Drawing.Design;
+using System.Windows.Forms;
 
 namespace Terrarium.Glass
 {
-	public class GlassLabel : System.Windows.Forms.Label
-	{
-		protected bool		noWrap = false;
+    public class GlassLabel : Label
+    {
+        protected bool noWrap;
 
-		public GlassLabel()
-		{
-			this.BackColor = Color.Transparent;
-			this.ForeColor = Color.White;
-			this.Font = new Font( "Verdana", 6.75f, FontStyle.Bold );
-		}
+        public GlassLabel()
+        {
+            BackColor = Color.Transparent;
+            ForeColor = Color.White;
+            Font = new Font("Verdana", 6.75f, FontStyle.Bold);
+        }
 
-		public bool NoWrap
-		{
-			get
-			{
-				return this.noWrap;
-			}
-			set
-			{
-				this.noWrap = value;
-				this.Invalidate();
-			}
-		}
+        public bool NoWrap
+        {
+            get { return noWrap; }
+            set
+            {
+                noWrap = value;
+                Invalidate();
+            }
+        }
 
-		protected override void OnPaint(PaintEventArgs e)
-		{
-			GlassHelper.DrawText( this.Text, this.ClientRectangle, this.TextAlign, e.Graphics, this.noWrap, Color.Empty, Color.Empty );
-		}
-
-	}
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            GlassHelper.DrawText(Text, ClientRectangle, TextAlign, e.Graphics, noWrap, Color.Empty, Color.Empty);
+        }
+    }
 }

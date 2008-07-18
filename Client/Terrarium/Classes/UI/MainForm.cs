@@ -2182,7 +2182,6 @@ namespace Terrarium.Client
 
 		private void MainForm_SystemColorsChanged(object sender, System.EventArgs e)
 		{
-			GlassStyleManager.RefreshSystemStyle();
 			this.Invalidate(true);
 		}
 
