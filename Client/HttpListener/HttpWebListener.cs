@@ -6,7 +6,6 @@ using System;
 using System.Collections;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
@@ -19,23 +18,55 @@ namespace Terrarium.Net
     // set up an environment that accepts requests for specific URL's and responds to them.
     public class HttpWebListener
     {
-        private ArrayList m_AcceptedConnections = new ArrayList();
-        private bool m_PrefixFiltering;
-        private Queue m_PendingRequests = new Queue();
-        private ManualResetEvent m_RequestReady = new ManualResetEvent(false);
-        private IPEndPoint m_IPEndPoint;
-        private Socket m_AccepterSocket;
+        private const string ResponseTo100Continue = 
+            "HTTP/1.1 100 Continue\r\nServer: HttpWebListener\r\n\r\n";
 
-        private const string responseToBadRequest = "HTTP/1.1 400 Bad Request\r\nServer: HttpWebListener\r\n\r\n<HTML><BODY>Bad Request<BODY></HTML>";
-        private static readonly byte[] responseToBadRequestBytes = Encoding.ASCII.GetBytes(responseToBadRequest);
+        private const string ResponseToBadRequest =
+            "HTTP/1.1 400 Bad Request\r\nServer: HttpWebListener\r\n\r\n<HTML><BODY>Bad Request<BODY></HTML>";
 
-        private const string responseTo100Continue = "HTTP/1.1 100 Continue\r\nServer: HttpWebListener\r\n\r\n";
-        public static readonly byte[] responseTo100ContinueBytes = Encoding.ASCII.GetBytes(responseTo100Continue);
+        public static readonly byte[] ResponseTo100ContinueBytes = Encoding.ASCII.GetBytes(ResponseTo100Continue);
+        private static readonly byte[] _responseToBadRequestBytes = Encoding.ASCII.GetBytes(ResponseToBadRequest);
+        private static readonly AsyncCallback _staticAcceptCallback = AcceptCallback;
+        public static AsyncCallback staticReceiveCallback = ReceiveCallback;
 
-        public static AsyncCallback staticReceiveCallback = new AsyncCallback(ReceiveCallback);
-        private static AsyncCallback staticAcceptCallback = new AsyncCallback(AcceptCallback);
-        private int m_Timeout;
-        private bool m_Auto100Continue = true;
+        private readonly ArrayList _acceptedConnections = new ArrayList();
+        private readonly Queue _pendingRequests = new Queue();
+        private readonly ManualResetEvent _requestReady = new ManualResetEvent(false);
+        private Socket _accepterSocket;
+
+        private bool _auto100Continue = true;
+        private IPEndPoint _IPEndPoint;
+        private bool _prefixFiltering;
+        private int _timeout;
+
+        public IPEndPoint LocalEndPoint
+        {
+            get { return _IPEndPoint; }
+        }
+
+        public int Timeout
+        {
+            get { return _timeout; }
+
+            set { _timeout = value; }
+        }
+
+        public ManualResetEvent RequestReady
+        {
+            get { return _requestReady; }
+        }
+
+        public int ActiveConnections
+        {
+            get { return HttpConnectionState.ActiveConnections; }
+        }
+
+        public bool Auto100Continue
+        {
+            get { return _auto100Continue; }
+
+            set { _auto100Continue = value; }
+        }
 
         public void Start(int port)
         {
@@ -57,31 +88,33 @@ namespace Terrarium.Net
 #if DEBUG
             if (HttpTraceHelper.Api.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) + "::Start() ipEndPoint:" + ipEndPoint.ToString() + " prefixFiltering:" + prefixFiltering.ToString() );
+                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) +
+                                          "::Start() ipEndPoint:" + ipEndPoint + " prefixFiltering:" + prefixFiltering);
             }
 #endif
-            if (m_PrefixFiltering)
+            if (_prefixFiltering)
             {
                 Exception exception = new NotSupportedException();
 #if DEBUG
                 if (HttpTraceHelper.ExceptionThrown.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) + "::Start() throwing: " + exception.ToString());
+                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) +
+                                              "::Start() throwing: " + exception);
                 }
 #endif
                 throw exception;
             }
-            m_IPEndPoint = ipEndPoint;
-            m_Timeout = System.Threading.Timeout.Infinite;
-            m_RequestReady.Reset();
-            m_PrefixFiltering = prefixFiltering;
+            _IPEndPoint = ipEndPoint;
+            _timeout = System.Threading.Timeout.Infinite;
+            _requestReady.Reset();
+            _prefixFiltering = prefixFiltering;
 
-            m_AccepterSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _accepterSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             // this might throw if the address is already in use
-            m_AccepterSocket.Bind(m_IPEndPoint);
-            m_AccepterSocket.Listen((int)SocketOptionName.MaxConnections);
-            m_AccepterSocket.BeginAccept(staticAcceptCallback, this);
+            _accepterSocket.Bind(_IPEndPoint);
+            _accepterSocket.Listen((int) SocketOptionName.MaxConnections);
+            _accepterSocket.BeginAccept(_staticAcceptCallback, this);
         }
 
         private static void ReceiveCallback(IAsyncResult asyncResult)
@@ -90,7 +123,8 @@ namespace Terrarium.Net
 #if DEBUG
             if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) + "::ReceiveCallback()");
+                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) +
+                                          "::ReceiveCallback()");
             }
 #endif
 
@@ -105,7 +139,8 @@ namespace Terrarium.Net
 #if DEBUG
                     if (HttpTraceHelper.Socket.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) + "::ReceiveCallback() calling Socket.EndReceive()");
+                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) +
+                                                  "::ReceiveCallback() calling Socket.EndReceive()");
                     }
 #endif
                     read = checkSocket.EndReceive(asyncResult);
@@ -115,7 +150,9 @@ namespace Terrarium.Net
 #if DEBUG
                     if (HttpTraceHelper.ExceptionCaught.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) + "::ReceiveCallback() caught exception in Socket.EndReceive():" + exception.ToString());
+                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) +
+                                                  "::ReceiveCallback() caught exception in Socket.EndReceive():" +
+                                                  exception);
                     }
 #endif
                     read = -1;
@@ -131,7 +168,9 @@ namespace Terrarium.Net
 #if DEBUG
             if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) + "::ReceiveCallback() EndReceive() returns: " + read.ToString() + " m_EofOffset: " + connectionState.EndOfOffset.ToString());
+                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) +
+                                          "::ReceiveCallback() EndReceive() returns: " + read + " m_EofOffset: " +
+                                          connectionState.EndOfOffset);
             }
 #endif
             ParseState parseState;
@@ -144,7 +183,9 @@ namespace Terrarium.Net
 #if DEBUG
                 if (HttpTraceHelper.ExceptionCaught.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) + "::ReceiveCallback() caught exception in ConnectionState.Parse(): " + exception.ToString());
+                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) +
+                                              "::ReceiveCallback() caught exception in ConnectionState.Parse(): " +
+                                              exception);
                 }
 #endif
                 goto cleanup;
@@ -152,7 +193,8 @@ namespace Terrarium.Net
 #if DEBUG
             if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) + "::ReceiveCallback() Parse() returns: " + parseState.ToString());
+                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) +
+                                          "::ReceiveCallback() Parse() returns: " + parseState);
             }
 #endif
             if (parseState == ParseState.Continue)
@@ -175,84 +217,89 @@ namespace Terrarium.Net
                 if (connectionState.Request.ContentLength == 0)
                 {
                 }
-                else
-                {
-                }
 
-                lock (connectionState.Listener.m_PendingRequests)
+                lock (connectionState.Listener._pendingRequests)
                 {
 #if DEBUG
                     if (HttpTraceHelper.InternalLog.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) + "::ReceiveCallback() calling Enqueue()");
+                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) +
+                                                  "::ReceiveCallback() calling Enqueue()");
                     }
 #endif
-                    connectionState.Listener.m_PendingRequests.Enqueue(connectionState.Request);
+                    connectionState.Listener._pendingRequests.Enqueue(connectionState.Request);
                 }
 
 #if DEBUG
                 if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) + "::ReceiveCallback() calling Set()");
+                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) +
+                                              "::ReceiveCallback() calling Set()");
                 }
 #endif
-                connectionState.Listener.m_RequestReady.Set();
+                connectionState.Listener._requestReady.Set();
                 return;
             }
 
             cleanup:
-                //
-                // some error. clean up
-                //
-                if (read > 0)
-                {
-#if DEBUG
-                    if (HttpTraceHelper.InternalLog.TraceVerbose)
-                    {
-                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) + "::ReceiveCallback() calling Send(responseToBadRequestBytes)");
-                    }
-#endif
-
-                    try
-                    {
-#if DEBUG
-                        if (HttpTraceHelper.Socket.TraceVerbose)
-                        {
-                            HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) + "::ReceiveCallback() calling Socket.Send()");
-                        }
-#endif
-                        checkSocket.Send(responseToBadRequestBytes);
-                    }
-                    catch (Exception exception)
-                    {
-#if DEBUG
-                        if (HttpTraceHelper.ExceptionCaught.TraceVerbose)
-                        {
-                            HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) + "::ReceiveCallback() caught exception in Socket.Send(): " + exception.ToString());
-                        }
-#endif
-                    }
-                }
-
-            lock (connectionState.Listener.m_AcceptedConnections)
+            //
+            // some error. clean up
+            //
+            if (read > 0)
             {
 #if DEBUG
                 if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) + "::ReceiveCallback() calling Remove()");
+                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) +
+                                              "::ReceiveCallback() calling Send(_responseToBadRequestBytes)");
                 }
 #endif
 
                 try
                 {
-                    connectionState.Listener.m_AcceptedConnections.Remove(connectionState);
+#if DEBUG
+                    if (HttpTraceHelper.Socket.TraceVerbose)
+                    {
+                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) +
+                                                  "::ReceiveCallback() calling Socket.Send()");
+                    }
+#endif
+                    checkSocket.Send(_responseToBadRequestBytes);
                 }
                 catch (Exception exception)
                 {
 #if DEBUG
                     if (HttpTraceHelper.ExceptionCaught.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) + "::ReceiveCallback() caught exception in ArrayList.Remove(): " + exception.ToString());
+                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) +
+                                                  "::ReceiveCallback() caught exception in Socket.Send(): " + exception);
+                    }
+#endif
+                }
+            }
+
+            lock (connectionState.Listener._acceptedConnections)
+            {
+#if DEBUG
+                if (HttpTraceHelper.InternalLog.TraceVerbose)
+                {
+                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) +
+                                              "::ReceiveCallback() calling Remove()");
+                }
+#endif
+
+                try
+                {
+                    connectionState.Listener._acceptedConnections.Remove(connectionState);
+                }
+                catch (Exception exception)
+                {
+#if DEBUG
+                    if (HttpTraceHelper.ExceptionCaught.TraceVerbose)
+                    {
+                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) +
+                                                  "::ReceiveCallback() caught exception in ArrayList.Remove(): " +
+                                                  exception);
                     }
 #endif
                 }
@@ -260,7 +307,8 @@ namespace Terrarium.Net
 #if DEBUG
                 if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) + "::ReceiveCallback() calling Close()");
+                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(connectionState) +
+                                              "::ReceiveCallback() calling Close()");
                 }
 #endif
                 connectionState.Close();
@@ -270,34 +318,37 @@ namespace Terrarium.Net
         public HttpListenerWebRequest GetNextRequest()
         {
             HttpListenerWebRequest httpListenerRequest = null;
-            lock (this.m_PendingRequests)
+            lock (_pendingRequests)
             {
 #if DEBUG
                 if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) + "::GetNextRequest() m_PendingRequests.Count: " + m_PendingRequests.Count.ToString());
+                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) +
+                                              "::GetNextRequest() _pendingRequests.Count: " + _pendingRequests.Count);
                 }
 #endif
 
-                if (m_PendingRequests.Count > 0)
+                if (_pendingRequests.Count > 0)
                 {
 #if DEBUG
                     if (HttpTraceHelper.InternalLog.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) + "::GetNextRequest() calling Dequeue()");
+                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) +
+                                                  "::GetNextRequest() calling Dequeue()");
                     }
 #endif
 
-                    httpListenerRequest = (HttpListenerWebRequest)m_PendingRequests.Dequeue();
+                    httpListenerRequest = (HttpListenerWebRequest) _pendingRequests.Dequeue();
 
 #if DEBUG
                     if (HttpTraceHelper.InternalLog.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) + "::GetNextRequest() calling Reset()");
+                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) +
+                                                  "::GetNextRequest() calling Reset()");
                     }
 #endif
 
-                    m_RequestReady.Reset();
+                    _requestReady.Reset();
                 }
             }
             return httpListenerRequest;
@@ -306,17 +357,18 @@ namespace Terrarium.Net
         private static void AcceptCallback(IAsyncResult asyncResult)
         {
             HttpWebListener httpWebListener = asyncResult.AsyncState as HttpWebListener;
-            Socket acceptedSocket = null;
+            Socket acceptedSocket;
             try
             {
-                acceptedSocket = httpWebListener.m_AccepterSocket.EndAccept(asyncResult);
+                acceptedSocket = httpWebListener._accepterSocket.EndAccept(asyncResult);
             }
             catch (Exception exception)
             {
 #if DEBUG
                 if (HttpTraceHelper.ExceptionCaught.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(httpWebListener) + "::Accepter() caught exception in Socket.EndAccept(): " + exception.ToString());
+                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(httpWebListener) +
+                                              "::Accepter() caught exception in Socket.EndAccept(): " + exception);
                 }
 #endif
                 httpWebListener.Stop();
@@ -325,14 +377,15 @@ namespace Terrarium.Net
 
             try
             {
-                httpWebListener.m_AccepterSocket.BeginAccept(staticAcceptCallback, httpWebListener);
+                httpWebListener._accepterSocket.BeginAccept(_staticAcceptCallback, httpWebListener);
             }
             catch (Exception exception)
             {
 #if DEBUG
                 if (HttpTraceHelper.ExceptionCaught.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(httpWebListener) + "::Accepter() caught exception in Socket.BeginAccept(): " + exception.ToString());
+                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(httpWebListener) +
+                                              "::Accepter() caught exception in Socket.BeginAccept(): " + exception);
                 }
 #endif
                 httpWebListener.Stop();
@@ -340,24 +393,26 @@ namespace Terrarium.Net
             }
 
             HttpConnectionState connectionState = new HttpConnectionState(acceptedSocket, 4096, httpWebListener);
-            lock (httpWebListener.m_AcceptedConnections)
+            lock (httpWebListener._acceptedConnections)
             {
 #if DEBUG
                 if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(httpWebListener) + "::Accepter() calling Add()");
+                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(httpWebListener) +
+                                              "::Accepter() calling Add()");
                 }
 #endif
                 try
                 {
-                    httpWebListener.m_AcceptedConnections.Add(connectionState);
+                    httpWebListener._acceptedConnections.Add(connectionState);
                 }
                 catch (Exception exception)
                 {
 #if DEBUG
                     if (HttpTraceHelper.ExceptionCaught.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(httpWebListener) + "::Accepter() caught exception in ArrayList.Add(): " + exception.ToString());
+                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(httpWebListener) +
+                                                  "::Accepter() caught exception in ArrayList.Add(): " + exception);
                     }
 #endif
                     return;
@@ -369,7 +424,8 @@ namespace Terrarium.Net
 #if DEBUG
             if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(httpWebListener) + "::Accepter() calling BeginReceive()");
+                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(httpWebListener) +
+                                          "::Accepter() calling BeginReceive()");
             }
 #endif
             connectionState.StartReceiving();
@@ -387,32 +443,32 @@ namespace Terrarium.Net
             // this Close() will cause any pending Accept()
             // to complete and throw, so the thread will cleanup and exit.
             //
-            if (m_AccepterSocket != null)
+            if (_accepterSocket != null)
             {
-                m_AccepterSocket.Close();
-                m_AccepterSocket = null;
+                _accepterSocket.Close();
+                _accepterSocket = null;
             }
 
-            lock (m_AcceptedConnections)
+            lock (_acceptedConnections)
             {
-                foreach (HttpConnectionState connectionState in m_AcceptedConnections)
+                foreach (HttpConnectionState connectionState in _acceptedConnections)
                 {
                     connectionState.Close();
                 }
-                m_AcceptedConnections.Clear();
+                _acceptedConnections.Clear();
             }
 
-            lock (m_PendingRequests)
+            lock (_pendingRequests)
             {
-                foreach (HttpListenerWebRequest httpListenerRequest in  m_PendingRequests) 
+                foreach (HttpListenerWebRequest httpListenerRequest in  _pendingRequests)
                 {
                     httpListenerRequest.Close();
-                }                
-                m_PendingRequests.Clear();
+                }
+                _pendingRequests.Clear();
             }
 
-            m_RequestReady.Reset();
-            m_IPEndPoint = null;
+            _requestReady.Reset();
+            _IPEndPoint = null;
         }
 
         public void AddUriPrefix(Uri uriPrefix)
@@ -420,16 +476,18 @@ namespace Terrarium.Net
 #if DEBUG
             if (HttpTraceHelper.Api.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) + "::AddUriPrefix() uriPrefix:" + uriPrefix.ToString());
+                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) +
+                                          "::AddUriPrefix() uriPrefix:" + uriPrefix);
             }
 #endif
-            if (m_PrefixFiltering)
+            if (_prefixFiltering)
             {
                 Exception exception = new NotSupportedException();
 #if DEBUG
                 if (HttpTraceHelper.ExceptionThrown.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) + "::AddUriPrefix() throwing: " + exception.ToString());
+                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) +
+                                              "::AddUriPrefix() throwing: " + exception);
                 }
 #endif
                 throw exception;
@@ -441,41 +499,22 @@ namespace Terrarium.Net
 #if DEBUG
             if (HttpTraceHelper.Api.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) + "::RemoveUriPrefix() uriPrefix:" + uriPrefix.ToString());
+                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) +
+                                          "::RemoveUriPrefix() uriPrefix:" + uriPrefix);
             }
 #endif
-            if (m_PrefixFiltering)
+            if (_prefixFiltering)
             {
                 Exception exception = new NotSupportedException();
 #if DEBUG
                 if (HttpTraceHelper.ExceptionThrown.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) + "::RemoveUriPrefix() throwing: " + exception.ToString());
+                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) +
+                                              "::RemoveUriPrefix() throwing: " + exception);
                 }
 #endif
                 throw exception;
             }
-        }
-
-        //
-        // if a request comes in for a Uri that doesn't match
-        // the current set of Registered prefixes we return
-        // an error and close the connection on the client
-        //
-        private bool CanServe(Uri uri)
-        {
-            if (m_PrefixFiltering)
-            {
-                Exception exception = new NotSupportedException();
-#if DEBUG
-                if (HttpTraceHelper.ExceptionThrown.TraceVerbose)
-                {
-                    HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) + "::CanServe() throwing: " + exception.ToString());
-                }
-#endif
-                throw exception;
-            }
-            return true;
         }
 
         public IAsyncResult BeginGetRequest(AsyncCallback callback, object stateObject)
@@ -499,11 +538,11 @@ namespace Terrarium.Net
                 // if not go async
                 //
                 ThreadPool.RegisterWaitForSingleObject(
-                    m_RequestReady,
+                    _requestReady,
                     HttpListenerAsyncResult.StaticCallback,
                     asyncResult,
                     -1,
-                    true );
+                    true);
             }
             else
             {
@@ -512,7 +551,7 @@ namespace Terrarium.Net
                 //
                 asyncResult.Complete(true);
             }
-            
+
             return asyncResult;
         }
 
@@ -521,7 +560,8 @@ namespace Terrarium.Net
 #if DEBUG
             if (HttpTraceHelper.Api.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) + "::EndGetRequest() asyncResult#" + HttpTraceHelper.HashString(asyncResult));
+                HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) +
+                                          "::EndGetRequest() asyncResult#" + HttpTraceHelper.HashString(asyncResult));
             }
 #endif
             HttpListenerAsyncResult castedAsyncResult = asyncResult as HttpListenerAsyncResult;
@@ -530,57 +570,6 @@ namespace Terrarium.Net
                 castedAsyncResult.AsyncWaitHandle.WaitOne(System.Threading.Timeout.Infinite, false);
             }
             return castedAsyncResult.Request;
-        }
-
-        public IPEndPoint LocalEndPoint
-        {
-            get
-            {
-                return m_IPEndPoint;
-            }
-        }
-
-        public int Timeout
-        {
-            get
-            {
-                return m_Timeout;
-            }
-            
-            set
-            {
-                m_Timeout = value;
-            }
-        }
-
-        public ManualResetEvent RequestReady
-        {
-            get
-            {
-                return m_RequestReady;
-            }
-        }
-
-        public int ActiveConnections
-        {
-            get
-            {
-                return HttpConnectionState.ActiveConnections;
-            }
-        }
-
-
-        public bool Auto100Continue
-        {
-            get
-            {
-                return m_Auto100Continue;
-            }
-            
-            set
-            {
-                m_Auto100Continue = value;
-            }
         }
 
         public HttpListenerWebRequest GetRequest()
@@ -592,16 +581,17 @@ namespace Terrarium.Net
             }
 #endif
             HttpListenerAsyncResult asyncResult = BeginGetRequest(null, null) as HttpListenerAsyncResult;
-            if (m_Timeout != System.Threading.Timeout.Infinite && !asyncResult.IsCompleted)
+            if (_timeout != System.Threading.Timeout.Infinite && !asyncResult.IsCompleted)
             {
-                asyncResult.AsyncWaitHandle.WaitOne(m_Timeout, false);
+                asyncResult.AsyncWaitHandle.WaitOne(_timeout, false);
                 if (!asyncResult.IsCompleted)
                 {
                     Exception exception = new Exception("Timeout");
 #if DEBUG
                     if (HttpTraceHelper.ExceptionThrown.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) + "::GetRequest() throwing: " + exception.ToString());
+                        HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) +
+                                                  "::GetRequest() throwing: " + exception);
                     }
 #endif
                     throw exception;

@@ -2,8 +2,6 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                               
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace Terrarium.Net
 {
     public class NativeSocketErrors

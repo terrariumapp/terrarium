@@ -10,79 +10,75 @@ namespace Terrarium.Net
     // Special AsyncResult for asynchronous processing of requests arriving at this Terrarium
     public class HttpListenerAsyncResult : IAsyncResult
     {
-        private object m_AsyncState;
-        private AutoResetEvent m_AsyncWaitHandle;
-        private bool m_CompletedSynchronously;
-        private bool m_IsCompleted;
-        private AsyncCallback m_AsyncCallback;
-        private HttpWebListener m_HttpWebListener;
-        private HttpListenerWebRequest m_HttpListenerWebRequest;
+        private static readonly WaitOrTimerCallback _staticCallback = GetRequestCallback;
+        private readonly AsyncCallback _asyncCallback;
+        private readonly object _asyncState;
+        private readonly HttpWebListener _httpWebListener;
+        private AutoResetEvent _asyncWaitHandle;
+        private bool _completedSynchronously;
+        private HttpListenerWebRequest _httpListenerWebRequest;
+        private bool _isCompleted;
 
-        private static WaitOrTimerCallback m_StaticCallback = new WaitOrTimerCallback(GetRequestCallback);
-        
-        public HttpListenerAsyncResult(AsyncCallback callback, object userState, HttpWebListener httpWebListener) 
+        public HttpListenerAsyncResult(AsyncCallback callback, object userState, HttpWebListener httpWebListener)
         {
 #if DEBUG
-            if (HttpTraceHelper.InternalLog.TraceVerbose) 
+            if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
                 HttpTraceHelper.WriteLine("ListenerAsyncResult#" + HttpTraceHelper.HashString(this) + "::.ctor()");
             }
 #endif
-            m_AsyncState = userState;
-            m_AsyncCallback = callback;
-            m_HttpWebListener = httpWebListener;
+            _asyncState = userState;
+            _asyncCallback = callback;
+            _httpWebListener = httpWebListener;
         }
 
         public static WaitOrTimerCallback StaticCallback
         {
-            get
-            {
-                return m_StaticCallback;
-            }
+            get { return _staticCallback; }
         }
 
-        public HttpWebListener Listener 
+        public HttpWebListener Listener
         {
-            get 
-            {
-                return m_HttpWebListener;
-            }
+            get { return _httpWebListener; }
         }
 
-        public HttpListenerWebRequest Request 
+        public HttpListenerWebRequest Request
         {
-            get 
-            {
-                return m_HttpListenerWebRequest;
-            }
-            
-            set 
-            {
-                m_HttpListenerWebRequest = value;
-            }
+            get { return _httpListenerWebRequest; }
+
+            set { _httpListenerWebRequest = value; }
         }
 
-        public object AsyncState 
+        public object AsyncState
         {
-            get 
-            {
-                return m_AsyncState;
-            }
+            get { return _asyncState; }
         }
 
-        public bool CompletedSynchronously 
+        public bool CompletedSynchronously
+        {
+            get { return _completedSynchronously; }
+        }
+
+        public bool IsCompleted
+        {
+            get { return _isCompleted; }
+        }
+
+        public WaitHandle AsyncWaitHandle
         {
             get
             {
-                return m_CompletedSynchronously;
-            }
-        }
-
-        public bool IsCompleted 
-        {
-            get 
-            {
-                return m_IsCompleted;
+                if (_asyncWaitHandle != null)
+                {
+                    lock (this)
+                    {
+                        if (_asyncWaitHandle != null)
+                        {
+                            _asyncWaitHandle = new AutoResetEvent(false);
+                        }
+                    }
+                }
+                return _asyncWaitHandle;
             }
         }
 
@@ -90,13 +86,14 @@ namespace Terrarium.Net
         {
             HttpListenerAsyncResult asyncResult = stateObject as HttpListenerAsyncResult;
 #if DEBUG
-            if (HttpTraceHelper.InternalLog.TraceVerbose) 
+            if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("ListenerAsyncResult#" + HttpTraceHelper.HashString(asyncResult) + "::GetRequestCallback()");
+                HttpTraceHelper.WriteLine("ListenerAsyncResult#" + HttpTraceHelper.HashString(asyncResult) +
+                                          "::GetRequestCallback()");
             }
 #endif
 
-            asyncResult.Request = asyncResult.m_HttpWebListener.GetNextRequest();
+            asyncResult.Request = asyncResult._httpWebListener.GetNextRequest();
 
             if (asyncResult.Request == null)
             {
@@ -104,18 +101,19 @@ namespace Terrarium.Net
                 // false alarm, request went to another thread, queue again.
                 //
 #if DEBUG
-                if (HttpTraceHelper.InternalLog.TraceVerbose) 
+                if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("ListenerAsyncResult#" + HttpTraceHelper.HashString(asyncResult) + "::GetRequestCallback() calling RegisterWaitForSingleObject()");
+                    HttpTraceHelper.WriteLine("ListenerAsyncResult#" + HttpTraceHelper.HashString(asyncResult) +
+                                              "::GetRequestCallback() calling RegisterWaitForSingleObject()");
                 }
 #endif
 
                 ThreadPool.RegisterWaitForSingleObject(
-                    asyncResult.m_HttpWebListener.RequestReady,
+                    asyncResult._httpWebListener.RequestReady,
                     StaticCallback,
                     asyncResult,
                     -1,
-                    true );
+                    true);
             }
             else
             {
@@ -123,49 +121,33 @@ namespace Terrarium.Net
             }
         }
 
-        public void Complete(bool completedSynchronously) 
+        public void Complete(bool completedSynchronously)
         {
-            m_CompletedSynchronously = completedSynchronously;
-            m_IsCompleted = true;
-            
-            if (m_AsyncWaitHandle != null)
+            _completedSynchronously = completedSynchronously;
+            _isCompleted = true;
+
+            if (_asyncWaitHandle != null)
             {
 #if DEBUG
-                if (HttpTraceHelper.InternalLog.TraceVerbose) 
+                if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("ListenerAsyncResult#" + HttpTraceHelper.HashString(this) + "::GetRequestCallback() Signaling event");
+                    HttpTraceHelper.WriteLine("ListenerAsyncResult#" + HttpTraceHelper.HashString(this) +
+                                              "::GetRequestCallback() Signaling event");
                 }
 #endif
 
-                m_AsyncWaitHandle.Set();
+                _asyncWaitHandle.Set();
             }
-            if (m_AsyncCallback != null) 
+            if (_asyncCallback != null)
             {
 #if DEBUG
-                if (HttpTraceHelper.InternalLog.TraceVerbose) 
+                if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("ListenerAsyncResult#" + HttpTraceHelper.HashString(this) + "::GetRequestCallback() Calling callback");
+                    HttpTraceHelper.WriteLine("ListenerAsyncResult#" + HttpTraceHelper.HashString(this) +
+                                              "::GetRequestCallback() Calling callback");
                 }
 #endif
-				m_AsyncCallback(this);
-            }
-        }
-
-        public WaitHandle AsyncWaitHandle 
-        {
-            get 
-            {
-                if (m_AsyncWaitHandle != null) 
-                {
-                    lock (this)
-                    {
-                        if (m_AsyncWaitHandle != null)
-                        {
-                            m_AsyncWaitHandle = new AutoResetEvent(false);
-                        }
-                    }
-                }
-                return m_AsyncWaitHandle;
+                _asyncCallback(this);
             }
         }
     }

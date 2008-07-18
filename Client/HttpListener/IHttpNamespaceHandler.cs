@@ -2,8 +2,6 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                               
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace Terrarium.Net
 {
     // Used by HttpNamespaceManager.   To implement a class that get called
