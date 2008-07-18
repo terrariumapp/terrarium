@@ -191,11 +191,6 @@
       <Project>{6A2A6B54-D211-4766-82A6-0B8E2072BEF9}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
-    <ProjectReference Include="..\HttpListener\HttpListener.csproj">
-      <Name>HttpListener</Name>
-      <Project>{E3EC9E4B-7AA9-4DA9-B6FE-A5E73FE1A8D0}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\VersionInfo.cs">

@@ -75,14 +75,12 @@ namespace Terrarium.Configuration
         /// <returns>True if the string matches one of the countries/regions in the list, false otherwise.</returns>
         public static bool Validate(string country)
         {
-            foreach (string s in Countries)
+            foreach (string availableCountry in Countries)
             {
-                if (s == country)
-                {
-                    return true;
-                }
+                if (!Equals(availableCountry, country)) continue;
+                return true;
             }
-        
+
             return false;
         }
     }
