@@ -1,0 +1,24 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj", "{69B380C9-06DE-428D-B171-83A461CB0C6F}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Default = Debug|Default
+		Release|Default = Release|Default
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{69B380C9-06DE-428D-B171-83A461CB0C6F}.Debug|Default.ActiveCfg = Debug
+		{69B380C9-06DE-428D-B171-83A461CB0C6F}.Debug|Default.Build.0 = Debug
+		{69B380C9-06DE-428D-B171-83A461CB0C6F}.Release|Default.ActiveCfg = Release
+		{69B380C9-06DE-428D-B171-83A461CB0C6F}.Release|Default.Build.0 = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
