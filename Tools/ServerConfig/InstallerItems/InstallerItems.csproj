@@ -7,7 +7,7 @@
     <ProjectGuid>{64B30CEC-FB6D-48BD-B1FD-D8D5480C8E4A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Terrarium.Server</RootNamespace>
+    <RootNamespace>InstallerItems</RootNamespace>
     <AssemblyName>InstallerItems</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
