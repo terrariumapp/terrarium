@@ -7,16 +7,26 @@ Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj
 		Release.AspNetCompiler.Debug = "False"
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InstallerItems", "..\Tools\ServerConfig\InstallerItems\InstallerItems.csproj", "{64B30CEC-FB6D-48BD-B1FD-D8D5480C8E4A}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Default = Debug|Default
-		Release|Default = Release|Default
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{69B380C9-06DE-428D-B171-83A461CB0C6F}.Debug|Default.ActiveCfg = Debug
-		{69B380C9-06DE-428D-B171-83A461CB0C6F}.Debug|Default.Build.0 = Debug
-		{69B380C9-06DE-428D-B171-83A461CB0C6F}.Release|Default.ActiveCfg = Release
-		{69B380C9-06DE-428D-B171-83A461CB0C6F}.Release|Default.Build.0 = Release
+		{69B380C9-06DE-428D-B171-83A461CB0C6F}.Debug|Any CPU.ActiveCfg = Debug
+		{69B380C9-06DE-428D-B171-83A461CB0C6F}.Debug|Any CPU.Build.0 = Debug
+		{69B380C9-06DE-428D-B171-83A461CB0C6F}.Release|Any CPU.ActiveCfg = Release
+		{69B380C9-06DE-428D-B171-83A461CB0C6F}.Release|Any CPU.Build.0 = Release
+		{64B30CEC-FB6D-48BD-B1FD-D8D5480C8E4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64B30CEC-FB6D-48BD-B1FD-D8D5480C8E4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64B30CEC-FB6D-48BD-B1FD-D8D5480C8E4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64B30CEC-FB6D-48BD-B1FD-D8D5480C8E4A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
