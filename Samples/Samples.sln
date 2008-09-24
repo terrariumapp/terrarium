@@ -1,7 +1,43 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Herbivore", "Herbivore\Herbivore.csproj", "{EF0CB4E4-8E87-4729-A7B6-C9570998C183}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plant", "Plant\Plant.csproj", "{2AF87A13-F0BA-43DE-ACD2-9B35DA4CEFB7}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Carnivore", "Carnivore\Carnivore.csproj", "{1019EEB5-20F5-4D5F-9834-B0A8A7CC88BB}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EF0CB4E4-8E87-4729-A7B6-C9570998C183}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF0CB4E4-8E87-4729-A7B6-C9570998C183}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF0CB4E4-8E87-4729-A7B6-C9570998C183}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF0CB4E4-8E87-4729-A7B6-C9570998C183}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2AF87A13-F0BA-43DE-ACD2-9B35DA4CEFB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AF87A13-F0BA-43DE-ACD2-9B35DA4CEFB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AF87A13-F0BA-43DE-ACD2-9B35DA4CEFB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AF87A13-F0BA-43DE-ACD2-9B35DA4CEFB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1019EEB5-20F5-4D5F-9834-B0A8A7CC88BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1019EEB5-20F5-4D5F-9834-B0A8A7CC88BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1019EEB5-20F5-4D5F-9834-B0A8A7CC88BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1019EEB5-20F5-4D5F-9834-B0A8A7CC88BB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
