@@ -159,6 +159,12 @@
     <Compile Include="Classes\DirectX\ManagedDirectX.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Classes\Engine\DirectX10GraphicsEngine.cs" />
+    <Compile Include="Classes\Engine\DirectX7GraphicsEngine.cs" />
+    <Compile Include="Classes\Engine\DirectX9GraphicsEngine.cs" />
+    <Compile Include="Classes\Engine\IGraphicsEngine.cs" />
+    <Compile Include="Classes\Engine\ManagedDirectXGraphicsEngine.cs" />
+    <Compile Include="Classes\Engine\XnaGraphicsEngine.cs" />
     <Compile Include="Classes\HeightMap.cs">
       <SubType>Code</SubType>
     </Compile>
