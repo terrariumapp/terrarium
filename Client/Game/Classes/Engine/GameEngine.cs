@@ -1,27 +1,21 @@
-//------------------------------------------------------------------------------
-//      Copyright (c) Microsoft Corporation.  All rights reserved.                                                               
-//------------------------------------------------------------------------------
-
 using System;
 using System.Collections;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
-using System.Globalization;
-
 using OrganismBase;
 using Terrarium.Configuration;
+using Terrarium.Forms;
 using Terrarium.Hosting;
 using Terrarium.PeerToPeer;
-using Terrarium.Tools;
-using Terrarium.Forms;
-
 using Terrarium.Services.Species;
+using Terrarium.Tools;
 
-namespace Terrarium.Game 
+namespace Terrarium.Game
 {
     /// <summary>
     ///  This class encapsulates the majority of the Terrarium gaming engine
@@ -40,22 +34,67 @@ namespace Terrarium.Game
         /// </summary>
         private static GameEngine engine;
 
+        private static bool invalidPeerError;
+
+        // These are static since they only get calculated once at startup
+        private static int maxAnimals;
+        private static int maxPlants;
+        private static int organismQuanta;
+
+
+        private static bool reloadSettings = true;
+        private static bool shutdownError;
+        private static int worldHeight;
+        private static int worldWidth;
+
         /// <summary>
-        ///  The game scheduler is responsible for managing creature time
-        ///  slices.
+        ///  Queue for managing the insertion of new creatures into the
+        ///  game.  They are queue'd up and added to the world at a point that is "safe".
         /// </summary>
-        private IGameScheduler scheduler;
+        private readonly Queue newOrganismQueue = Queue.Synchronized(new Queue());
 
         /// <summary>
         ///  Provides a managed location for creature assemblies.
         /// </summary>
-        private PrivateAssemblyCache pac;
+        private readonly PrivateAssemblyCache pac;
+
+        private readonly Random random = new Random(DateTime.Now.Millisecond);
+
+        /// <summary>
+        ///  Queue for managing the removal of creatures from the game.  Again, they are
+        ///  queued and removed at a safe point.
+        /// </summary>
+        private readonly Queue removeOrganismQueue = new Queue();
+
+        /// <summary>
+        ///  The game scheduler is responsible for managing creature time
+        ///  slices.
+        /// </summary>
+        private readonly IGameScheduler scheduler;
+
+        private int animalCount;
+        private string currentStateFileName;
 
         /// <summary>
         ///  This WorldVector object contains the current state of the world, as well as
         ///  the actions animals would like to perform to it to create the next state.
         /// </summary>
         private WorldVector currentVector;
+        private Boolean ecosystemMode;
+
+        /// <summary>
+        ///  Array referencing each of the LED indicators within the
+        ///  UI portion of the Terrarium.
+        /// </summary>
+        private TerrariumLed[] ledIndicators;
+
+        private Boolean logState;
+
+        /// <summary>
+        /// networkEngine is a reference to the network object that does all peer to peer communication
+        /// for this instance of the game.
+        /// </summary>
+        private NetworkEngine networkEngine;
 
         /// <summary>
         /// This is the state object that gets built up that eventually represents the
@@ -67,77 +106,22 @@ namespace Terrarium.Game
         ///  Listing of all organism IDs in the currentVector, used for enhancing enumeration
         ///  structures.
         /// </summary>
-        private string [] organismIDList;
+        private string[] organismIDList;
 
-        /// <summary>
-        ///  Queue for managing the insertion of new creatures into the
-        ///  game.  They are queue'd up and added to the world at a point that is "safe".
-        /// </summary>
-        private Queue newOrganismQueue = Queue.Synchronized(new Queue());
-
-        /// <summary>
-        ///  Queue for managing the removal of creatures from the game.  Again, they are
-        ///  queued and removed at a safe point.
-        /// </summary>
-        private Queue removeOrganismQueue = new Queue();
+        private int plantCount;
+        private PopulationData populationData;
 
         /// <summary>
         /// The processing of each actual turn of the game is broken down into steps so that we can paint the screen
         /// in between them.  turnPhase represents what step we are currently doing.
         /// </summary>
-        int turnPhase = 0;
-        Random random = new Random(DateTime.Now.Millisecond);
-
-        /// <summary>
-        /// networkEngine is a reference to the network object that does all peer to peer communication
-        /// for this instance of the game.
-        /// </summary>
-        NetworkEngine networkEngine;
+        private int turnPhase;
 
         /// <summary>
         ///  Indicates whether or not the Network engine is going
         ///  to be used to enable a connected Terrarium.
         /// </summary>
-        Boolean usingNetwork = true;
-
-        /// <summary>
-        ///  Array referencing each of the LED indicators within the
-        ///  UI portion of the Terrarium.
-        /// </summary>
-        TerrariumLed [] ledIndicators;
-
-        // These are static since they only get calculated once at startup
-        static int maxAnimals = 0;
-        static int maxPlants = 0;
-        static int worldHeight = 0;
-        static int worldWidth = 0;
-        static int organismQuanta = 0;
-
-
-        static bool reloadSettings = true;
-        static bool shutdownError = false;
-        static bool invalidPeerError = false;
-
-        int plantCount = 0;
-        int animalCount = 0;
-        PopulationData populationData = null;
-        Boolean logState = false;
-        string dataPath;
-        Boolean ecosystemMode = false;
-        string currentStateFileName;
-
-        /// <summary>
-        ///  Event that can be handled by clients that notifies them when
-        ///  the world vector is changed.
-        /// </summary>
-        public event WorldVectorChangedEventHandler WorldVectorChanged;
-
-        /// <summary>
-        ///  Event that can be handled by clients to be notified whenever
-        ///  some interesting state in the engine has changed. Used for notifications in 
-        ///  the UI.
-        /// </summary>
-        public event EngineStateChangedEventHandler EngineStateChanged;
+        private Boolean usingNetwork = true;
 
         /// <summary>
         ///  Constructs a new game engine.
@@ -149,8 +133,8 @@ namespace Terrarium.Game
         /// <param name="reportData">Determines if data should be reported.</param>
         /// <param name="leds">Provides a listing of game leds that can be used.</param>
         /// <param name="trackLastRun">Controls whether the PAC keeps track of the last run creature for blacklisting.</param>
-        private GameEngine(string dataPath, bool useNetwork, bool deserializeState, string fileName,  bool reportData, 
-                            TerrariumLed [] leds, bool trackLastRun)
+        private GameEngine(string dataPath, bool useNetwork, bool deserializeState, string fileName, bool reportData,
+                           TerrariumLed[] leds, bool trackLastRun)
         {
             ledIndicators = leds;
             currentStateFileName = fileName;
@@ -170,9 +154,8 @@ namespace Terrarium.Game
             // as soon as possible
             AppDomain.CurrentDomain.SetAppDomainPolicy(SecurityUtils.MakePolicyLevel(pac.AssemblyDirectory));
 
-            this.dataPath = dataPath;
             usingNetwork = useNetwork;
-            populationData = new PopulationData(dataPath, reportData, leds[(int) LedIndicators.ReportWebService]);
+            populationData = new PopulationData(reportData, leds[(int) LedIndicators.ReportWebService]);
 
             // Should only happen if an exception prevented a previous attempt to start a game
             if (AppMgr.CurrentScheduler != null)
@@ -190,7 +173,7 @@ namespace Terrarium.Game
                 networkEngine = new NetworkEngine();
             }
 
-            WorldState newWorldState = null;
+            WorldState currentState;
             Boolean successfulDeserialization = false;
             if (deserializeState && File.Exists(fileName))
             {
@@ -200,11 +183,11 @@ namespace Terrarium.Game
                     {
                         // The process was killed while an organism was being run, blacklist it
                         // Since this potentially means the animal hung the game.
-                        pac.BlacklistAssemblies(new string [] {pac.LastRun});
+                        pac.BlacklistAssemblies(new string[] {pac.LastRun});
                     }
                     DeserializeState(fileName);
-                    newWorldState = CurrentVector.State;
-                    scheduler.CurrentState = newWorldState;
+                    currentState = CurrentVector.State;
+                    scheduler.CurrentState = currentState;
                     scheduler.CompleteOrganismDeserialization();
                     successfulDeserialization = true;
                 }
@@ -217,17 +200,289 @@ namespace Terrarium.Game
             if (!successfulDeserialization)
             {
                 // Set up initial world state
-                newWorldState = new WorldState(GridWidth, GridHeight);
-                newWorldState.TickNumber = 0;
-                newWorldState.StateGuid = Guid.NewGuid();
-                newWorldState.Teleporter = new Teleporter(AnimalCount / EngineSettings.NumberOfAnimalsPerTeleporter);
-                newWorldState.MakeImmutable();
+                currentState = new WorldState(GridWidth, GridHeight);
+                currentState.TickNumber = 0;
+                currentState.StateGuid = Guid.NewGuid();
+                currentState.Teleporter = new Teleporter(AnimalCount/EngineSettings.NumberOfAnimalsPerTeleporter);
+                currentState.MakeImmutable();
 
-                WorldVector vector = new WorldVector(newWorldState);
+                WorldVector vector = new WorldVector(currentState);
                 CurrentVector = vector;
-                scheduler.CurrentState = newWorldState;
+                scheduler.CurrentState = currentState;
             }
         }
+
+        /// <summary>
+        ///  Provides quick access to the network engine.
+        /// </summary>
+        /// <returns>A reference to the network engine.</returns>
+        public NetworkEngine NetworkEngine
+        {
+            get { return networkEngine; }
+        }
+
+        /// <summary>
+        ///  Provides quick access to the PrivateAssemblyCache
+        /// </summary>
+        public PrivateAssemblyCache Pac
+        {
+            get { return pac; }
+        }
+
+        /// <summary>
+        ///  Returns the number of peers from the network engine.
+        /// </summary>
+        public int PeerCount
+        {
+            get { return UsingNetwork && networkEngine != null ? networkEngine.PeerCount : 0; }
+        }
+
+        /// <summary>
+        ///  Gets the current peer channel from the network engine.  Also
+        ///  allows the user to change the peer channel and network with
+        ///  a different set of machines.
+        /// </summary>
+        public string PeerChannel
+        {
+            get { return UsingNetwork && networkEngine != null ? networkEngine.PeerChannel : "<not networked>"; }
+
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    if (UsingNetwork && networkEngine != null)
+                    {
+                        networkEngine.ShutdownNetwork();
+                        networkEngine = null;
+                        UsingNetwork = false;
+                    }
+                }
+                else
+                {
+                    if (UsingNetwork && networkEngine != null)
+                    {
+                        networkEngine.ShutdownNetwork();
+                        networkEngine = null;
+                    }
+
+                    UsingNetwork = true;
+                    networkEngine = new NetworkEngine();
+                    networkEngine.InitializeNetwork(value, ledIndicators);
+                }
+            }
+        }
+
+        /// <summary>
+        ///  Determines if the engine is in EcoSystem mode or some other mode.
+        /// </summary>
+        public Boolean EcosystemMode
+        {
+            get { return ecosystemMode; }
+        }
+
+        /// <summary>
+        ///  Returns the name of the current state file.
+        /// </summary>
+        public string FileName
+        {
+            get { return currentStateFileName; }
+
+            set { currentStateFileName = value; }
+        }
+
+        /// <summary>
+        ///  Determines if game state should be logged after each tick.
+        ///  This is useful for debugging mode only.
+        /// </summary>
+        public Boolean LogState
+        {
+            get { return logState; }
+
+            set { logState = value; }
+        }
+
+        /// <summary>
+        ///  Provides access to the game scheduler for scheduling creatures.
+        /// </summary>
+        public IGameScheduler Scheduler
+        {
+            get { return scheduler; }
+        }
+
+        /// <summary>
+        ///  Provides access to the current world vector
+        /// </summary>
+        public WorldVector CurrentVector
+        {
+            get { return currentVector; }
+
+            set
+            {
+                WorldVector oldVector = currentVector;
+                currentVector = value;
+                OnWorldVectorChanged(new WorldVectorChangedEventArgs(oldVector, currentVector));
+            }
+        }
+
+        /// <summary>
+        ///  Static access to the current game engine.
+        /// </summary>
+        public static GameEngine Current
+        {
+            get { return engine; }
+        }
+
+        /// <summary>
+        ///  Used to notify the game engine that a shutdown level
+        ///  error has occured.
+        /// </summary>
+        public static bool ShutdownError
+        {
+            get { return shutdownError; }
+
+            set
+            {
+                lock (typeof (GameEngine))
+                {
+                    shutdownError = value;
+                }
+            }
+        }
+
+        /// <summary>
+        ///  Used to notify the game engine that the peer is not
+        ///  able to play the game networked.
+        /// </summary>
+        public static bool InvalidPeerError
+        {
+            get { return invalidPeerError; }
+
+            set
+            {
+                lock (typeof (GameEngine))
+                {
+                    invalidPeerError = value;
+                }
+            }
+        }
+
+        /// <summary>
+        ///  Provides access to the population data used
+        ///  for reporting.
+        /// </summary>
+        public PopulationData PopulationData
+        {
+            get { return populationData; }
+        }
+
+        /// <summary>
+        ///  Provides the height of the given world in game units (pixels)
+        /// </summary>
+        public int WorldHeight
+        {
+            get { return worldHeight; }
+        }
+
+        /// <summary>
+        ///  Provides the width of the given world in game units (pixels)
+        /// </summary>
+        public int WorldWidth
+        {
+            get { return worldWidth; }
+        }
+
+        /// <summary>
+        ///  Converts world width to grid cells and returns the number of
+        ///  grid cells.
+        /// </summary>
+        public int GridWidth
+        {
+            get { return WorldWidth >> EngineSettings.GridWidthPowerOfTwo; }
+        }
+
+        /// <summary>
+        ///  Converts world height to grid cells and returns the number of
+        ///  grid cells.
+        /// </summary>
+        public int GridHeight
+        {
+            get { return WorldHeight >> EngineSettings.GridHeightPowerOfTwo; }
+        }
+
+        /// <summary>
+        ///  Identifies the maximum amount of Animal class creatures allowed
+        ///  in the game engine.
+        /// </summary>
+        public int MaxAnimals
+        {
+            get { return maxAnimals; }
+        }
+
+        /// <summary>
+        ///  Identifies the maximum amount of Plant class creatures allowed
+        ///  in the game engine.
+        /// </summary>
+        public static int MaxPlants
+        {
+            get { return maxPlants; }
+        }
+
+        /// <summary>
+        ///  Identifies the current count of Animal class creatures in the
+        ///  game engine.
+        /// </summary>
+        public int AnimalCount
+        {
+            get { return animalCount; }
+        }
+
+        /// <summary>
+        ///  Identifies the current count of Plant class creatures in the
+        ///  game engine.
+        /// </summary>
+        private int PlantCount
+        {
+            get { return plantCount; }
+        }
+
+        /// <summary>
+        ///  The current turn phase.  There are ten phases per tick.
+        /// </summary>
+        public int TurnPhase
+        {
+            get { return turnPhase; }
+        }
+
+        /// <summary>
+        ///  Determines if the engine is going to use the network engine.
+        /// </summary>
+        private Boolean UsingNetwork
+        {
+            get { return usingNetwork; }
+
+            set { usingNetwork = value; }
+        }
+
+        /// <summary>
+        /// Used to determine if the network is running
+        /// </summary>
+        public bool IsNetworkEnabled
+        {
+            get { return usingNetwork; }
+        }
+
+        /// <summary>
+        ///  Event that can be handled by clients that notifies them when
+        ///  the world vector is changed.
+        /// </summary>
+        public event WorldVectorChangedEventHandler WorldVectorChanged;
+
+        /// <summary>
+        ///  Event that can be handled by clients to be notified whenever
+        ///  some interesting state in the engine has changed. Used for notifications in 
+        ///  the UI.
+        /// </summary>
+        public event EngineStateChangedEventHandler EngineStateChanged;
 
         /// <summary>
         ///  Stops the game and determines if the final tick of data should be serialized.
@@ -274,8 +529,8 @@ namespace Terrarium.Game
         /// </summary>
         private void CalculateWorldSize()
         {
-            int Modifier = 40;
-    
+            const int Modifier = 40;
+
             // We need to get all the objects loaded and initialized.
             OrganismQuanta.TestAnimal(10);
 
@@ -284,74 +539,46 @@ namespace Terrarium.Game
             OrganismQuanta.TestAnimal(100);
 
             Trace.WriteLine(String.Format("Total {0}, Last {1}, Best {2}, Worst {3}, Average {4}",
-                new Object[] {
-                                 OrganismQuanta.totalQuanta * Modifier,
-                                 OrganismQuanta.lastQuanta * Modifier,
-                                 OrganismQuanta.bestQuanta * Modifier,
-                                 OrganismQuanta.worstQuanta * Modifier,
-                                 (OrganismQuanta.totalQuanta * Modifier / OrganismQuanta.samples)
-                             }
-                ));
+                                          new Object[]
+                                              {
+                                                  OrganismQuanta.totalQuanta*Modifier,
+                                                  OrganismQuanta.lastQuanta*Modifier,
+                                                  OrganismQuanta.bestQuanta*Modifier,
+                                                  OrganismQuanta.worstQuanta*Modifier,
+                                                  (OrganismQuanta.totalQuanta*Modifier/OrganismQuanta.samples)
+                                              }
+                                ));
 
             // Figure out how much of a time slice to give each animal
-            organismQuanta = (int) (OrganismQuanta.totalQuanta / OrganismQuanta.samples);
+            organismQuanta = (int) (OrganismQuanta.totalQuanta/OrganismQuanta.samples);
             if (organismQuanta < 500)
             {
                 organismQuanta *= Modifier;
             }
-            Debug.Assert(organismQuanta < EngineSettings.OrganismSchedulingMaximumOvertime, "The computer is too slow to run Terrarium or obtained bad results from OrganismQuanta");
+            Debug.Assert(organismQuanta < EngineSettings.OrganismSchedulingMaximumOvertime,
+                         "The computer is too slow to run Terrarium or obtained bad results from OrganismQuanta");
 
-            // This is where we attempt to estimate how many animals we can support on this machine.
-            // We assume we want 20 frames a second and we do two engine ticks per second which means we have
-            // 500 msec per engine tick.  We budget our paint time 200 mSec, and that leaves 300 mSec for all engine
-            // processing.
-            // We assume we'll allocate 4/5 of our available engine processing time to running animals, and 1/5 to plants.
-            // organismQuanta is how many microseconds each animal will get, so we have to divide by 1000
-            // to get milliseconds.
-            // We assume that we can use all engine processing time for running animals although this isn't strictly true
-            // since we need to run the engine code too.  It's OK, because animals can't use all their allocated time every
-            // tick -- they'll eventually get killed. Thus, we use the time they don't use for the engine processing.
-            // It's all basically an estimate, that we've tuned and works pretty well.
-            float baseTime = (300 / 5) / (((float) organismQuanta) / ((float) 1000));
-            maxAnimals = (int) (baseTime * 4);
-            maxAnimals = (int) (maxAnimals * ((double) GameConfig.CpuThrottle / (double) 100));
-            maxPlants = maxAnimals;
-
-            // Now lets compute worldheight
-            // Each animal needs a certain amount of territory so we can compute a density.
-            // 10,000 pixels per plant/animal is the key at this point.
-            worldHeight = (int) (Math.Sqrt(10000 * (maxAnimals + maxPlants)) + 1);
-            if (worldHeight < 1024)
-            {
-                worldHeight = 1024; // ensures at least an 800x800 area for viewing purposes
-            }
-
-            double a = worldHeight / 1024.0;
-
-            a = Math.Round(a + 0.5);
-            
-            worldHeight = 1024 * (int)a;
-
-            worldWidth = worldHeight;
+            estimateNumberOfAnimalsToSupport();
+            computeWorldHeight();
 
             // We only need to normalize to GridCellHeight and GridCellWidth.  The
             // game view may add some extra pixels on the bottom and right of the
             // screen for tiling purposes, but this never hurts the game.  In this
             // way we don't need to know the size of the world tiles in the game
             // engine.
-            if (worldWidth % EngineSettings.GridCellWidth != 0)
+            if (worldWidth%EngineSettings.GridCellWidth != 0)
             {
-                worldWidth += EngineSettings.GridCellWidth - ( worldWidth % EngineSettings.GridCellWidth );
+                worldWidth += EngineSettings.GridCellWidth - (worldWidth%EngineSettings.GridCellWidth);
             }
-        
-            if (worldHeight % EngineSettings.GridCellHeight != 0)
+
+            if (worldHeight%EngineSettings.GridCellHeight != 0)
             {
-                worldHeight += EngineSettings.GridCellHeight - ( worldHeight % EngineSettings.GridCellHeight );
+                worldHeight += EngineSettings.GridCellHeight - (worldHeight%EngineSettings.GridCellHeight);
             }
 
             // Worldheight and Height must be evenly divisible by our grid cells
-            Debug.Assert(WorldHeight % EngineSettings.GridCellHeight == 0 &&
-                WorldWidth % EngineSettings.GridCellWidth == 0);
+            Debug.Assert(WorldHeight%EngineSettings.GridCellHeight == 0 &&
+                         WorldWidth%EngineSettings.GridCellWidth == 0);
 
             // if we actually calculate it, tell the engine not to redo it since it only needs to be done once
             // if this gets changed because we load a file, we'll do it again
@@ -359,15 +586,46 @@ namespace Terrarium.Game
         }
 
         /// <summary>
-        ///  Provides quick access to the network engine.
+        /// Now lets compute worldheight
+        /// Each animal needs a certain amount of territory so we can compute a density.
+        /// 10,000 pixels per plant/animal is the key at this point.
         /// </summary>
-        /// <returns>A reference to the network engine.</returns>
-        public NetworkEngine NetworkEngine
+        private static void computeWorldHeight()
         {
-            get
+            worldHeight = (int) (Math.Sqrt(10000*(maxAnimals + maxPlants)) + 1);
+            if (worldHeight < 1024)
             {
-                return networkEngine;
+                worldHeight = 1024; // ensures at least an 800x800 area for viewing purposes
             }
+
+            double a = worldHeight/1024.0;
+
+            a = Math.Round(a + 0.5);
+
+            worldHeight = 1024*(int) a;
+
+            worldWidth = worldHeight;
+        }
+
+        /// <summary>
+        /// This is where we attempt to estimate how many animals we can support on this machine.
+        /// We assume we want 20 frames a second and we do two engine ticks per second which means we have
+        /// 500 msec per engine tick.  We budget our paint time 200 mSec, and that leaves 300 mSec for all engine
+        /// processing.
+        /// We assume we'll allocate 4/5 of our available engine processing time to running animals, and 1/5 to plants.
+        /// organismQuanta is how many microseconds each animal will get, so we have to divide by 1000
+        /// to get milliseconds.
+        /// We assume that we can use all engine processing time for running animals although this isn't strictly true
+        /// since we need to run the engine code too.  It's OK, because animals can't use all their allocated time every
+        /// tick -- they'll eventually get killed. Thus, we use the time they don't use for the engine processing.
+        /// It's all basically an estimate, that we've tuned and works pretty well.
+        /// </summary>
+        private static void estimateNumberOfAnimalsToSupport()
+        {
+            float baseTime = (300/5)/((organismQuanta)/((float) 1000));
+            maxAnimals = (int) (baseTime*4);
+            maxAnimals = (int) (maxAnimals*(GameConfig.CpuThrottle/(double) 100));
+            maxPlants = maxAnimals;
         }
 
         /// <summary>
@@ -377,7 +635,7 @@ namespace Terrarium.Game
         /// <param name="dataPath">The path where the Terrarium game will be stored.</param>
         /// <param name="fileName">The path to the serialized Terrarium.</param>
         /// <param name="leds">A series of leds to be used for state reporting.</param>
-        public static void NewTerrariumGame(string dataPath, string fileName, TerrariumLed [] leds)
+        public static void NewTerrariumGame(string dataPath, string fileName, TerrariumLed[] leds)
         {
             if (engine != null)
             {
@@ -393,7 +651,7 @@ namespace Terrarium.Game
         /// <param name="dataPath">The path where the Terrarium game will be stored.</param>
         /// <param name="fileName">The path to the serialized Terrarium.</param>
         /// <param name="leds">A series of leds to be used for state reporting.</param>
-        public static void LoadTerrariumGame(string dataPath, string fileName, TerrariumLed [] leds)
+        public static void LoadTerrariumGame(string dataPath, string fileName, TerrariumLed[] leds)
         {
             if (engine != null)
             {
@@ -409,7 +667,7 @@ namespace Terrarium.Game
         /// <param name="dataPath">The path where the Terrarium game will be stored.</param>
         /// <param name="fileName">The path to the serialized Terrarium.</param>
         /// <param name="leds">A series of leds to be used for state reporting.</param>
-        public static void NewEcosystemGame(string dataPath, string fileName, TerrariumLed [] leds)
+        public static void NewEcosystemGame(string dataPath, string fileName, TerrariumLed[] leds)
         {
             if (engine != null)
             {
@@ -435,7 +693,7 @@ namespace Terrarium.Game
         /// <param name="dataPath">The path where the Terrarium game will be stored.</param>
         /// <param name="fileName">The path to the serialized Terrarium.</param>
         /// <param name="leds">A series of leds to be used for state reporting.</param>
-        public static void LoadEcosystemGame(string dataPath, string fileName, TerrariumLed [] leds)
+        public static void LoadEcosystemGame(string dataPath, string fileName, TerrariumLed[] leds)
         {
             if (engine != null)
             {
@@ -451,153 +709,6 @@ namespace Terrarium.Game
             }
 
             engine.ecosystemMode = true;
-        }
-
-        /// <summary>
-        ///  Provides quick access to the PrivateAssemblyCache
-        /// </summary>
-        public PrivateAssemblyCache Pac
-        {
-            get
-            {
-                return pac;
-            }
-        }
-
-        /// <summary>
-        ///  Returns the number of peers from the network engine.
-        /// </summary>
-        public int PeerCount
-        {
-            get
-            {
-                if (UsingNetwork && networkEngine != null)
-                {
-                    return networkEngine.PeerCount;
-                }
-                else
-                {
-                    return 0;
-                }
-            }
-        }
-
-        /// <summary>
-        ///  Gets the current peer channel from the network engine.  Also
-        ///  allows the user to change the peer channel and network with
-        ///  a different set of machines.
-        /// </summary>
-        public string PeerChannel
-        {
-            get
-            {
-                if (UsingNetwork && networkEngine != null)
-                {
-                    return networkEngine.PeerChannel;
-                }
-                else
-                {
-                    return "<not networked>";
-                }
-            }
-
-            set
-            {
-                if (value == null || value.Length == 0)
-                {
-                    if (UsingNetwork && networkEngine != null)
-                    {
-                        networkEngine.ShutdownNetwork();
-                        networkEngine = null;
-                        UsingNetwork = false;
-                    }
-                }
-                else
-                {
-                    if (UsingNetwork && networkEngine != null) 
-                    {
-                        networkEngine.ShutdownNetwork();
-                        networkEngine = null;
-                    }
-
-                    UsingNetwork = true;
-                    networkEngine = new NetworkEngine();
-                    networkEngine.InitializeNetwork(value, ledIndicators);
-                }
-            }
-        }
-
-        /// <summary>
-        ///  Determines if the engine is in EcoSystem mode or some other mode.
-        /// </summary>
-        public Boolean EcosystemMode 
-        {
-            get
-            {
-                return ecosystemMode;
-            }
-        }
-
-        /// <summary>
-        ///  Returns the name of the current state file.
-        /// </summary>
-        public string FileName
-        {
-            get
-            {
-                return currentStateFileName;
-            }
-
-            set
-            {
-                currentStateFileName = value;
-            }
-        }
-
-        /// <summary>
-        ///  Determines if game state should be logged after each tick.
-        ///  This is useful for debugging mode only.
-        /// </summary>
-        public Boolean LogState
-        {
-            get
-            {
-                return logState;
-            }
-
-            set
-            {
-                logState = value;
-            }
-        }
-
-        /// <summary>
-        ///  Provides access to the game scheduler for scheduling creatures.
-        /// </summary>
-        public IGameScheduler Scheduler 
-        {
-            get
-            {
-                return scheduler;
-            }
-        }
-
-        /// <summary>
-        ///  Provides access to the current world vector
-        /// </summary>
-        public WorldVector CurrentVector
-        {
-            get
-            {
-                return currentVector;
-            }
-
-            set
-            {
-                WorldVector oldVector = currentVector;
-                currentVector = value;
-                OnWorldVectorChanged(new WorldVectorChangedEventArgs(oldVector, currentVector));
-            }
         }
 
         /// <summary>
@@ -627,163 +738,6 @@ namespace Terrarium.Game
         }
 
         /// <summary>
-        ///  Static access to the current game engine.
-        /// </summary>
-        static public GameEngine Current
-        {
-            get 
-            {
-                return engine;
-            }
-        }
-
-        /// <summary>
-        ///  Used to notify the game engine that a shutdown level
-        ///  error has occured.
-        /// </summary>
-        public static bool ShutdownError
-        {
-            get
-            {
-                return shutdownError;
-            }
-        
-            set
-            {
-                lock (typeof(GameEngine))
-                {
-                    shutdownError = value;
-                }
-            }
-        }
-
-        /// <summary>
-        ///  Used to notify the game engine that the peer is not
-        ///  able to play the game networked.
-        /// </summary>
-        public static bool InvalidPeerError
-        {
-            get
-            {
-                return invalidPeerError;
-            }
-        
-            set
-            {
-                lock (typeof(GameEngine))
-                {
-                    invalidPeerError = value;
-                }
-            }
-        }
-
-        /// <summary>
-        ///  Provides access to the population data used
-        ///  for reporting.
-        /// </summary>
-        public PopulationData PopulationData 
-        {
-            get
-            {
-                return populationData;
-            }
-        }
-
-        /// <summary>
-        ///  Provides the height of the given world in game units (pixels)
-        /// </summary>
-        public int WorldHeight
-        {
-            get
-            {
-                return worldHeight;
-            }
-        }
-
-        /// <summary>
-        ///  Provides the width of the given world in game units (pixels)
-        /// </summary>
-        public int WorldWidth
-        {
-            get
-            {
-                return worldWidth;
-            }
-        }
-
-        /// <summary>
-        ///  Converts world width to grid cells and returns the number of
-        ///  grid cells.
-        /// </summary>
-        public int GridWidth 
-        {
-            get
-            {
-                return WorldWidth >> EngineSettings.GridWidthPowerOfTwo;
-            }
-        }
-
-        /// <summary>
-        ///  Converts world height to grid cells and returns the number of
-        ///  grid cells.
-        /// </summary>
-        public int GridHeight 
-        {
-            get
-            {
-                return WorldHeight >> EngineSettings.GridHeightPowerOfTwo;
-            }
-        }
-
-        /// <summary>
-        ///  Identifies the maximum amount of Animal class creatures allowed
-        ///  in the game engine.
-        /// </summary>
-        public int MaxAnimals 
-        {
-            get
-            {
-                return maxAnimals;
-            }
-        }
-
-        /// <summary>
-        ///  Identifies the maximum amount of Plant class creatures allowed
-        ///  in the game engine.
-        /// </summary>
-        int MaxPlants 
-        {
-            get
-            {
-                return maxPlants;
-            }
-        }
-
-        /// <summary>
-        ///  Identifies the current count of Animal class creatures in the
-        ///  game engine.
-        /// </summary>
-        public int AnimalCount
-        {
-            get
-            {
-                return animalCount;
-            }
-        }
-
-        /// <summary>
-        ///  Identifies the current count of Plant class creatures in the
-        ///  game engine.
-        /// </summary>
-        int PlantCount
-        {
-            get
-            {
-                return plantCount;
-            }
-        }
-
-        /// <summary>
         ///  Adds another organism to the count of organisms.  Depending on the organism
         ///  type either plants or animals will be incremented.
         /// </summary>
@@ -798,7 +752,7 @@ namespace Terrarium.Game
             {
                 animalCount++;
             }
-            else 
+            else
             {
                 plantCount++;
             }
@@ -810,7 +764,7 @@ namespace Terrarium.Game
         /// </summary>
         /// <param name="state">The state of the creature.</param>
         /// <param name="reason">The reason the creature is being removed.</param>
-        void UncountOrganism(OrganismState state, PopulationChangeReason reason) 
+        private void UncountOrganism(OrganismState state, PopulationChangeReason reason)
         {
             Debug.Assert(state != null);
 
@@ -826,27 +780,16 @@ namespace Terrarium.Game
         }
 
         /// <summary>
-        ///  The current turn phase.  There are ten phases per tick.
-        /// </summary>
-        public int TurnPhase
-        {
-            get
-            {
-                return turnPhase;
-            }
-        }
-
-        /// <summary>
         ///  Serializes the game state to the given path.
         /// </summary>
         /// <param name="path">Path to the state file.</param>
-        private void SerializeState(string path) 
+        private void SerializeState(string path)
         {
             // We should only serialize at the beginning of the 10 state turnphase so everything
             // can be started at zero when we deserialize
             while (turnPhase != 0)
             {
-                try 
+                try
                 {
                     ProcessTurn();
                 }
@@ -882,7 +825,7 @@ namespace Terrarium.Game
         ///  Deserializes the game state from the given path.
         /// </summary>
         /// <param name="path">Path to the serialized game state.</param>
-        void DeserializeState(string path)
+        private void DeserializeState(string path)
         {
             // We should only deserialize at the beginning of the 10 state turnphase because
             // that's when we serialized
@@ -899,7 +842,7 @@ namespace Terrarium.Game
                     ErrorLog.LogHandledException(e);
                 }
             }
-        
+
             BinaryFormatter b = new BinaryFormatter();
             FileStream stream = new FileStream(path, FileMode.Open);
             try
@@ -934,7 +877,8 @@ namespace Terrarium.Game
 
                 // The scheduler should reset itself if it encounters an exception, so we don't need
                 // to do anything for it here
-                Trace.WriteLine("State could not be deserialized from " + path + ": " + e.Message + "\r\n" + e.StackTrace);
+                Trace.WriteLine("State could not be deserialized from " + path + ": " + e.Message + "\r\n" +
+                                e.StackTrace);
                 throw;
             }
             finally
@@ -944,33 +888,6 @@ namespace Terrarium.Game
         }
 
         /// <summary>
-        ///  Determines if the engine is going to use the network engine.
-        /// </summary>
-        Boolean UsingNetwork
-        {
-            get
-            {
-                return usingNetwork;
-            }
-
-            set
-            {
-                usingNetwork = value;
-            }
-        }
-
-		/// <summary>
-		/// Used to determine if the network is running
-		/// </summary>
-		public bool IsNetworkEnabled
-		{
-			get
-			{
-				return this.usingNetwork;
-			}
-		}
-
-        /// <summary>
         ///  Finds a location within the current game world where no organisms exist.
         /// </summary>
         /// <param name="cellRadius">The cell radius of the new creature to be inserted.</param>
@@ -978,36 +895,22 @@ namespace Terrarium.Game
         /// <returns>The empty point where the creature can be inserted.</returns>
         private Point FindEmptyPosition(int cellRadius, Point preferredGridPoint)
         {
-            Point newLocation;
-            if (preferredGridPoint == Point.Empty)
-            {
-                newLocation = new Point(random.Next(cellRadius, GridWidth - 1 - cellRadius),
-                    random.Next(cellRadius, GridHeight - 1 - cellRadius));
-            }
-            else
-            {
-                newLocation = preferredGridPoint;
-            }
+            Point newLocation = preferredGridPoint == Point.Empty ? new Point(random.Next(cellRadius, GridWidth - 1 - cellRadius),
+                                                                              random.Next(cellRadius, GridHeight - 1 - cellRadius)) : preferredGridPoint;
 
             int retry = 20;
-            while (retry > 0 && newWorldState.FindOrganismsInCells(newLocation.X - cellRadius, newLocation.X + cellRadius,
-                newLocation.Y - cellRadius, newLocation.Y + cellRadius).Count != 0)
+            while (retry > 0 &&
+                   newWorldState.FindOrganismsInCells(newLocation.X - cellRadius, newLocation.X + cellRadius,
+                                                      newLocation.Y - cellRadius, newLocation.Y + cellRadius).Count != 0)
             {
                 newLocation = new Point(random.Next(cellRadius, GridWidth - 1 - cellRadius),
-                    random.Next(cellRadius, GridHeight - 1 - cellRadius));
+                                        random.Next(cellRadius, GridHeight - 1 - cellRadius));
                 retry--;
             }
 
             // If we couldn't find a spot delete the organism
-            if (retry == 0)
-            {
-                return Point.Empty;
-            }
-            else
-            {
-                return new Point(newLocation.X << EngineSettings.GridWidthPowerOfTwo,
-                    newLocation.Y << EngineSettings.GridHeightPowerOfTwo);
-            }
+            return retry == 0 ? Point.Empty : new Point(newLocation.X << EngineSettings.GridWidthPowerOfTwo,
+                                                        newLocation.Y << EngineSettings.GridHeightPowerOfTwo);
         }
 
         /// <summary>
@@ -1077,7 +980,7 @@ namespace Terrarium.Game
             NewOrganism newOrganism;
             if (preferredLocation == Point.Empty)
             {
-                newOrganism = new NewOrganism(species.InitializeNewState(new Point(0,0), 0), null);
+                newOrganism = new NewOrganism(species.InitializeNewState(new Point(0, 0), 0), null);
             }
             else
             {
@@ -1102,28 +1005,29 @@ namespace Terrarium.Game
             string fullPath = Path.GetFullPath(assemblyPath);
             string reportPath = Path.Combine(GameConfig.ApplicationDirectory, Guid.NewGuid() + ".xml");
             int validAssembly = PrivateAssemblyCache.CheckAssemblyWithReporting(fullPath, reportPath);
-        
+
             if (validAssembly == 0)
             {
                 throw OrganismAssemblyFailedValidationException.GenerateExceptionFromXml(reportPath);
             }
-            
+
             if (File.Exists(reportPath))
             {
                 File.Delete(reportPath);
             }
 
-            byte[] asm = null;
+            byte[] asm;
             using (FileStream sourceStream = File.OpenRead(assemblyPath))
             {
-                if (sourceStream.Length > (100 * 1024))
+                if (sourceStream.Length > (100*1024))
                 {
-                    throw new GameEngineException("Your organism is greater than 100k in size.  Please try to reduce the size of your assembly.");
+                    throw new GameEngineException(
+                        "Your organism is greater than 100k in size.  Please try to reduce the size of your assembly.");
                 }
                 asm = new byte[sourceStream.Length];
                 sourceStream.Read(asm, 0, (int) sourceStream.Length);
             }
-        
+
             // Load the debugging information if it exists
             byte[] asmSymbols = null;
             if (File.Exists(Path.ChangeExtension(assemblyPath, ".pdb")))
@@ -1136,54 +1040,45 @@ namespace Terrarium.Game
             }
 
             // Actually load the assembly from the bytes
-            Species newSpecies = null;
-            System.Reflection.Assembly organismAssembly = null;
+            Species newSpecies;
+            Assembly organismAssembly;
             try
             {
-                if (asmSymbols != null)
-                {
-                    organismAssembly = System.Reflection.Assembly.Load(asm, asmSymbols);
-                }
-                else
-                {
-                    organismAssembly = System.Reflection.Assembly.Load(asm);
-                }
-            
+                organismAssembly = asmSymbols != null ? Assembly.Load(asm, asmSymbols) : Assembly.Load(asm);
+
                 // Make sure organism isn't signed with Terrarium key (e.g. has full trust)
                 if (SecurityUtils.AssemblyHasTerrariumKey(organismAssembly.GetName()))
                 {
                     throw new GameEngineException("You can't introduce assemblies signed with the Terrarium key");
                 }
-            
+
                 newSpecies = Species.GetSpeciesFromAssembly(organismAssembly);
             }
-            // Catch two common fusion errors that occur if you build against the wrong
-            // organismbase.dll
+                // Catch two common fusion errors that occur if you build against the wrong
+                // organismbase.dll
             catch (FileNotFoundException e)
             {
                 if (Path.GetFileName(e.FileName).ToLower(CultureInfo.InvariantCulture) == "organismbase.dll")
                 {
-                    throw new GameEngineException("Your organism is built against the wrong version of organismbase.dll.  Build using the version in '" + Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "'.");
+                    throw new GameEngineException(
+                        "Your organism is built against the wrong version of organismbase.dll.  Build using the version in '" +
+                        Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "'.");
                 }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
             catch (FileLoadException e)
             {
                 if (Path.GetFileName(e.FileName).ToLower(CultureInfo.InvariantCulture).StartsWith("organismbase"))
                 {
-                    throw new GameEngineException("The organism was built using a different version of organismbase.dll than the current client.  You may need to change servers to one that supports the build of the client you are running.");
+                    throw new GameEngineException(
+                        "The organism was built using a different version of organismbase.dll than the current client.  You may need to change servers to one that supports the build of the client you are running.");
                 }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
             catch (BadImageFormatException)
             {
-                throw new GameEngineException("Your organism doesn't appear to be a valid .NET Framework assembly.  It is possible you're loading an old assembly.");
+                throw new GameEngineException(
+                    "Your organism doesn't appear to be a valid .NET Framework assembly.  It is possible you're loading an old assembly.");
             }
 
             SpeciesServiceStatus speciesResult = SpeciesServiceStatus.Success;
@@ -1201,27 +1096,23 @@ namespace Terrarium.Game
                     string speciesType;
                     if (newSpecies is AnimalSpecies)
                     {
-                        if (((AnimalSpecies) newSpecies).IsCarnivore)
-                        {
-                            speciesType = "Carnivore";
-                        }
-                        else
-                        {
-                            speciesType = "Herbivore";
-                        }
+                        speciesType = ((AnimalSpecies) newSpecies).IsCarnivore ? "Carnivore" : "Herbivore";
                     }
                     else
                     {
                         speciesType = "Plant";
                     }
-                    
+
                     if (!Regex.IsMatch(newSpecies.AssemblyInfo.ShortName, "[0-9a-zA-Z ]+"))
                     {
-                        throw new GameEngineException("The assembly name of your organism must consist only of ASCII letters, digits, and spaces.");
+                        throw new GameEngineException(
+                            "The assembly name of your organism must consist only of ASCII letters, digits, and spaces.");
                     }
-                
-                    speciesResult = service.Add(newSpecies.AssemblyInfo.ShortName, System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(),
-                        speciesType, newSpecies.AuthorName, newSpecies.AuthorEmail, newSpecies.AssemblyInfo.FullName, asm);
+
+                    speciesResult = service.Add(newSpecies.AssemblyInfo.ShortName,
+                                                Assembly.GetExecutingAssembly().GetName().Version.ToString(),
+                                                speciesType, newSpecies.AuthorName, newSpecies.AuthorEmail,
+                                                newSpecies.AssemblyInfo.FullName, asm);
                 }
             }
 
@@ -1229,7 +1120,8 @@ namespace Terrarium.Game
             {
                 if (!pac.Exists(organismAssembly.FullName))
                 {
-                    pac.SaveOrganismAssembly(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"), organismAssembly.FullName);
+                    pac.SaveOrganismAssembly(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"),
+                                             organismAssembly.FullName);
                 }
                 else if (!reintroduction)
                 {
@@ -1239,16 +1131,15 @@ namespace Terrarium.Game
                     // and not the new one if they save and reload.
                     if (!EcosystemMode)
                     {
-                        throw new GameEngineException("Organism assemblies can only be introduced once into a Terrarium. \r\n - If you are just trying to add more of these animals, select your animal in the 'Species' dropdown below and push the 'add' button.\r\n - If you are developing an animal and have a new assembly to try, create a new terrarium and introduce it there.");
+                        throw new GameEngineException(
+                            "Organism assemblies can only be introduced once into a Terrarium. \r\n - If you are just trying to add more of these animals, select your animal in the 'Species' dropdown below and push the 'add' button.\r\n - If you are developing an animal and have a new assembly to try, create a new terrarium and introduce it there.");
                     }
-                    else
-                    {
-                        // The server should prevent
-                        Debug.Assert(false);
-                        throw new GameEngineException("Can't add this species because you already have an assembly with the same name in your Ecosystem.");
-                    }
+                    // The server should prevent
+                    Debug.Assert(false);
+                    throw new GameEngineException(
+                        "Can't add this species because you already have an assembly with the same name in your Ecosystem.");
                 }
-            
+
                 newSpecies = Species.GetSpeciesFromAssembly(pac.LoadOrganismAssembly(organismAssembly.FullName));
 
                 for (int i = 0; i < 10; i++)
@@ -1258,29 +1149,35 @@ namespace Terrarium.Game
             }
             else if (speciesResult == SpeciesServiceStatus.AlreadyExists)
             {
-                throw new GameEngineException("Species name already exists in universe, please choose a new assembly name.");
+                throw new GameEngineException(
+                    "Species name already exists in universe, please choose a new assembly name.");
             }
             else if (speciesResult == SpeciesServiceStatus.FiveMinuteThrottle)
             {
-                throw new GameEngineException("You have submitted another species within the last 5 minutes.  Please wait at least 5 minutes between adding new species.");
+                throw new GameEngineException(
+                    "You have submitted another species within the last 5 minutes.  Please wait at least 5 minutes between adding new species.");
             }
             else if (speciesResult == SpeciesServiceStatus.TwentyFourHourThrottle)
             {
-                throw new GameEngineException("You have submitted 30 species within the last 24 hours.  You now have to wait up to 24 hours to introduce a new species.");
+                throw new GameEngineException(
+                    "You have submitted 30 species within the last 24 hours.  You now have to wait up to 24 hours to introduce a new species.");
             }
             else if (speciesResult == SpeciesServiceStatus.PoliCheckSpeciesNameFailure)
             {
-                throw new GameEngineException("Your Species Name has failed our basic check for inflammatory terms.  Please resubmit using a new name, or if your name was flagged in error, please try using initials or other monikers.");
+                throw new GameEngineException(
+                    "Your Species Name has failed our basic check for inflammatory terms.  Please resubmit using a new name, or if your name was flagged in error, please try using initials or other monikers.");
             }
             else if (speciesResult == SpeciesServiceStatus.PoliCheckAuthorNameFailure)
             {
-                throw new GameEngineException("Your Author Name has failed our basic check for inflammatory terms.  Please resubmit using a new name, or if your name was flagged in error, please try using initials or other monikers.");
+                throw new GameEngineException(
+                    "Your Author Name has failed our basic check for inflammatory terms.  Please resubmit using a new name, or if your name was flagged in error, please try using initials or other monikers.");
             }
             else if (speciesResult == SpeciesServiceStatus.PoliCheckEmailFailure)
             {
-                throw new GameEngineException("Your Email has failed our basic check for inflammatory terms.  Please resubmit using a different email address.");
+                throw new GameEngineException(
+                    "Your Email has failed our basic check for inflammatory terms.  Please resubmit using a different email address.");
             }
-            else 
+            else
             {
                 throw new GameEngineException("Terrarium is experience some server problems.  Please try again later.");
             }
@@ -1298,7 +1195,7 @@ namespace Terrarium.Game
             while (newOrganismQueue.Count > 0)
             {
                 Object queueObject = newOrganismQueue.Dequeue();
-                if (typeof(TeleportState).IsAssignableFrom(queueObject.GetType()))
+                if (typeof (TeleportState).IsAssignableFrom(queueObject.GetType()))
                 {
                     // Teleported organism
                     TeleportState teleportState = (TeleportState) queueObject;
@@ -1308,9 +1205,9 @@ namespace Terrarium.Game
                         // if it was, destroy the organism by not handling it
                         if (teleportState.Originator != newWorldState.StateGuid)
                         {
-                            this.OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other,
-                                "Teleport attempted to an old game.",
-                                "A teleport was attempted to an old game, the organism was lost in space."));
+                            OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other,
+                                                                                 "Teleport attempted to an old game.",
+                                                                                 "A teleport was attempted to an old game, the organism was lost in space."));
                             continue;
                         }
                     }
@@ -1318,31 +1215,27 @@ namespace Terrarium.Game
                     Organism organism;
                     try
                     {
-                        if (teleportState.TeleportedToSelf)
-                        {
-                            organism = teleportState.Organism;
-                        }
-                        else
-                        {
-                            organism = teleportState.OrganismWrapper.Organism;
-                        }
+                        organism = teleportState.TeleportedToSelf ? teleportState.Organism : teleportState.OrganismWrapper.Organism;
                     }
                     catch (FileLoadException e)
                     {
                         // Here we want to log how many organisms are getting killed
                         // FileLoadException will happen when an organism is blacklisted, so don't show a message because the message contains the name
                         ErrorLog.LogHandledException(e);
-                        OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other, "An organism died during teleportation"));
+                        OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other,
+                                                                             "An organism died during teleportation"));
                         continue;
                     }
                     catch (Exception e)
                     {
                         // Here we want to log how many organisms are getting killed
                         ErrorLog.LogHandledException(e);
-                        OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other, "An organism died during teleportation: " + e.Message));
+                        OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other,
+                                                                             "An organism died during teleportation: " +
+                                                                             e.Message));
                         continue;
                     }
-                
+
                     OrganismState organismState = teleportState.OrganismState;
 
                     // Make it mutable and change its position
@@ -1356,10 +1249,13 @@ namespace Terrarium.Game
                     else
                     {
                         // We couldn't find a place to put it, kill the organism
-                        OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other, "A '" + ((Species) organismState.Species).Name + "' died during teleportation: couldn't find an open spot quickly enough."));
+                        OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other,
+                                                                             "A '" +
+                                                                             ((Species) organismState.Species).Name +
+                                                                             "' died during teleportation: couldn't find an open spot quickly enough."));
                         continue;
                     }
-                
+
                     try
                     {
                         // Host it and give it state in a random location
@@ -1373,10 +1269,11 @@ namespace Terrarium.Game
                         ErrorLog.LogHandledException(e);
                         continue;
                     }
-                
+
                     try
                     {
-                        if ( !teleportState.TeleportedToSelf ) {
+                        if (!teleportState.TeleportedToSelf)
+                        {
                             if (organism is Animal)
                             {
                                 ((Animal) organism).DeserializeAnimal(organism.SerializedStream);
@@ -1390,7 +1287,11 @@ namespace Terrarium.Game
                     }
                     catch (Exception e)
                     {
-                        OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other, "A '" + ((Species) organismState.Species).Name + "' lost its memory during teleportation: " + e.Message));
+                        OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other,
+                                                                             "A '" +
+                                                                             ((Species) organismState.Species).Name +
+                                                                             "' lost its memory during teleportation: " +
+                                                                             e.Message));
                     }
 
                     newWorldState.AddOrganism(organismState);
@@ -1403,7 +1304,7 @@ namespace Terrarium.Game
                     //The GameEngine state has changed so raise an event to that effect
                     if (!teleportState.TeleportedToSelf)
                     {
-                        this.OnEngineStateChanged(EngineStateChangedEventArgs.AnimalArrived(organismState));
+                        OnEngineStateChanged(EngineStateChangedEventArgs.AnimalArrived(organismState));
                     }
                 }
                 else
@@ -1412,39 +1313,37 @@ namespace Terrarium.Game
                     NewOrganism newOrganism = (NewOrganism) queueObject;
 
                     OrganismState organismState = newOrganism.State;
-                    Point newPosition;
-                    if (newOrganism.AddAtRandomLocation)
-                    {
-                        newPosition = FindEmptyPosition(organismState.CellRadius, Point.Empty);
-                    }
-                    else
-                    {
-                        // Try to add it at the preferred point if it is free
-                        newPosition = FindEmptyPosition(organismState.CellRadius,
-                            new Point(organismState.Position.X >> EngineSettings.GridWidthPowerOfTwo,
-                            organismState.Position.Y >> EngineSettings.GridHeightPowerOfTwo));
-                    }
-                
+                    Point newPosition = newOrganism.AddAtRandomLocation ? 
+                        FindEmptyPosition(organismState.CellRadius, Point.Empty) : 
+                        FindEmptyPosition(organismState.CellRadius, 
+                        new Point(organismState.Position.X >> EngineSettings.GridWidthPowerOfTwo,
+                        organismState.Position.Y >> EngineSettings.GridHeightPowerOfTwo));
+
                     if (newPosition != Point.Empty)
                     {
                         organismState.Position = newPosition;
                     }
                     else
                     {
-                        OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other, "A '" + ((Species) organismState.Species).Name + "' died at birth: not enough space in the world."));
+                        OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other,
+                                                                             "A '" +
+                                                                             ((Species) organismState.Species).Name +
+                                                                             "' died at birth: not enough space in the world."));
                         continue;
                     }
 
                     // Host it and Give it state in a random location
-                    Debug.Assert(((Species) organismState.Species).Type != null, "Type is null on organism '" + ((Species) organismState.Species).Name + "'");
+                    Debug.Assert(((Species) organismState.Species).Type != null,
+                                 "Type is null on organism '" + ((Species) organismState.Species).Name + "'");
                     try
                     {
                         scheduler.Create(((Species) organismState.Species).Type, organismState.ID);
-                    } 
+                    }
                     catch (Exception e)
                     {
                         ErrorLog.LogHandledException(e);
-                        OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other, "An organism died at birth: " + e.Message));
+                        OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other,
+                                                                             "An organism died at birth: " + e.Message));
                         continue;
                     }
                     newWorldState.AddOrganism(organismState);
@@ -1483,31 +1382,37 @@ namespace Terrarium.Game
         ///  be called by normal code, rather call RemoveOrganismQueued.
         /// </summary>
         /// <param name="killedOrganism">The organism to be removed.</param>
-        private void RemoveOrganism(KilledOrganism killedOrganism) 
+        private void RemoveOrganism(KilledOrganism killedOrganism)
         {
             OrganismState killedState = newWorldState.GetOrganismState(killedOrganism.ID);
             if (killedOrganism.DeathReason == PopulationChangeReason.Error ||
                 killedOrganism.DeathReason == PopulationChangeReason.Timeout ||
                 killedOrganism.DeathReason == PopulationChangeReason.SecurityViolation ||
-                killedOrganism.DeathReason == PopulationChangeReason.OrganismBlacklisted )
+                killedOrganism.DeathReason == PopulationChangeReason.OrganismBlacklisted)
             {
-                this.OnEngineStateChanged(EngineStateChangedEventArgs.AnimalDestroyed(killedState, killedOrganism.DeathReason));
+                OnEngineStateChanged(EngineStateChangedEventArgs.AnimalDestroyed(killedState, killedOrganism.DeathReason));
             }
 
             // Tell the developer the details
             if (killedOrganism.DeathReason == PopulationChangeReason.Error ||
                 killedOrganism.DeathReason == PopulationChangeReason.SecurityViolation)
             {
-				if ( killedOrganism.ExtraInformation != null && killedOrganism.ExtraInformation.Length > 0 ) {
-					string developerMessage = "**** An exception occurred in a '" + ((Species) killedState.Species).Name + "': \r\n" + killedOrganism.ExtraInformation;
-					this.OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.DeveloperInformation, developerMessage));
-				}
+                if (!string.IsNullOrEmpty(killedOrganism.ExtraInformation))
+                {
+                    string developerMessage = "**** An exception occurred in a '" + ((Species) killedState.Species).Name +
+                                              "': \r\n" + killedOrganism.ExtraInformation;
+                    OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.DeveloperInformation,
+                                                                         developerMessage));
+                }
             }
-            
-            if ( killedOrganism.DeathReason == PopulationChangeReason.Error && killedOrganism.ExtraInformation != null && killedOrganism.ExtraInformation.Length > 0 ) {
-				OrganismState state = newWorldState.GetOrganismState(killedOrganism.ID);
-				state.Kill(killedOrganism.DeathReason);
-            } else {
+
+            if (killedOrganism.DeathReason == PopulationChangeReason.Error && string.IsNullOrEmpty(killedOrganism.ExtraInformation))
+            {
+                OrganismState state = newWorldState.GetOrganismState(killedOrganism.ID);
+                state.Kill(killedOrganism.DeathReason);
+            }
+            else
+            {
                 UncountOrganism(killedState, killedOrganism.DeathReason);
 
                 // Remove it from the Host
@@ -1558,7 +1463,8 @@ namespace Terrarium.Game
                     // We always want to save on the tick after we've reported so we don't get our state messed up
                     // on the server.  For example: never start the game in a state that was before the information
                     // was sent to the server because the server will think we're corrupted.
-                    if (logState || (ecosystemMode && populationData.IsReportingTick(CurrentVector.State.TickNumber - 1)))
+                    if (logState ||
+                        (ecosystemMode && populationData.IsReportingTick(CurrentVector.State.TickNumber - 1)))
                     {
                         Debug.WriteLine("Saving state.");
                         SerializeState(currentStateFileName);
@@ -1647,7 +1553,7 @@ namespace Terrarium.Game
 
                     // Insert any new organisms
                     InsertOrganismsFromQueue();
-                
+
                     // Set Antenna States
                     DoAntennas();
 
@@ -1671,10 +1577,7 @@ namespace Terrarium.Game
                 turnPhase = 0;
                 return true;
             }
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
         /// <summary>
@@ -1693,7 +1596,7 @@ namespace Terrarium.Game
                 }
             }
         }
-    
+
         /// <summary>
         ///  Helper function to update all state objects with the latest antenna
         ///  information after the creature's have processed their ticks.
@@ -1708,7 +1611,7 @@ namespace Terrarium.Game
                     AntennaState antennaState = new AntennaState(null);
                     if (animal != null)
                     {
-                        antennaState = new AntennaState(((Animal) animal).Antennas);
+                        antennaState = new AntennaState((animal).Antennas);
                     }
                     antennaState.MakeImmutable();
                     ((AnimalState) orgState).Antennas = antennaState;
@@ -1764,16 +1667,19 @@ namespace Terrarium.Game
                         if (defenderState.IsAlive)
                         {
                             // Figure out the maximum possible attack damage
-                            damageCaused = random.Next(0, attackerState.AnimalSpecies.MaximumAttackDamagePerUnitRadius *
-                                attackerState.Radius);
+                            damageCaused = random.Next(0, attackerState.AnimalSpecies.MaximumAttackDamagePerUnitRadius*
+                                                          attackerState.Radius);
 
                             // Defense doesn't scale based on distance
-                            DefendAction defendAction = (DefendAction) CurrentVector.Actions.DefendActions[defenderState.ID];
+                            DefendAction defendAction =
+                                (DefendAction) CurrentVector.Actions.DefendActions[defenderState.ID];
                             int defendDiscount = 0;
                             if (defendAction != null && defendAction.TargetAnimal.ID == attackerState.ID)
                             {
-                                defendDiscount = random.Next(0, defenderState.AnimalSpecies.MaximumDefendDamagePerUnitRadius *
-                                    defenderState.Radius);
+                                defendDiscount = random.Next(0,
+                                                             defenderState.AnimalSpecies.
+                                                                 MaximumDefendDamagePerUnitRadius*
+                                                             defenderState.Radius);
                             }
 
                             if (damageCaused > defendDiscount)
@@ -1793,7 +1699,9 @@ namespace Terrarium.Game
                 }
 
                 // Tell the attacker what happened
-                attackerState.OrganismEvents.AttackCompleted = new AttackCompletedEventArgs(action.ActionID, action, killed, escaped, damageCaused);
+                attackerState.OrganismEvents.AttackCompleted = new AttackCompletedEventArgs(action.ActionID, action,
+                                                                                            killed, escaped,
+                                                                                            damageCaused);
             }
         }
 
@@ -1805,7 +1713,7 @@ namespace Terrarium.Game
 
                 if (organismState != null)
                 {
-                    if (organismState is AnimalState && !((AnimalState) organismState).IsAlive)
+                    if (organismState is AnimalState && !(organismState).IsAlive)
                     {
                         continue;
                     }
@@ -1838,7 +1746,8 @@ namespace Terrarium.Game
                         if (!animalState.IsStopped)
                         {
                             // Need to move
-                            Vector vector = Vector.Subtract(animalState.Position, animalState.CurrentMoveToAction.MovementVector.Destination);
+                            Vector vector = Vector.Subtract(animalState.Position,
+                                                            animalState.CurrentMoveToAction.MovementVector.Destination);
                             Point newLocation;
 
                             Vector unitVector = vector.GetUnitVector();
@@ -1849,7 +1758,8 @@ namespace Terrarium.Game
                             }
                             else
                             {
-                                Vector speedVector = unitVector.Scale(animalState.CurrentMoveToAction.MovementVector.Speed);
+                                Vector speedVector =
+                                    unitVector.Scale(animalState.CurrentMoveToAction.MovementVector.Speed);
                                 newLocation = Vector.Add(animalState.Position, speedVector);
                             }
 
@@ -1885,12 +1795,9 @@ namespace Terrarium.Game
                         // This organism wanted to go where it already was, so -- destination reached
                         stationaryState.OrganismEvents.MoveCompleted =
                             new MoveCompletedEventArgs(stationaryState.CurrentMoveToAction.ActionID,
-                            stationaryState.CurrentMoveToAction, ReasonForStop.DestinationReached, null);
+                                                       stationaryState.CurrentMoveToAction,
+                                                       ReasonForStop.DestinationReached, null);
                         stationaryState.CurrentMoveToAction = null;
-                    }
-                    else
-                    {
-                        stationaryState = segment.State;
                     }
 
                     continue;
@@ -1912,7 +1819,7 @@ namespace Terrarium.Game
                 Debug.Assert(endSegment.GridX == newState.GridX && endSegment.GridY == newState.GridY);
 
                 newState.BurnEnergy(newState.EnergyRequiredToMove(moveVector.Magnitude,
-                    newState.CurrentMoveToAction.MovementVector.Speed));
+                                                                  newState.CurrentMoveToAction.MovementVector.Speed));
 
                 // Burning energy may have killed the organism, in which case we can't
                 // send it events because the CurrentMoveToAction is gone
@@ -1926,7 +1833,8 @@ namespace Terrarium.Game
                         // If where they landed wasn't where they wanted to go, then they got blocked.  Stop movement and notify them
                         newState.OrganismEvents.MoveCompleted =
                             new MoveCompletedEventArgs(newState.CurrentMoveToAction.ActionID,
-                            newState.CurrentMoveToAction, ReasonForStop.Blocked, endSegment.BlockedByState);
+                                                       newState.CurrentMoveToAction, ReasonForStop.Blocked,
+                                                       endSegment.BlockedByState);
 
                         newState.CurrentMoveToAction = null;
                     }
@@ -1935,9 +1843,10 @@ namespace Terrarium.Game
                         // Destination reached
                         newState.OrganismEvents.MoveCompleted =
                             new MoveCompletedEventArgs(newState.CurrentMoveToAction.ActionID,
-                            newState.CurrentMoveToAction, ReasonForStop.DestinationReached, null);
+                                                       newState.CurrentMoveToAction, ReasonForStop.DestinationReached,
+                                                       null);
 
-                        newState.CurrentMoveToAction =null;
+                        newState.CurrentMoveToAction = null;
                     }
                 }
             }
@@ -1951,7 +1860,7 @@ namespace Terrarium.Game
             {
                 OrganismState organismState = newWorldState.GetOrganismState(organismID);
 
-                if (organismState != null && organismState.GetType() == typeof(PlantState))
+                if (organismState != null && organismState.GetType() == typeof (PlantState))
                 {
                     PlantState plantState = (PlantState) organismState;
                     int availableLight = CurrentVector.State.GetAvailableLight(plantState);
@@ -1968,7 +1877,7 @@ namespace Terrarium.Game
         {
             Hashtable plantsToKill = null;
             Hashtable animalsToKill = null;
-            ArrayList deadAnimals =  new ArrayList();
+            ArrayList deadAnimals = new ArrayList();
 
             if (PlantCount > MaxPlants)
             {
@@ -1987,12 +1896,13 @@ namespace Terrarium.Game
 
             SortOrganismsForDisease(plantsToKill, animalsToKill, deadAnimals);
             KillOrganisms(plantsToKill, PlantCount - MaxPlants, PlantCount, false);
-            KillOrganisms(animalsToKill, AnimalCount - MaxAnimals - deadAnimals.Count, MaxAnimals - deadAnimals.Count, true);
+            KillOrganisms(animalsToKill, AnimalCount - MaxAnimals - deadAnimals.Count, MaxAnimals - deadAnimals.Count,
+                          true);
 
             // Next remove enough previously rotted animals to get us as close to the right level as possible
             // Make sure dead animals only represent 1/3 of our maximum
             // Leave around some corpses if possible so that carnivores can eat
-            int corpseRemoveCount = deadAnimals.Count - (MaxAnimals / 3);
+            int corpseRemoveCount = deadAnimals.Count - (MaxAnimals/3);
             if (corpseRemoveCount > 0)
             {
                 foreach (AnimalState state in deadAnimals)
@@ -2014,9 +1924,10 @@ namespace Terrarium.Game
             }
         }
 
-        private void KillOrganisms(Hashtable organismsToKill, int organismKillCount, int totalPopulation, bool killingAnimals)
+        private void KillOrganisms(IDictionary organismsToKill, int organismKillCount, int totalPopulation,
+                                   bool killingAnimals)
         {
-            int diseaseBoundary = 10;
+            const int diseaseBoundary = 10;
             int killedCount = 0;
             ArrayList largePopulationSpecies = new ArrayList();
             Random rand = new Random(DateTime.Now.Millisecond);
@@ -2032,7 +1943,7 @@ namespace Terrarium.Game
                     if (list.Count > diseaseBoundary)
                     {
                         // Kill a proportional amount of this species
-                        int speciesKillTarget = (int) (((double) list.Count / (double) totalPopulation) * (double) organismKillCount);
+                        int speciesKillTarget = (int) ((list.Count/(double) totalPopulation)*organismKillCount);
                         while (list.Count > diseaseBoundary && speciesKillTarget > 0)
                         {
                             killedCount++;
@@ -2090,7 +2001,7 @@ namespace Terrarium.Game
                         {
                             index++;
                         }
-                    
+
                         if (index > largePopulationSpecies.Count - 1)
                         {
                             index = 0;
@@ -2103,7 +2014,7 @@ namespace Terrarium.Game
                 // If we still need to kill more organisms, we take it off of anyone, one by one, randomly
                 if (organismKillCount > 0)
                 {
-                    SortedList [] allSpecies = new SortedList[organismsToKill.Count];
+                    SortedList[] allSpecies = new SortedList[organismsToKill.Count];
                     allSpeciesCollection.CopyTo(allSpecies, 0);
                     while (organismKillCount > 0)
                     {
@@ -2131,12 +2042,12 @@ namespace Terrarium.Game
         }
 
         // Fills in the hashtables with sorted lists keyed on SpeciesName
-        private void SortOrganismsForDisease(Hashtable plantsToKill, Hashtable animalsToKill, ArrayList deadAnimals) 
+        private void SortOrganismsForDisease(IDictionary plantsToKill, IDictionary animalsToKill, IList deadAnimals)
         {
             // This is just to ensure that each strength is unique so we can use the sorted list
             // We allow strengths to be from 0 - 9,999,000 and we never use numbers in the hundreds
             // we add the uniquifier which is a number from 0 - 999 just to break ties
-            int uniquifier = 0; 
+            int uniquifier = 0;
             foreach (string organismID in organismIDList)
             {
                 OrganismState organismState = newWorldState.GetOrganismState(organismID);
@@ -2149,7 +2060,7 @@ namespace Terrarium.Game
                 int strength;
                 if (organismState.IsAlive)
                 {
-                    strength = (int)((organismState.PercentLifespanRemaining) * 1000) * 1000 + uniquifier;
+                    strength = (int) ((organismState.PercentLifespanRemaining)*1000)*1000 + uniquifier;
                     uniquifier++;
                     Debug.Assert(uniquifier < 1000);
                 }
@@ -2159,7 +2070,7 @@ namespace Terrarium.Game
                 }
 
                 string speciesName = ((Species) organismState.Species).Name;
-                SortedList addList = null;
+                SortedList addList;
                 if (plantsToKill != null && organismState is PlantState)
                 {
                     if (plantsToKill.Contains(speciesName))
@@ -2171,7 +2082,7 @@ namespace Terrarium.Game
                         addList = new SortedList();
                         plantsToKill.Add(speciesName, addList);
                     }
-                
+
                     if (strength == -1)
                     {
                         RemoveOrganism(new KilledOrganism(organismState));
@@ -2240,25 +2151,30 @@ namespace Terrarium.Game
                 {
                     if (organismState.IncubationTicks == EngineSettings.TicksToIncubate)
                     {
-                        Point newPosition = organismState.Position;
-                        newPosition = FindEmptyPosition(organismState.CellRadius, Point.Empty);
+                        Point newPosition = FindEmptyPosition(organismState.CellRadius, Point.Empty);
                         if (newPosition != Point.Empty)
                         {
                             // Only birth an organism if there is space
                             NewOrganism newOrganism = new NewOrganism(
-                                ((Species) organismState.Species).InitializeNewState(newPosition, organismState.Generation + 1),
-                                (organismState.CurrentReproduceAction.Dna == null) ? (new byte[0]) : ((byte[]) organismState.CurrentReproduceAction.Dna.Clone()));
+                                ((Species) organismState.Species).InitializeNewState(newPosition,
+                                                                                     organismState.Generation + 1),
+                                (organismState.CurrentReproduceAction.Dna == null)
+                                    ? (new byte[0])
+                                    : ((byte[]) organismState.CurrentReproduceAction.Dna.Clone()));
                             newOrganismQueue.Enqueue(newOrganism);
                         }
                         else
                         {
                             // Kill the organism since there is no place to put it
-                            OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other, "A '" + ((Species) organismState.Species).Name + "' died during birth: couldn't find an open spot quickly enough."));
+                            OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other,
+                                                                                 "A '" +
+                                                                                 ((Species) organismState.Species).Name +
+                                                                                 "' died during birth: couldn't find an open spot quickly enough."));
                         }
 
                         organismState.OrganismEvents.ReproduceCompleted =
                             new ReproduceCompletedEventArgs(organismState.CurrentReproduceAction.ActionID,
-                            organismState.CurrentReproduceAction);
+                                                            organismState.CurrentReproduceAction);
                         organismState.ResetReproductionWait();
                         organismState.CurrentReproduceAction = null;
                     }
@@ -2269,12 +2185,14 @@ namespace Terrarium.Game
                         {
                             if (organismState is AnimalState)
                             {
-                                organismState.BurnEnergy((double) organismState.Radius * EngineSettings.AnimalIncubationEnergyPerUnitOfRadius);
+                                organismState.BurnEnergy(organismState.Radius*
+                                                         EngineSettings.AnimalIncubationEnergyPerUnitOfRadius);
                             }
                             else
                             {
                                 Debug.Assert(organismState is PlantState);
-                                organismState.BurnEnergy((double) organismState.Radius * EngineSettings.PlantIncubationEnergyPerUnitOfRadius);
+                                organismState.BurnEnergy(organismState.Radius*
+                                                         EngineSettings.PlantIncubationEnergyPerUnitOfRadius);
                             }
 
                             organismState.AddIncubationTick();
@@ -2302,9 +2220,8 @@ namespace Terrarium.Game
         // Assumes the animal was dead (if an animal) at the time of the bite
         // and that it is the proper food source for this animal (herbivore or carnivore)
         // Also assumes that it is within biting range.
-        private void DoBites() 
+        private void DoBites()
         {
-            Boolean biteSuccessful;
             ICollection eatActions = CurrentVector.Actions.EatActions.Values;
             foreach (EatAction action in eatActions)
             {
@@ -2315,39 +2232,40 @@ namespace Terrarium.Game
                     continue;
                 }
 
-                biteSuccessful = true;
-                int foodChunkCount = 0;
-                OrganismState defenderState = (OrganismState) newWorldState.GetOrganismState(action.TargetOrganism.ID);
+                Boolean biteSuccessful = true;
+                OrganismState defenderState = newWorldState.GetOrganismState(action.TargetOrganism.ID);
                 if (defenderState == null)
                 {
                     // the defender has been removed from the game
                     biteSuccessful = false;
-                } 
+                }
                 else
                 {
-                    int energyToFill = (int) (((double) attackerState.Radius * (double) attackerState.Species.MaximumEnergyPerUnitRadius) - 
-                        attackerState.StoredEnergy);
+                    int energyToFill =
+                        (int) ((attackerState.Radius*(double) attackerState.Species.MaximumEnergyPerUnitRadius) -
+                               attackerState.StoredEnergy);
                     Debug.Assert(energyToFill > 0);
 
                     // Determine how many chunks it would take to fill the animal completely
+                    int foodChunkCount;
                     if (defenderState is PlantState)
                     {
-                        foodChunkCount = (int) ((double) energyToFill / (double) EngineSettings.EnergyPerPlantFoodChunk);
+                        foodChunkCount = (int) (energyToFill/(double) EngineSettings.EnergyPerPlantFoodChunk);
                     }
                     else
                     {
-                        foodChunkCount = (int) ((double) energyToFill / (double) EngineSettings.EnergyPerAnimalFoodChunk);
+                        foodChunkCount = (int) (energyToFill/(double) EngineSettings.EnergyPerAnimalFoodChunk);
                     }
-                
+
                     if (foodChunkCount == 0)
                     {
                         foodChunkCount = 1;
                     }
 
                     // If this is more than the animal can eat in one bite, limit it to what they can eat
-                    if (foodChunkCount > attackerState.AnimalSpecies.EatingSpeedPerUnitRadius * attackerState.Radius)
+                    if (foodChunkCount > attackerState.AnimalSpecies.EatingSpeedPerUnitRadius*attackerState.Radius)
                     {
-                        foodChunkCount = attackerState.AnimalSpecies.EatingSpeedPerUnitRadius * attackerState.Radius;
+                        foodChunkCount = attackerState.AnimalSpecies.EatingSpeedPerUnitRadius*attackerState.Radius;
                     }
 
                     if (defenderState.FoodChunks <= foodChunkCount)
@@ -2363,25 +2281,26 @@ namespace Terrarium.Game
                     }
 
                     // Determine how much energy we got
-                    int newEnergy = 0;
+                    int newEnergy;
                     if (defenderState is PlantState)
                     {
-                        newEnergy = EngineSettings.EnergyPerPlantFoodChunk * foodChunkCount;
+                        newEnergy = EngineSettings.EnergyPerPlantFoodChunk*foodChunkCount;
                     }
                     else
                     {
-                        newEnergy = EngineSettings.EnergyPerAnimalFoodChunk * foodChunkCount;
+                        newEnergy = EngineSettings.EnergyPerAnimalFoodChunk*foodChunkCount;
                     }
 
                     attackerState.StoredEnergy = attackerState.StoredEnergy + newEnergy;
                 }
 
                 // Tell the attacker what happened
-                attackerState.OrganismEvents.EatCompleted = new EatCompletedEventArgs(action.ActionID, action, biteSuccessful);
+                attackerState.OrganismEvents.EatCompleted = new EatCompletedEventArgs(action.ActionID, action,
+                                                                                      biteSuccessful);
             }
         }
 
-        void BurnBaseEnergy()
+        private void BurnBaseEnergy()
         {
             foreach (string organismID in organismIDList)
             {
@@ -2396,7 +2315,8 @@ namespace Terrarium.Game
                         {
                             if (organismState.IsAlive)
                             {
-                                organismState.BurnEnergy((double) organismState.Radius * EngineSettings.BaseAnimalEnergyPerUnitOfRadius);
+                                organismState.BurnEnergy(organismState.Radius*
+                                                         EngineSettings.BaseAnimalEnergyPerUnitOfRadius);
                             }
                         }
                         else
@@ -2405,7 +2325,7 @@ namespace Terrarium.Game
                             PlantState plantState = (PlantState) organismState;
                             if (organismState.IsAlive)
                             {
-                                plantState.BurnEnergy(plantState.Radius * EngineSettings.BasePlantEnergyPerUnitOfRadius);
+                                plantState.BurnEnergy(plantState.Radius*EngineSettings.BasePlantEnergyPerUnitOfRadius);
                             }
 
                             // When plants die they disappear
@@ -2431,7 +2351,7 @@ namespace Terrarium.Game
             }
         }
 
-        void Heal() 
+        private void Heal()
         {
             foreach (string organismID in organismIDList)
             {
