@@ -1,17 +1,13 @@
-//------------------------------------------------------------------------------
-//      Copyright (c) Microsoft Corporation.  All rights reserved.                                                              
-//------------------------------------------------------------------------------
-
 using System;
 using System.Data;
 using System.Diagnostics;
-using System.Web.Services.Protocols;
 using System.Globalization;
+using System.Web.Services.Protocols;
 using OrganismBase;
 using Terrarium.Configuration;
-using Terrarium.Tools;
 using Terrarium.Forms;
 using Terrarium.Services.Reporting;
+using Terrarium.Tools;
 
 namespace Terrarium.Game
 {
@@ -24,44 +20,48 @@ namespace Terrarium.Game
     [Serializable]
     public class PopulationData
     {
-        string reportDirectory;
-        int currentTick = -1;
-        Boolean firstTick = true;
-        DataSet data;
-        DataTable   populationChangeTable,  // One row per population delta
-                    tickTable,              // one row per tick
-                    totalsTable;            // One row per species, current population, min and max
-        Boolean timedOut = false;
-        Boolean nodeCorrupted = false;
-        Boolean organismBlacklisted = false;
-        Boolean reportDataToServer = true;
-        Boolean reportNow = false;
-        int lastReportedTick = -1;      // used only for debugging
-        const int ticksToReport = 600;  // 2 ticks per second * 60 seconds * 5 minutes
-        DataSet peerTotalsData = null;
+        private const int ticksToReport = 600; // 2 ticks per second * 60 seconds * 5 minutes
+        private readonly bool reportDataToServer = true;
+        private int currentTick = -1;
+        private DataSet data;
+        private bool firstTick = true;
+        private int lastReportedTick = -1; // used only for debugging
+        [NonSerialized] private TerrariumLed led;
 
-        [NonSerialized]
-        WebClientAsyncResult pendingAsyncResult;
+        private bool nodeCorrupted;
+        private bool organismBlacklisted;
+        private DataSet peerTotalsData;
 
-        [NonSerialized]
-        Terrarium.Services.Reporting.ReportingService reportingService;
+        [NonSerialized] private WebClientAsyncResult pendingAsyncResult;
+        private DataTable populationChangeTable; // One row per species, current population, min and max
 
-        [NonSerialized]
-        TerrariumLed led;
+        [NonSerialized] private ReportingService reportingService;
+        private bool reportNow;
+        private DataTable tickTable; // One row per species, current population, min and max
+        private bool timedOut;
+
+        private DataTable // one row per tick
+            totalsTable; // One row per species, current population, min and max
 
         /// <summary>
         ///  Creates a new PopulationData class that can be used to report data and
         ///  update a status LED.
         /// </summary>
-        /// <param name="reportDirectory">A directory to write out reports to.</param>
         /// <param name="reportData">Should data be reported to the server.</param>
         /// <param name="led">An LED used to indicate status.</param>
-        public PopulationData(string reportDirectory, Boolean reportData, TerrariumLed led)
+        public PopulationData(bool reportData, TerrariumLed led)
         {
-            this.reportDirectory = reportDirectory;
-            this.reportDataToServer = reportData;
+            reportDataToServer = reportData;
             this.led = led;
             ResetData();
+        }
+
+        /// <summary>
+        ///  Remebers the last tick that data was reported to the server.
+        /// </summary>
+        public int LastReportedTick
+        {
+            get { return lastReportedTick; }
         }
 
         /// <summary>
@@ -70,22 +70,11 @@ namespace Terrarium.Game
         /// </summary>
         public void InitWebService()
         {
-            if (this.reportingService == null)
+            if (reportingService == null)
             {
-                this.reportingService = new ReportingService();
+                reportingService = new ReportingService();
                 reportingService.Url = GameConfig.WebRoot + "/reporting/reportpopulation.asmx";
                 reportingService.Timeout = 60000;
-            }
-        }
-
-        /// <summary>
-        ///  Remebers the last tick that data was reported to the server.
-        /// </summary>
-        public int LastReportedTick
-        {
-            get
-            {
-                return lastReportedTick;
             }
         }
 
@@ -104,33 +93,37 @@ namespace Terrarium.Game
         /// <summary>
         ///  Resets the data in the PopulationData class to initial values.
         /// </summary>
-        void ResetData()
+        private void ResetData()
         {
             data = new DataSet();
             data.Locale = CultureInfo.InvariantCulture;
-            DataColumn column;
 
             populationChangeTable = data.Tables.Add("PopulationChange");
-            populationChangeTable.Columns.Add("TickNumber", typeof(System.Int32));
-            populationChangeTable.Columns.Add("Species", typeof(System.String));
-            populationChangeTable.Columns.Add("Delta", typeof(System.Int32));
-            populationChangeTable.Columns.Add("Reason", typeof(PopulationChangeReason));
-            populationChangeTable.PrimaryKey = new DataColumn[] {populationChangeTable.Columns["TickNumber"],
-                                                                    populationChangeTable.Columns["Species"],
-                                                                    populationChangeTable.Columns["Reason"]};
+            populationChangeTable.Columns.Add("TickNumber", typeof (Int32));
+            populationChangeTable.Columns.Add("Species", typeof (String));
+            populationChangeTable.Columns.Add("Delta", typeof (Int32));
+            populationChangeTable.Columns.Add("Reason", typeof (PopulationChangeReason));
+            populationChangeTable.PrimaryKey = new DataColumn[]
+                                                   {
+                                                       populationChangeTable.Columns["TickNumber"],
+                                                       populationChangeTable.Columns["Species"],
+                                                       populationChangeTable.Columns["Reason"]
+                                                   };
 
             tickTable = data.Tables.Add("Tick");
-            tickTable.Columns.Add("Number", typeof(System.Int32));
-            data.Relations.Add("TickPopulationChangeRelation", tickTable.Columns["Number"], populationChangeTable.Columns["TickNumber"]);
+            tickTable.Columns.Add("Number", typeof (Int32));
+            data.Relations.Add("TickPopulationChangeRelation", tickTable.Columns["Number"],
+                               populationChangeTable.Columns["TickNumber"]);
 
             totalsTable = data.Tables.Add("Totals");
-            totalsTable.Columns.Add("Species", typeof(System.String));
-            data.Relations.Add("TotalsPopulationChangeRelation", totalsTable.Columns["Species"], populationChangeTable.Columns["Species"]);
+            totalsTable.Columns.Add("Species", typeof (String));
+            data.Relations.Add("TotalsPopulationChangeRelation", totalsTable.Columns["Species"],
+                               populationChangeTable.Columns["Species"]);
 
-            totalsTable.Columns.Add("Population", typeof(System.Int32), "Sum(Child(TotalsPopulationChangeRelation).Delta)");
-            column = totalsTable.Columns.Add("MaxPopulation", typeof(System.Int32));
+            totalsTable.Columns.Add("Population", typeof (Int32), "Sum(Child(TotalsPopulationChangeRelation).Delta)");
+            DataColumn column = totalsTable.Columns.Add("MaxPopulation", typeof (Int32));
             column.DefaultValue = 0;
-            column = totalsTable.Columns.Add("MinPopulation", typeof(System.Int32));
+            column = totalsTable.Columns.Add("MinPopulation", typeof (Int32));
             column.DefaultValue = 0;
 
             totalsTable.PrimaryKey = new DataColumn[] {totalsTable.Columns["Species"]};
@@ -142,9 +135,9 @@ namespace Terrarium.Game
         /// </summary>
         /// <param name="tickNumber">The current tick number.</param>
         /// <returns>True if the tick is a reporting tick, false otherwise.</returns>
-        public bool IsReportingTick(int tickNumber) 
+        public bool IsReportingTick(int tickNumber)
         {
-            return (tickNumber != 0 && tickNumber % ticksToReport == 0) || reportNow;
+            return (tickNumber != 0 && tickNumber%ticksToReport == 0) || reportNow;
         }
 
         /// <summary>
@@ -178,7 +171,7 @@ namespace Terrarium.Game
             }
 
             Boolean resetData = false;
-            DataSet reportData = null;
+            DataSet reportData;
             DataTable reportTable = null;
 
             currentTick = tickNumber;
@@ -217,9 +210,10 @@ namespace Terrarium.Game
             {
                 foreach (DataRow row in reportTable.Rows)
                 {
-                    if ((int) NullToZero(row["Population"]) > 0)
+                    if (NullToZero(row["Population"]) > 0)
                     {
-                        CountOrganism((string) row["SpeciesName"], PopulationChangeReason.Initial, (int) row["Population"]);
+                        CountOrganism((string) row["SpeciesName"], PopulationChangeReason.Initial,
+                                      (int) row["Population"]);
                     }
                 }
             }
@@ -230,14 +224,14 @@ namespace Terrarium.Game
         ///  be used to update datagrids, charts, or other reporting facilities.
         /// </summary>
         /// <param name="peerGuid">The world state GUID for this peer.</param>
-        /// <param name="currentTick">The current tick number.</param>
+        /// <param name="tick">The current tick number.</param>
         /// <returns>The current world data.</returns>
-        public DataSet GetCurrentReportingStats(Guid peerGuid, int currentTick)
+        public DataSet GetCurrentReportingStats(Guid peerGuid, int tick)
         {
             // Get data since last reporting period
             DataSet newData = CreateReportDataSet();
             DataTable newTable = newData.Tables["History"];
-            FillReportTable(newTable, peerGuid, currentTick);
+            FillReportTable(newTable, peerGuid, tick);
 
             if (peerTotalsData != null)
             {
@@ -250,12 +244,9 @@ namespace Terrarium.Game
                 mergedData.Tables[0].DefaultView.AllowEdit = false;
                 return mergedData;
             }
-            else
-            {
-                newData.Tables[0].DefaultView.AllowNew = false;
-                newData.Tables[0].DefaultView.AllowEdit = false;
-                return newData;
-            }
+            newData.Tables[0].DefaultView.AllowNew = false;
+            newData.Tables[0].DefaultView.AllowEdit = false;
+            return newData;
         }
 
         /// <summary>
@@ -277,7 +268,7 @@ namespace Terrarium.Game
                 allData.Locale = CultureInfo.InvariantCulture;
 
                 allData.Merge(newData);
-                
+
                 for (int i = (allData.Tables["History"].Rows.Count - 1); i >= 0; i--)
                 {
                     if (((int) allData.Tables["History"].Rows[i]["OrganismBlacklistedCount"]) > 0)
@@ -292,9 +283,10 @@ namespace Terrarium.Game
                 {
                     led.LedState = LedStates.Waiting;
                 }
-                pendingAsyncResult = (WebClientAsyncResult) reportingService.BeginReportPopulation(allData, peerStateGuid, currentTick,
-                    new AsyncCallback(ReportServiceCallback),
-                    allData);
+                pendingAsyncResult =
+                    (WebClientAsyncResult) reportingService.BeginReportPopulation(allData, peerStateGuid, currentTick,
+                                                                                  ReportServiceCallback,
+                                                                                  allData);
 
                 // This is needed because if it completes synchronously, pendingAsyncResult is cleared in the
                 // callback, and then it gets set *afterward* which we don't want since it's already done.
@@ -312,11 +304,9 @@ namespace Terrarium.Game
         /// <param name="asyncResult">The results of the method.</param>
         private void ReportServiceCallback(IAsyncResult asyncResult)
         {
-            int resultCode;
-
-            try 
+            try
             {
-                resultCode = reportingService.EndReportPopulation(asyncResult);
+                int resultCode = reportingService.EndReportPopulation(asyncResult);
 
                 if (resultCode == 3)
                 {
@@ -375,7 +365,7 @@ namespace Terrarium.Game
 
             // If it's the first tick, calculate the first minimum since it is the minimum for this set of data
             // and we might start out with organisms so it might not be zero
-            if (firstTick) 
+            if (firstTick)
             {
                 firstTick = false;
 
@@ -388,12 +378,12 @@ namespace Terrarium.Game
             // Calculate minimums and maximums
             foreach (DataRow row in totalsTable.Rows)
             {
-                if ((int) row["Population"] > (int)row["MaxPopulation"])
+                if ((int) row["Population"] > (int) row["MaxPopulation"])
                 {
                     row["MaxPopulation"] = row["Population"];
                 }
 
-                if ((int) row["Population"] < (int)row["MinPopulation"])
+                if ((int) row["Population"] < (int) row["MinPopulation"])
                 {
                     row["MinPopulation"] = row["Population"];
                 }
@@ -468,7 +458,7 @@ namespace Terrarium.Game
                 row["Reason"] = reason;
                 populationChangeTable.Rows.Add(row);
             }
-            else 
+            else
             {
                 row["Delta"] = (int) row["Delta"] - count;
             }
@@ -500,34 +490,37 @@ namespace Terrarium.Game
         /// <returns>A reporting server compatible dataset.</returns>
         public DataSet CreateReportDataSet()
         {
-            DataSet data = new DataSet();
-            data.Locale = CultureInfo.InvariantCulture;
+            DataSet reportDataSet = new DataSet();
+            reportDataSet.Locale = CultureInfo.InvariantCulture;
 
-            DataTable totalsOnlyTable = data.Tables.Add("History");
-            totalsOnlyTable.Columns.Add("GUID", typeof(System.Guid));
-            totalsOnlyTable.Columns.Add("TickNumber", typeof(System.Int32));
-            totalsOnlyTable.Columns.Add("ContactTime", typeof(System.DateTime));
-            totalsOnlyTable.Columns.Add("ClientTime", typeof(System.DateTime));
-            totalsOnlyTable.Columns.Add("CorrectTime", typeof(System.Byte));
-            totalsOnlyTable.Columns.Add("SpeciesName", typeof(System.String));
-            totalsOnlyTable.Columns.Add("Population", typeof(System.Int32));
-            totalsOnlyTable.Columns.Add("BirthCount", typeof(System.Int32));
-            totalsOnlyTable.Columns.Add("TeleportedToCount", typeof(System.Int32));
-            totalsOnlyTable.Columns.Add("StarvedCount", typeof(System.Int32));
-            totalsOnlyTable.Columns.Add("KilledCount", typeof(System.Int32));
-            totalsOnlyTable.Columns.Add("TeleportedFromCount", typeof(System.Int32));
-            totalsOnlyTable.Columns.Add("ErrorCount", typeof(System.Int32));
-            totalsOnlyTable.Columns.Add("TimeoutCount", typeof(System.Int32));
-            totalsOnlyTable.Columns.Add("SickCount", typeof(System.Int32));
-            totalsOnlyTable.Columns.Add("OldAgeCount", typeof(System.Int32));
-            totalsOnlyTable.Columns.Add("SecurityViolationCount", typeof(System.Int32));
-            totalsOnlyTable.Columns.Add("OrganismBlacklistedCount", typeof(System.Int32));
+            DataTable totalsOnlyTable = reportDataSet.Tables.Add("History");
+            totalsOnlyTable.Columns.Add("GUID", typeof (Guid));
+            totalsOnlyTable.Columns.Add("TickNumber", typeof (Int32));
+            totalsOnlyTable.Columns.Add("ContactTime", typeof (DateTime));
+            totalsOnlyTable.Columns.Add("ClientTime", typeof (DateTime));
+            totalsOnlyTable.Columns.Add("CorrectTime", typeof (Byte));
+            totalsOnlyTable.Columns.Add("SpeciesName", typeof (String));
+            totalsOnlyTable.Columns.Add("Population", typeof (Int32));
+            totalsOnlyTable.Columns.Add("BirthCount", typeof (Int32));
+            totalsOnlyTable.Columns.Add("TeleportedToCount", typeof (Int32));
+            totalsOnlyTable.Columns.Add("StarvedCount", typeof (Int32));
+            totalsOnlyTable.Columns.Add("KilledCount", typeof (Int32));
+            totalsOnlyTable.Columns.Add("TeleportedFromCount", typeof (Int32));
+            totalsOnlyTable.Columns.Add("ErrorCount", typeof (Int32));
+            totalsOnlyTable.Columns.Add("TimeoutCount", typeof (Int32));
+            totalsOnlyTable.Columns.Add("SickCount", typeof (Int32));
+            totalsOnlyTable.Columns.Add("OldAgeCount", typeof (Int32));
+            totalsOnlyTable.Columns.Add("SecurityViolationCount", typeof (Int32));
+            totalsOnlyTable.Columns.Add("OrganismBlacklistedCount", typeof (Int32));
 
-            totalsOnlyTable.PrimaryKey = new DataColumn[] {totalsOnlyTable.Columns["GUID"],
-                                                              totalsOnlyTable.Columns["TickNumber"],
-                                                              totalsOnlyTable.Columns["SpeciesName"]};
+            totalsOnlyTable.PrimaryKey = new DataColumn[]
+                                             {
+                                                 totalsOnlyTable.Columns["GUID"],
+                                                 totalsOnlyTable.Columns["TickNumber"],
+                                                 totalsOnlyTable.Columns["SpeciesName"]
+                                             };
 
-            return data;
+            return reportDataSet;
         }
 
         /// <summary>
@@ -552,19 +545,67 @@ namespace Terrarium.Game
                 // Total up the delta across all ticks that we are reporting in the populationChangeTable
 
                 // Events that increased population
-                newRow["BirthCount"] = NullToZero(populationChangeTable.Compute("Sum(Delta)", "Species='" + ((string) row["Species"]).Replace("'", "''") + "' AND Reason=" + ((Int32) PopulationChangeReason.Born)));
-                newRow["TeleportedToCount"] = NullToZero(populationChangeTable.Compute("Sum(Delta)", "Species='" + ((string) row["Species"]).Replace("'", "''") + "' AND Reason=" + ((Int32) PopulationChangeReason.TeleportedTo)));
+                newRow["BirthCount"] =
+                    NullToZero(populationChangeTable.Compute("Sum(Delta)",
+                                                             "Species='" + ((string) row["Species"]).Replace("'", "''") +
+                                                             "' AND Reason=" + ((Int32) PopulationChangeReason.Born)));
+                newRow["TeleportedToCount"] =
+                    NullToZero(populationChangeTable.Compute("Sum(Delta)",
+                                                             "Species='" + ((string) row["Species"]).Replace("'", "''") +
+                                                             "' AND Reason=" +
+                                                             ((Int32) PopulationChangeReason.TeleportedTo)));
 
                 // Events that decreased population
-                newRow["StarvedCount"] = -(NullToZero(populationChangeTable.Compute("Sum(Delta)", "Species='" + ((string) row["Species"]).Replace("'", "''") + "' AND Reason=" + ((Int32) PopulationChangeReason.Starved))));
-                newRow["KilledCount"] = -(NullToZero(populationChangeTable.Compute("Sum(Delta)", "Species='" + ((string) row["Species"]).Replace("'", "''") + "' AND Reason=" + ((Int32) PopulationChangeReason.Killed))));
-                newRow["TeleportedFromCount"] = -(NullToZero(populationChangeTable.Compute("Sum(Delta)", "Species='" + ((string) row["Species"]).Replace("'", "''") + "' AND Reason=" + ((Int32) PopulationChangeReason.TeleportedFrom))));
-                newRow["ErrorCount"] = -(NullToZero(populationChangeTable.Compute("Sum(Delta)", "Species='" + ((string) row["Species"]).Replace("'", "''") + "' AND Reason=" + ((Int32) PopulationChangeReason.Error))));
-                newRow["TimeoutCount"] = -(NullToZero(populationChangeTable.Compute("Sum(Delta)", "Species='" + ((string) row["Species"]).Replace("'", "''") + "' AND Reason=" + ((Int32) PopulationChangeReason.Timeout))));
-                newRow["SickCount"] = -(NullToZero(populationChangeTable.Compute("Sum(Delta)", "Species='" + ((string) row["Species"]).Replace("'", "''") + "' AND Reason=" + ((Int32) PopulationChangeReason.Sick))));
-                newRow["OldAgeCount"] = -(NullToZero(populationChangeTable.Compute("Sum(Delta)", "Species='" + ((string) row["Species"]).Replace("'", "''") + "' AND Reason=" + ((Int32) PopulationChangeReason.OldAge))));
-                newRow["SecurityViolationCount"] = -(NullToZero(populationChangeTable.Compute("Sum(Delta)", "Species='" + ((string) row["Species"]).Replace("'", "''") + "' AND Reason=" + ((Int32) PopulationChangeReason.SecurityViolation))));
-                newRow["OrganismBlacklistedCount"] = -(NullToZero(populationChangeTable.Compute("Sum(Delta)", "Species='" + ((string) row["Species"]).Replace("'", "''") + "' AND Reason=" + ((Int32) PopulationChangeReason.OrganismBlacklisted))));
+                newRow["StarvedCount"] =
+                    -(NullToZero(populationChangeTable.Compute("Sum(Delta)",
+                                                               "Species='" +
+                                                               ((string) row["Species"]).Replace("'", "''") +
+                                                               "' AND Reason=" +
+                                                               ((Int32) PopulationChangeReason.Starved))));
+                newRow["KilledCount"] =
+                    -(NullToZero(populationChangeTable.Compute("Sum(Delta)",
+                                                               "Species='" +
+                                                               ((string) row["Species"]).Replace("'", "''") +
+                                                               "' AND Reason=" + ((Int32) PopulationChangeReason.Killed))));
+                newRow["TeleportedFromCount"] =
+                    -(NullToZero(populationChangeTable.Compute("Sum(Delta)",
+                                                               "Species='" +
+                                                               ((string) row["Species"]).Replace("'", "''") +
+                                                               "' AND Reason=" +
+                                                               ((Int32) PopulationChangeReason.TeleportedFrom))));
+                newRow["ErrorCount"] =
+                    -(NullToZero(populationChangeTable.Compute("Sum(Delta)",
+                                                               "Species='" +
+                                                               ((string) row["Species"]).Replace("'", "''") +
+                                                               "' AND Reason=" + ((Int32) PopulationChangeReason.Error))));
+                newRow["TimeoutCount"] =
+                    -(NullToZero(populationChangeTable.Compute("Sum(Delta)",
+                                                               "Species='" +
+                                                               ((string) row["Species"]).Replace("'", "''") +
+                                                               "' AND Reason=" +
+                                                               ((Int32) PopulationChangeReason.Timeout))));
+                newRow["SickCount"] =
+                    -(NullToZero(populationChangeTable.Compute("Sum(Delta)",
+                                                               "Species='" +
+                                                               ((string) row["Species"]).Replace("'", "''") +
+                                                               "' AND Reason=" + ((Int32) PopulationChangeReason.Sick))));
+                newRow["OldAgeCount"] =
+                    -(NullToZero(populationChangeTable.Compute("Sum(Delta)",
+                                                               "Species='" +
+                                                               ((string) row["Species"]).Replace("'", "''") +
+                                                               "' AND Reason=" + ((Int32) PopulationChangeReason.OldAge))));
+                newRow["SecurityViolationCount"] =
+                    -(NullToZero(populationChangeTable.Compute("Sum(Delta)",
+                                                               "Species='" +
+                                                               ((string) row["Species"]).Replace("'", "''") +
+                                                               "' AND Reason=" +
+                                                               ((Int32) PopulationChangeReason.SecurityViolation))));
+                newRow["OrganismBlacklistedCount"] =
+                    -(NullToZero(populationChangeTable.Compute("Sum(Delta)",
+                                                               "Species='" +
+                                                               ((string) row["Species"]).Replace("'", "''") +
+                                                               "' AND Reason=" +
+                                                               ((Int32) PopulationChangeReason.OrganismBlacklisted))));
 
                 totalsOnlyTable.Rows.Add(newRow);
             }
@@ -593,26 +634,31 @@ namespace Terrarium.Game
                 existingTable.DefaultView.AllowEdit = true;
                 foreach (DataRow row in newTable.Rows)
                 {
-                    DataRow [] existingRows = existingTable.Select("SpeciesName='" + ((string) row["SpeciesName"]).Replace("'", "''") + "'");
+                    DataRow[] existingRows =
+                        existingTable.Select("SpeciesName='" + ((string) row["SpeciesName"]).Replace("'", "''") + "'");
                     Debug.Assert(existingRows.Length <= 1);
                     if (existingRows.Length == 0)
                     {
                         existingTable.ImportRow(row);
                     }
-                    else 
+                    else
                     {
                         DataRow existingRow = existingRows[0];
                         existingRow["Population"] = row["Population"];
-                        existingRow["BirthCount"] = AddValues(existingRow["BirthCount"], row["BirthCount"]);
-                        existingRow["TeleportedToCount"] = AddValues(existingRow["TeleportedToCount"], row["TeleportedToCount"]);
-                        existingRow["StarvedCount"] = AddValues(existingRow["StarvedCount"], row["StarvedCount"]);
-                        existingRow["KilledCount"] = AddValues(existingRow["KilledCount"], row["KilledCount"]);
-                        existingRow["TeleportedFromCount"] = AddValues(existingRow["TeleportedFromCount"], row["TeleportedFromCount"]);
-                        existingRow["TimeoutCount"] = AddValues(existingRow["TimeoutCount"], row["TimeoutCount"]);
-                        existingRow["SickCount"] = AddValues(existingRow["SickCount"], row["SickCount"]);
-                        existingRow["OldAgeCount"] = AddValues(existingRow["OldAgeCount"], row["OldAgeCount"]);
-                        existingRow["SecurityViolationCount"] = AddValues(existingRow["SecurityViolationCount"], row["SecurityViolationCount"]);
-                        existingRow["OrganismBlacklistedCount"] = AddValues(existingRow["OrganismBlacklistedCount"], row["OrganismBlacklistedCount"]);
+                        existingRow["BirthCount"] = addValues(existingRow["BirthCount"], row["BirthCount"]);
+                        existingRow["TeleportedToCount"] = addValues(existingRow["TeleportedToCount"],
+                                                                     row["TeleportedToCount"]);
+                        existingRow["StarvedCount"] = addValues(existingRow["StarvedCount"], row["StarvedCount"]);
+                        existingRow["KilledCount"] = addValues(existingRow["KilledCount"], row["KilledCount"]);
+                        existingRow["TeleportedFromCount"] = addValues(existingRow["TeleportedFromCount"],
+                                                                       row["TeleportedFromCount"]);
+                        existingRow["TimeoutCount"] = addValues(existingRow["TimeoutCount"], row["TimeoutCount"]);
+                        existingRow["SickCount"] = addValues(existingRow["SickCount"], row["SickCount"]);
+                        existingRow["OldAgeCount"] = addValues(existingRow["OldAgeCount"], row["OldAgeCount"]);
+                        existingRow["SecurityViolationCount"] = addValues(existingRow["SecurityViolationCount"],
+                                                                          row["SecurityViolationCount"]);
+                        existingRow["OrganismBlacklistedCount"] = addValues(existingRow["OrganismBlacklistedCount"],
+                                                                            row["OrganismBlacklistedCount"]);
                     }
                 }
 
@@ -627,9 +673,9 @@ namespace Terrarium.Game
         /// <param name="value1">Value to be added to.</param>
         /// <param name="value2">Value to be added.</param>
         /// <returns>The sum of the two values.</returns>
-        private Int32 AddValues(object value1, object value2)
+        private static Int32 addValues(object value1, object value2)
         {
-            return PopulationData.NullToZero(value1) + PopulationData.NullToZero(value2);
+            return NullToZero(value1) + NullToZero(value2);
         }
 
         /// <summary>
@@ -643,10 +689,7 @@ namespace Terrarium.Game
             {
                 return 0;
             }
-            else
-            {
-                return Convert.ToInt32(value);
-            }
+            return Convert.ToInt32(value);
         }
     }
 }

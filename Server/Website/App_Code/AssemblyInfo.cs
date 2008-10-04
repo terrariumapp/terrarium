@@ -1,13 +1,6 @@
-//------------------------------------------------------------------------------
-//      Copyright (c) Microsoft Corporation.  All rights reserved.                                                          
-//------------------------------------------------------------------------------
-
-
 using System;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Security;
 
 [assembly: ComVisible(false)]
 [assembly: CLSCompliant(true)]
@@ -16,6 +9,7 @@ using System.Security;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 //
+
 [assembly: AssemblyTitle("Terrarium Server")]
 [assembly: AssemblyDescription("Terrarium Server Application and Web Services")]
 [assembly: AssemblyConfiguration("")]
@@ -23,7 +17,7 @@ using System.Security;
 [assembly: AssemblyProduct("")]
 [assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]		
+[assembly: AssemblyCulture("")]
 
 //
 // Version information for an assembly consists of the following four values:
