@@ -1,8 +1,3 @@
-//------------------------------------------------------------------------------
-//      Copyright (c) Microsoft Corporation.  All rights reserved.                                                          
-//------------------------------------------------------------------------------
-
-
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -23,167 +18,94 @@ namespace Terrarium.Server
     public class UserUsageSummary
     {
         private string alias;
+        private float averageHours;
         private UsagePeriod period;
         private int totalHours;
-        private float averageHours;
 
         public string Alias
         {
-            get
-            {
-                return this.alias;
-            }
-            set
-            {
-                this.alias = value;
-            }
+            get { return alias; }
+            set { alias = value; }
         }
 
 
         public UsagePeriod Period
         {
-            get
-            {
-                return this.period;
-            }
-            set
-            {
-                this.period = value;
-            }
+            get { return period; }
+            set { period = value; }
         }
 
         public int TotalHours
         {
-            get
-            {
-                return this.totalHours;
-            }
-            set
-            {
-                this.totalHours = value;
-            }
+            get { return totalHours; }
+            set { totalHours = value; }
         }
 
         public float AverageHours
         {
-            get
-            {
-                return this.averageHours;
-            }
-            set
-            {
-                this.averageHours = value;
-            }
+            get { return averageHours; }
+            set { averageHours = value; }
         }
     }
 
     public class TeamUsageSummary
     {
-        private string pumAlias;
-        private UsagePeriod period;
+        private float averageHours;
         private int inCount;
         private int outCount;
-        private int teamCount;
         private int participationRate;
+        private UsagePeriod period;
+        private string pumAlias;
+        private int teamCount;
         private int totalHours;
-        private float averageHours;
 
         public string PumAlias
         {
-            get
-            {
-                return this.pumAlias;
-            }
-            set
-            {
-                this.pumAlias = value;
-            }
+            get { return pumAlias; }
+            set { pumAlias = value; }
         }
 
         public UsagePeriod Period
         {
-            get
-            {
-                return this.period;
-            }
-            set
-            {
-                this.period = value;
-            }
+            get { return period; }
+            set { period = value; }
         }
 
         public int InCount
         {
-            get
-            {
-                return this.inCount;
-            }
-            set
-            {
-                this.inCount = value;
-            }
+            get { return inCount; }
+            set { inCount = value; }
         }
 
         public int OutCount
         {
-            get
-            {
-                return this.outCount;
-            }
-            set
-            {
-                this.outCount = value;
-            }
+            get { return outCount; }
+            set { outCount = value; }
         }
 
         public int TeamCount
         {
-            get
-            {
-                return this.teamCount;
-            }
-            set
-            {
-                this.teamCount = value;
-            }
+            get { return teamCount; }
+            set { teamCount = value; }
         }
 
         public int ParticipationRate
         {
-            get
-            {
-                return this.participationRate;
-            }
-            set
-            {
-                this.participationRate = value;
-            }
+            get { return participationRate; }
+            set { participationRate = value; }
         }
 
-         public int TotalHours
+        public int TotalHours
         {
-            get
-            {
-                return this.totalHours;
-            }
-            set
-            {
-                this.totalHours = value;
-            }
+            get { return totalHours; }
+            set { totalHours = value; }
         }
 
         public float AverageHours
         {
-            get
-            {
-                return this.averageHours;
-            }
-            set
-            {
-                this.averageHours = value;
-            }
+            get { return averageHours; }
+            set { averageHours = value; }
         }
-
     }
 
     public static class UsageReporting
@@ -202,7 +124,8 @@ namespace Terrarium.Server
                 command = new SqlCommand();
                 command.Connection = connection;
                 command.CommandType = CommandType.Text;
-                command.CommandText = "SELECT SUM(UsageMinutes) AS UsageMinutes FROM Usage WHERE Alias = @Alias AND (TickTime >= @StartDate AND TickTime <= @EndDate)";
+                command.CommandText =
+                    "SELECT SUM(UsageMinutes) AS UsageMinutes FROM Usage WHERE Alias = @Alias AND (TickTime >= @StartDate AND TickTime <= @EndDate)";
                 command.Parameters.AddWithValue("@Alias", alias);
 
                 DateTime startDate = DateTime.MinValue;
@@ -222,7 +145,7 @@ namespace Terrarium.Server
                 {
                     if (!((reader["UsageMinutes"]) is DBNull))
                     {
-                        summary.TotalHours = Convert.ToInt32(reader["UsageMinutes"]) / 60;
+                        summary.TotalHours = Convert.ToInt32(reader["UsageMinutes"])/60;
                     }
                 }
 
@@ -234,7 +157,7 @@ namespace Terrarium.Server
                     span = new TimeSpan(1, 0, 0, 0);
                 }
 
-                summary.AverageHours = (float)summary.TotalHours / (float)span.Days;
+                summary.AverageHours = summary.TotalHours/(float) span.Days;
 
                 return summary;
             }
@@ -272,7 +195,8 @@ namespace Terrarium.Server
                 command = new SqlCommand();
                 command.Connection = connection;
                 command.CommandType = CommandType.Text;
-                command.CommandText = "SELECT * FROM Usage WHERE Alias = @Alias AND (TickTime >= @StartDate AND TickTime <= @EndDate)";
+                command.CommandText =
+                    "SELECT * FROM Usage WHERE Alias = @Alias AND (TickTime >= @StartDate AND TickTime <= @EndDate)";
                 command.Parameters.AddWithValue("@Alias", alias);
 
                 DateTime startDate = DateTime.MinValue;
@@ -355,7 +279,8 @@ namespace Terrarium.Server
                 command = new SqlCommand();
                 command.Connection = connection;
                 command.CommandType = CommandType.Text;
-                command.CommandText = "SELECT P.Alias FROM Pum P, PumTeam PT WHERE P.Id = PT.PumId AND PT.Alias = @Alias";
+                command.CommandText =
+                    "SELECT P.Alias FROM Pum P, PumTeam PT WHERE P.Id = PT.PumId AND PT.Alias = @Alias";
                 command.Parameters.AddWithValue("@Alias", alias);
 
                 reader = command.ExecuteReader();
@@ -397,10 +322,10 @@ namespace Terrarium.Server
 
             try
             {
-                string cacheKey = "GetTeamSummaries(" + period.ToString() + ")";
+                string cacheKey = "GetTeamSummaries(" + period + ")";
                 if (HttpContext.Current.Cache[cacheKey] != null)
                 {
-                    return (List<TeamUsageSummary>)HttpContext.Current.Cache[cacheKey];
+                    return (List<TeamUsageSummary>) HttpContext.Current.Cache[cacheKey];
                 }
                 else
                 {
@@ -419,10 +344,11 @@ namespace Terrarium.Server
                     while (reader.Read())
                     {
                         string pumAlias = Convert.ToString(reader["Alias"]);
-                        teamList.Add(UsageReporting.GetTeamUsage(pumAlias, period));
+                        teamList.Add(GetTeamUsage(pumAlias, period));
                     }
 
-                    HttpContext.Current.Cache.Add(cacheKey, teamList, null, DateTime.Now.AddMinutes(59), TimeSpan.Zero, CacheItemPriority.Normal, null);
+                    HttpContext.Current.Cache.Add(cacheKey, teamList, null, DateTime.Now.AddMinutes(59), TimeSpan.Zero,
+                                                  CacheItemPriority.Normal, null);
 
                     return teamList;
                 }
@@ -455,14 +381,15 @@ namespace Terrarium.Server
 
             try
             {
-                string cacheKey = "GetUserSummaries(" + period.ToString() + ")";
+                string cacheKey = "GetUserSummaries(" + period + ")";
                 if (HttpContext.Current.Cache[cacheKey] != null)
                 {
-                    return new ReadOnlyCollection<UserUsageSummary>((List<UserUsageSummary>)HttpContext.Current.Cache[cacheKey]);
+                    return
+                        new ReadOnlyCollection<UserUsageSummary>(
+                            (List<UserUsageSummary>) HttpContext.Current.Cache[cacheKey]);
                 }
                 else
                 {
-
                     List<UserUsageSummary> userList = new List<UserUsageSummary>();
 
                     connection = new SqlConnection(ServerSettings.SpeciesDsn);
@@ -471,7 +398,8 @@ namespace Terrarium.Server
                     command = new SqlCommand();
                     command.Connection = connection;
                     command.CommandType = CommandType.Text;
-                    command.CommandText = "SELECT TOP 10 Alias,	SUM(UsageMinutes) AS UsageTotal FROM Usage WHERE TickTime >= @StartDate AND TickTime <= @EndDate GROUP BY Alias ORDER BY UsageTotal DESC";
+                    command.CommandText =
+                        "SELECT TOP 10 Alias,	SUM(UsageMinutes) AS UsageTotal FROM Usage WHERE TickTime >= @StartDate AND TickTime <= @EndDate GROUP BY Alias ORDER BY UsageTotal DESC";
 
                     DateTime startDate = DateTime.MinValue;
                     DateTime endDate = DateTime.MinValue;
@@ -488,12 +416,13 @@ namespace Terrarium.Server
                         UserUsageSummary summary = new UserUsageSummary();
                         summary.Alias = Convert.ToString(reader["Alias"]);
                         summary.Period = period;
-                        summary.TotalHours = Convert.ToInt32(reader["UsageTotal"]) / 60;
+                        summary.TotalHours = Convert.ToInt32(reader["UsageTotal"])/60;
 
                         userList.Add(summary);
                     }
 
-                    HttpContext.Current.Cache.Add(cacheKey, userList, null, DateTime.Now.AddMinutes(59), TimeSpan.Zero, CacheItemPriority.Normal, null);
+                    HttpContext.Current.Cache.Add(cacheKey, userList, null, DateTime.Now.AddMinutes(59), TimeSpan.Zero,
+                                                  CacheItemPriority.Normal, null);
 
                     return new ReadOnlyCollection<UserUsageSummary>(userList);
                 }
@@ -536,7 +465,8 @@ namespace Terrarium.Server
                 command = new SqlCommand();
                 command.Connection = connection;
                 command.CommandType = CommandType.Text;
-                command.CommandText = "SELECT	PT.Alias, (SELECT 	SUM(U.UsageMinutes) FROM Usage U WHERE U.Alias = PT.Alias AND U.TickTime >= @StartDate AND U.TickTime <= @EndDate) AS UsageMinutes FROM Pum P, PumTeam PT WHERE 	PT.PumId = P.Id AND	P.Alias = @Alias ORDER BY UsageMinutes DESC";
+                command.CommandText =
+                    "SELECT	PT.Alias, (SELECT 	SUM(U.UsageMinutes) FROM Usage U WHERE U.Alias = PT.Alias AND U.TickTime >= @StartDate AND U.TickTime <= @EndDate) AS UsageMinutes FROM Pum P, PumTeam PT WHERE 	PT.PumId = P.Id AND	P.Alias = @Alias ORDER BY UsageMinutes DESC";
 
                 command.Parameters.AddWithValue("@Alias", pumAlias);
 
@@ -565,11 +495,10 @@ namespace Terrarium.Server
                 }
 
                 teamSummary.TotalHours /= 60;
-                teamSummary.AverageHours = (float)teamSummary.TotalHours / (float)teamSummary.TeamCount;
-                teamSummary.ParticipationRate = (int)(100.0f * ((float)teamSummary.InCount / (float)teamSummary.TeamCount));
+                teamSummary.AverageHours = teamSummary.TotalHours/(float) teamSummary.TeamCount;
+                teamSummary.ParticipationRate = (int) (100.0f*(teamSummary.InCount/(float) teamSummary.TeamCount));
 
                 return teamSummary;
-
             }
             finally
             {
@@ -605,10 +534,10 @@ namespace Terrarium.Server
 
             try
             {
-                string cacheKey = "GetTeamDetails(" + pumAlias + "," + period.ToString() + ")";
+                string cacheKey = "GetTeamDetails(" + pumAlias + "," + period + ")";
                 if (HttpContext.Current.Cache[cacheKey] != null)
                 {
-                    return (List<UserUsageSummary>)HttpContext.Current.Cache[cacheKey];
+                    return (List<UserUsageSummary>) HttpContext.Current.Cache[cacheKey];
                 }
                 else
                 {
@@ -622,7 +551,8 @@ namespace Terrarium.Server
                     command = new SqlCommand();
                     command.Connection = connection;
                     command.CommandType = CommandType.Text;
-                    command.CommandText = "SELECT PT.* FROM PumTeam PT, Pum P WHERE PT.PumID = P.Id AND P.Alias = @Alias";
+                    command.CommandText =
+                        "SELECT PT.* FROM PumTeam PT, Pum P WHERE PT.PumID = P.Id AND P.Alias = @Alias";
                     command.Parameters.AddWithValue("@Alias", pumAlias);
 
                     reader = command.ExecuteReader();
@@ -635,7 +565,8 @@ namespace Terrarium.Server
                         userList.Add(GetUserUsage(userAlias, period));
                     }
 
-                    HttpContext.Current.Cache.Add(cacheKey, userList, null, DateTime.Now.AddMinutes(59), TimeSpan.Zero, CacheItemPriority.Normal, null);
+                    HttpContext.Current.Cache.Add(cacheKey, userList, null, DateTime.Now.AddMinutes(59), TimeSpan.Zero,
+                                                  CacheItemPriority.Normal, null);
 
                     return userList;
                 }
@@ -678,9 +609,9 @@ namespace Terrarium.Server
                     }
                 case UsagePeriod.Week:
                     {
-                        startDate = DateTime.Now.AddDays(-((int)DateTime.Now.DayOfWeek));
+                        startDate = DateTime.Now.AddDays(-((int) DateTime.Now.DayOfWeek));
                         startDate = new DateTime(startDate.Year, startDate.Month, startDate.Day, 0, 0, 0);
-                        endDate = DateTime.Now.AddDays(((int)DayOfWeek.Saturday) - ((int)DateTime.Now.DayOfWeek));
+                        endDate = DateTime.Now.AddDays(((int) DayOfWeek.Saturday) - ((int) DateTime.Now.DayOfWeek));
                         endDate = DateTime.Now.AddDays(1);
                         endDate = new DateTime(endDate.Year, endDate.Month, endDate.Day, 23, 59, 59);
                         break;

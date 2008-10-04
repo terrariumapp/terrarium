@@ -2,28 +2,16 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                          
 //------------------------------------------------------------------------------
 
-
 using System;
-using System.Web;
+using System.Web.UI;
 using System.Web.UI.WebControls;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Web.Services;
-using System.Web.Services.Protocols;
-using System.Data;
-using System.Data.SqlClient;
-using Terrarium.Server;
-using System.IO;
-using System.Text;
-using System.Xml;
 
 namespace Terrarium.Server.Reporting
 {
-    public partial class Default : System.Web.UI.Page
+    public partial class Default : Page
     {
-        private bool sortAscending = false;
         private string lastSortExpression = "";
+        private bool sortAscending;
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -37,15 +25,15 @@ namespace Terrarium.Server.Reporting
                 }
                 else
                 {
-                    alias = this.Context.User.Identity.Name;
+                    alias = Context.User.Identity.Name;
                     alias = alias.Substring(alias.IndexOf('\\') + 1);
                 }
 
-                this.UserAliasLabel.Text = alias;
+                UserAliasLabel.Text = alias;
 
-                this.UserTodayLabel.Text = UsageReporting.GetUserUsage(alias, UsagePeriod.Today).TotalHours.ToString() + " hours";
-                this.UserWeekLabel.Text = UsageReporting.GetUserUsage(alias, UsagePeriod.Week).TotalHours.ToString() + " hours";
-                this.UserTotalLabel.Text = UsageReporting.GetUserUsage(alias, UsagePeriod.Total).TotalHours.ToString() + " hours";
+                UserTodayLabel.Text = UsageReporting.GetUserUsage(alias, UsagePeriod.Today).TotalHours + " hours";
+                UserWeekLabel.Text = UsageReporting.GetUserUsage(alias, UsagePeriod.Week).TotalHours + " hours";
+                UserTotalLabel.Text = UsageReporting.GetUserUsage(alias, UsagePeriod.Total).TotalHours + " hours";
 
                 int inCount = 0, outCount = 0, percentage = 0;
 
@@ -70,18 +58,19 @@ namespace Terrarium.Server.Reporting
                     //this.TeamTotalParticipationLabel.Text = teamSummary.ParticipationRate.ToString() + "% (" + teamSummary.InCount.ToString() + " / " + teamSummary.TeamCount.ToString() + ")";
                 }
 
-                this.individualDataGrid.DataSource = UsageReporting.GetUserSummaries((UsagePeriod)Enum.Parse(typeof(UsagePeriod), this.IndividualPeriodDropDown.SelectedItem.Text));
+                individualDataGrid.DataSource =
+                    UsageReporting.GetUserSummaries(
+                        (UsagePeriod) Enum.Parse(typeof (UsagePeriod), IndividualPeriodDropDown.SelectedItem.Text));
 
-                this.DataBind();
+                DataBind();
 
-                if (this.IsPostBack == false)
+                if (IsPostBack == false)
                 {
-                    this.ViewState["SortExpression"] = "ParticipationRate";
-                    this.ViewState["SortAscending"] = false;
+                    ViewState["SortExpression"] = "ParticipationRate";
+                    ViewState["SortAscending"] = false;
                 }
 
-                this.SortTeams();
-
+                SortTeams();
             }
             catch (Exception ex)
             {
@@ -91,18 +80,18 @@ namespace Terrarium.Server.Reporting
 
         protected void SortTeams_Click(object sender, DataGridSortCommandEventArgs e)
         {
-            if (this.ViewState["SortExpression"] != null && this.ViewState["SortExpression"].ToString() == e.SortExpression)
+            if (ViewState["SortExpression"] != null && ViewState["SortExpression"].ToString() == e.SortExpression)
             {
-                this.ViewState["SortAscending"] = !(bool)this.ViewState["SortAscending"];
+                ViewState["SortAscending"] = !(bool) ViewState["SortAscending"];
             }
             else
             {
-                this.ViewState["SortAscending"] = true;
+                ViewState["SortAscending"] = true;
             }
 
-            this.ViewState["SortExpression"] = e.SortExpression;
+            ViewState["SortExpression"] = e.SortExpression;
 
-            this.SortTeams();
+            SortTeams();
         }
 
         protected void SortTeams()
@@ -144,13 +133,13 @@ namespace Terrarium.Server.Reporting
         {
             int value = left.ParticipationRate.CompareTo(right.ParticipationRate);
 
-            if (true == (bool)this.ViewState["SortAscending"])
+            if ((bool) ViewState["SortAscending"])
             {
                 return value;
             }
             else
             {
-                return -1 * value;
+                return -1*value;
             }
         }
 
@@ -158,9 +147,9 @@ namespace Terrarium.Server.Reporting
         {
             int value = left.InCount.CompareTo(right.InCount);
 
-            if (true == (bool)this.ViewState["SortAscending"])
+            if ((bool) ViewState["SortAscending"])
             {
-                return -1 * value;
+                return -1*value;
             }
             else
             {
@@ -172,9 +161,9 @@ namespace Terrarium.Server.Reporting
         {
             int value = left.OutCount.CompareTo(right.OutCount);
 
-            if (true == (bool)this.ViewState["SortAscending"])
+            if ((bool) ViewState["SortAscending"])
             {
-                return -1 * value;
+                return -1*value;
             }
             else
             {
@@ -186,9 +175,9 @@ namespace Terrarium.Server.Reporting
         {
             int value = left.TotalHours.CompareTo(right.TotalHours);
 
-            if (true == (bool)this.ViewState["SortAscending"])
+            if ((bool) ViewState["SortAscending"])
             {
-                return -1 * value;
+                return -1*value;
             }
             else
             {
@@ -200,9 +189,9 @@ namespace Terrarium.Server.Reporting
         {
             int value = left.AverageHours.CompareTo(right.AverageHours);
 
-            if (true == (bool)this.ViewState["SortAscending"])
+            if ((bool) ViewState["SortAscending"])
             {
-                return -1 * value;
+                return -1*value;
             }
             else
             {
@@ -214,23 +203,24 @@ namespace Terrarium.Server.Reporting
         {
             int value = left.PumAlias.CompareTo(right.PumAlias);
 
-            if (true == (bool)this.ViewState["SortAscending"])
+            if ((bool) ViewState["SortAscending"])
             {
-                return -1 * value;
+                return -1*value;
             }
             else
             {
                 return value;
             }
         }
+
         protected TeamUsageSummary GetTeamUsageSummary(object target)
         {
-            return (TeamUsageSummary)target;
+            return (TeamUsageSummary) target;
         }
 
         protected UserUsageSummary GetUserUsageSummary(object target)
         {
-            return (UserUsageSummary)target;
+            return (UserUsageSummary) target;
         }
     }
 }
