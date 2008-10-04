@@ -3,10 +3,8 @@
 <%@ register tagprefix="controls" tagname="MenuBar" src="~/Controls/MenuBar.ascx" %>
 <%@ register tagprefix="controls" tagname="InfoBar" src="~/Controls/InfoBar.ascx" %>
 <%@ register tagprefix="controls" tagname="HeaderBar" src="~/Controls/HeaderBar.ascx" %>
-<%@ Register TagPrefix="Web" Namespace="WebChart" Assembly="WebChart" %>
 <%@ Import Namespace="Terrarium.Server" %>
 <%@ Import Namespace="System.Data.SqlTypes" %>
-<%@ Import Namespace="WebChart" %>
 <%@ Import Namespace="System.IO" %>
 <%@ Import Namespace="System.Data.SqlClient" %>
 <%@ Import Namespace="System.Data.OleDb" %>
@@ -201,8 +199,6 @@
 																							</td>
 																							<td>&nbsp;&nbsp;</td>
 																							<td align="center" valign="middle">
-																								<asp:Button id="populationChart" onclick="populationChart_Click" runat="server" CssClass="ChartLabel"
-																									Height="24" Text="Create Chart"></asp:Button>
 																							</td>
 																						</tr>
 																					</table>

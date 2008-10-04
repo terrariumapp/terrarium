@@ -34,29 +34,6 @@ namespace Terrarium.Server
 		}
 	    
 		/*
-			Method:     ChartPopulation
-			Purpose:    Charts the population for all species in the dataset over
-			a given start and end period and returns the generated chart location.
-		*/
-		[WebMethod]
-		public string ChartPopulation(DateTime start, DateTime end, DataSet included) 
-		{
-			return ChartBuilder.ChartPopulation(start, end, included);
-		}
-	    
-		/*
-			Method:     ChartVitals
-			Purpose:    Charts the vital statistics for a given species in the
-			dataset over a given start and end period and returns the generated
-			chart location.
-		*/
-		[WebMethod]
-		public string ChartVitals(DateTime start, DateTime end, string species) 
-		{
-			return ChartBuilder.ChartVitals(start, end, species);
-		}
-	    
-		/*
 			Method:     GrabLatestSpeciesData
 			Purpose:    Returns the latest datapoint of statistics information
 			for a given species in the form of a dataset.

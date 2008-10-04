@@ -172,11 +172,6 @@ namespace Terrarium.Server.Charts
                 included.DataSource = includedData.Tables["Species"].DefaultView;
                 included.DataBind();
             }
-
-            if ( !IsPostBack ) 
-            {
-                ChartPopulation();
-            }
         }
 
         /*
@@ -228,72 +223,6 @@ namespace Terrarium.Server.Charts
         {
             notIncluded.CurrentPageIndex = 0;
             ApplyFilter();
-        }
-
-        /*
-            Method:     populationChart_Click
-            Purpose:    This method is called whenever the Chart Population
-            button is clicked.  It renders a new graph of the population's
-            of current selected creatures.
-        */
-        protected void populationChart_Click(Object sender, EventArgs e) 
-        {
-            ChartPopulation();
-        }
-
-        /*
-            Method:     ChartVitals
-            Purpose:    This method is called to print a vital statistics
-            chart for a single creature.  The function properly computes
-            the start and end dates for the chart based on user input, and
-            then makes calls to the database to set up the point series
-            data needed to print the chart.
-        */
-        
-        protected void ChartVitals(DataRow drow) 
-        {
-            DateTime begin, end;
-
-            if ( StartTime.SelectedItem.Text == "Last 24 hours" ) 
-            {
-                end = DateTime.UtcNow;
-                begin = end.AddHours(-24);
-            }
-            else 
-            {
-                begin = Calendar1.SelectedDate;
-                end = begin.AddHours(24);
-            }
-            Chart.ImageUrl = ChartBuilder.ChartVitals(begin, end, drow["SpeciesName"].ToString());
-            Chart.Visible = true;
-        }
-
-        /*
-            Method:     ChartPopulation
-            Purpose:    This method is called to print a population chart
-            for all currently selected creatures.  The function properly
-            computers the start and end dates for the chart based on user
-            input and then makes calls to the database to set up the point
-            series required to create the population graph.
-        */
-        
-        protected void ChartPopulation() 
-        {
-            DataSet includedData = LoadXmlDataFromViewState();
-            DateTime begin, end;
-
-            if ( StartTime.SelectedItem.Text == "Last 24 hours" ) 
-            {
-                end = DateTime.UtcNow;
-                begin = end.AddHours(-24);
-            }
-            else 
-            {
-                begin = Calendar1.SelectedDate;
-                end = begin.AddHours(24);
-            }
-            Chart.ImageUrl = ChartBuilder.ChartPopulation(begin, end, includedData);
-            Chart.Visible = true;
         }
 
         /*
@@ -407,21 +336,7 @@ namespace Terrarium.Server.Charts
                         ViewState["SelectedSpeciesSchema"] = includedData.GetXmlSchema();
                     }
                     break;
-                case "Chart":
-                    includedData = LoadXmlDataFromViewState();
-                    if ( includedData != null ) 
-                    {
-                        // Ensure primary key
-                        includedData.Tables["Species"].DefaultView.Sort = "SpeciesName DESC";
-                        includedData.Tables["Species"].PrimaryKey = new DataColumn[] { includedData.Tables["Species"].Columns["SpeciesName"] };
 
-                        drow = includedData.Tables["Species"].Rows.Find(HttpUtility.HtmlDecode(e.Item.Cells[2].Text));
-                        if ( drow != null ) 
-                        {
-                            ChartVitals(drow);
-                        }
-                    }
-                    break;
                 default:
                     break;
             }
