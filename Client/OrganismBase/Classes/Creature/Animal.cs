@@ -1,16 +1,8 @@
-//------------------------------------------------------------------------------
-//      Copyright (c) Microsoft Corporation.  All rights reserved.                                                             
-//------------------------------------------------------------------------------
-
 using System;
 using System.Collections;
-using System.Drawing;
-using System.Diagnostics;
 using System.IO;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  This is the class that you derive from when you create an animal.
@@ -18,6 +10,281 @@ namespace OrganismBase
     public abstract class Animal : Organism
     {
         private AntennaState antennaState = new AntennaState(null);
+
+        /// <summary>
+        ///  Provides access to the world boundary object.  This can
+        ///  be used to investigate the world from an Animal's point
+        ///  of view.
+        /// </summary>
+        internal IAnimalWorldBoundary World
+        {
+            get { return (IAnimalWorldBoundary) OrganismWorldBoundary; }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   Provides access to the creature's Antenna.  Each Antenna has a specific set of
+        ///   positions that it may be in.  Setting states with this information is possible
+        ///   as is passing numeric data.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  AntennaState for the organism to initiate communication.
+        /// </returns>
+        public AntennaState Antennas
+        {
+            get { return antennaState; }
+            set { antennaState = value; }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   The width of the world in single points/pixels.  Use this to make sure
+        ///   you don't try to move outside of the bounds of the Terrarium and to
+        ///   help manage your creature's population size/density.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  System.Int32 representing the width of the Terrarium in points/pixels.
+        /// </returns>
+        public int WorldWidth
+        {
+            get { return World.WorldWidth; }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   The height of the world in single points/pixels.  Use this to make sure
+        ///   you don't try to move outside of the bounds of the Terrarium and to
+        ///   help manage your creature's population size/density.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  System.Int32 representing the height of the Terrarium in points/pixels.
+        /// </returns>
+        public int WorldHeight
+        {
+            get { return World.WorldHeight; }
+        }
+
+        /// <summary>
+        ///  The current state of your own creature.  This is used to get the latest
+        ///  information about your creature's health, damage, and other stats available
+        ///  on the AnimalState object.
+        /// </summary>
+        /// <returns>
+        ///  AnimalState representing the most current state of your creature.
+        /// </returns>
+        public new AnimalState State
+        {
+            get { return World.CurrentAnimalState; }
+        }
+
+        /// <summary>
+        ///  Returns the immutable species object containing information about
+        ///  your creature's species related information.  This includes how
+        ///  many points were placed into creature attributes and other values
+        ///  calculated from those points allocations.
+        /// </summary>
+        /// <returns>
+        ///  IAnimalSpecies representing the immutable characteristics of your creature.
+        /// </returns>
+        public IAnimalSpecies Species
+        {
+            get { return (IAnimalSpecies) State.Species; }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   After your creature has begun moving you can get the MoveToAction object that
+        ///   represents your creature's current movement action.  You can use this to examine
+        ///   the movement location and speed that your creature moving to see if you'll need
+        ///   to alter your course.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  A MoveToAction object representing the current movement and the values
+        ///  passed into BeginMoving.
+        /// </returns>
+        public MoveToAction CurrentMoveToAction
+        {
+            get
+            {
+                if (PendingActions.MoveToAction != null)
+                {
+                    return PendingActions.MoveToAction;
+                }
+                if (InProgressActions.MoveToAction != null)
+                {
+                    return InProgressActions.MoveToAction;
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   Used to determine if your creature has been commanded to move.
+        ///   You can also check the CurrentMoveToAction property to get
+        ///   the actual movement vector for your creature.  Because moving
+        ///   is asynchronous your creature might not have started moving
+        ///   yet.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  True if your creature is or will be moving, False otherwise.
+        /// </returns>
+        public Boolean IsMoving
+        {
+            get { return CurrentMoveToAction != null; }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   After your creature has begun defending you can get the DefendAction object that
+        ///   represents you're creatures current defend action.  You can use this to examine
+        ///   the target creature you're defending against and determine if there might be a
+        ///   more appropriate enemy.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  A DefendAction object representing the current defend action and the values
+        ///  passed into BeginDefending.
+        /// </returns>
+        public DefendAction CurrentDefendAction
+        {
+            get
+            {
+                if (PendingActions.DefendAction != null)
+                {
+                    return PendingActions.DefendAction;
+                }
+                if (InProgressActions.DefendAction != null)
+                {
+                    return InProgressActions.DefendAction;
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   Used to determine if your creature has been commanded to defend.
+        ///   You can also check the CurrentDefendAction property to get
+        ///   the actual target creature you're defending against.  Because defending
+        ///   is asynchronous your creature won't defend until the upcoming tick.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  True if your creature will defend the next tick, False otherwise.
+        /// </returns>
+        public Boolean IsDefending
+        {
+            get { return CurrentDefendAction != null; }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   After your creature has begun attacking you can get the AttackAction object that
+        ///   represents your creature's current attack action.  You can use this to examine
+        ///   the target creature you're attacking and determine if there might be a
+        ///   more appropriate enemy.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  AttackAction object representing the current attack action and the values
+        ///  passed into BeginAttacking.
+        /// </returns>
+        public AttackAction CurrentAttackAction
+        {
+            get
+            {
+                if (PendingActions.AttackAction != null)
+                {
+                    return PendingActions.AttackAction;
+                }
+                if (InProgressActions.AttackAction != null)
+                {
+                    return InProgressActions.AttackAction;
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   Used to determine if your creature has been commanded to attack.
+        ///   You can also check the CurrentAttackAction property to get
+        ///   the actual target creature you're attacking.  Because attacking
+        ///   is asynchronous your creature won't attack until the upcoming tick.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  True if your creature will attack the next tick, False otherwise.
+        /// </returns>
+        public Boolean IsAttacking
+        {
+            get { return CurrentAttackAction != null; }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   After your creature has begun eating you can get the EatAction object that
+        ///   represents you're creatures current eat action.  You can use this to examine
+        ///   the target creature your eating and determine if their might be a better
+        ///   target to eat.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  EatAction object representing the current eat action and the values
+        ///  passed into BeginEating.
+        /// </returns>
+        public EatAction CurrentEatAction
+        {
+            get
+            {
+                if (PendingActions.EatAction != null)
+                {
+                    return PendingActions.EatAction;
+                }
+                if (InProgressActions.EatAction != null)
+                {
+                    return InProgressActions.EatAction;
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   Used to determine if your creature has been commanded to eat.
+        ///   You can also check the CurrentEatAction property to get
+        ///   the actual target creature you're eating.  Because eating
+        ///   is asynchronous your creature won't actually eat until the upcoming tick.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  True if your creature will eat the next tick, False otherwise.
+        /// </returns>
+        public Boolean IsEating
+        {
+            get { return CurrentEatAction != null; }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   Used to determine if your creature is capable of eating depending
+        ///   on the creature's current energy state.  You can also trap the
+        ///   AlreadyFullException from BeginEating.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  True if your creature is hungry enough to eat, False otherwise.
+        /// </returns>
+        public Boolean CanEat
+        {
+            get { return State.EnergyState <= EnergyState.Normal; }
+        }
 
         /// <summary>
         ///  <para>
@@ -28,7 +295,7 @@ namespace OrganismBase
         ///  </para>
         /// </summary>
         public event MoveCompletedEventHandler MoveCompleted;
-    
+
         /// <summary>
         ///  <para>
         ///   The AttackCompleted event is fired whenever your creature
@@ -81,7 +348,7 @@ namespace OrganismBase
         /// <param name="m">
         ///  MemoryStream used by the creature to serialize data.
         /// </param>
-        abstract public void SerializeAnimal(MemoryStream m);
+        public abstract void SerializeAnimal(MemoryStream m);
 
         /// <summary>
         ///  <para>
@@ -99,7 +366,7 @@ namespace OrganismBase
         /// <param name="m">
         ///  MemoryStream used by the creature to deserialize data.
         /// </param>
-        abstract public void DeserializeAnimal(MemoryStream m);
+        public abstract void DeserializeAnimal(MemoryStream m);
 
         /// <summary>
         ///  Implemented by the Animal class in order to allow
@@ -111,7 +378,7 @@ namespace OrganismBase
         public void InternalAnimalSerialize(MemoryStream m)
         {
         }
-    
+
         /// <summary>
         ///  Implemented by the Animal class in order to allow
         ///  deserialization of any private members required for the
@@ -123,19 +390,6 @@ namespace OrganismBase
         {
         }
 
-        /// <summary>
-        ///  Provides access to the world boundary object.  This can
-        ///  be used to investigate the world from an Animal's point
-        ///  of view.
-        /// </summary>
-        internal IAnimalWorldBoundary World
-        {
-            get
-            {
-                return (IAnimalWorldBoundary) OrganismWorldBoundary;
-            }
-        }
-    
         /// <summary>
         ///  <para>
         ///   Scans the world around your creature's current location in a circular
@@ -166,28 +420,6 @@ namespace OrganismBase
         public ArrayList Scan()
         {
             return World.Scan();
-        }
-    
-        /// <summary>
-        ///  <para>
-        ///   Provides access to the creature's Antenna.  Each Antenna has a specific set of
-        ///   positions that it may be in.  Setting states with this information is possible
-        ///   as is passing numeric data.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  AntennaState for the organism to initiate communication.
-        /// </returns>
-        public AntennaState Antennas
-        {
-            get
-            {
-                return antennaState;
-            }
-            set
-            {
-                antennaState = value;
-            }
         }
 
         /// <summary>
@@ -245,42 +477,6 @@ namespace OrganismBase
 
         /// <summary>
         ///  <para>
-        ///   The width of the world in single points/pixels.  Use this to make sure
-        ///   you don't try to move outside of the bounds of the Terrarium and to
-        ///   help manage your creature's population size/density.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  System.Int32 representing the width of the Terrarium in points/pixels.
-        /// </returns>
-        public int WorldWidth
-        {
-            get
-            {
-                return World.WorldWidth;
-            }
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   The height of the world in single points/pixels.  Use this to make sure
-        ///   you don't try to move outside of the bounds of the Terrarium and to
-        ///   help manage your creature's population size/density.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  System.Int32 representing the height of the Terrarium in points/pixels.
-        /// </returns>
-        public int WorldHeight
-        {
-            get
-            {
-                return World.WorldHeight;
-            }
-        }
-
-        /// <summary>
-        ///  <para>
         ///   Allows a creature to determine if the OrganismState of another creature
         ///   represents the same species.  This can be used to determine whether you
         ///   should attack/defend against another creature.
@@ -312,53 +508,20 @@ namespace OrganismBase
         }
 
         /// <summary>
-        ///  The current state of your own creature.  This is used to get the latest
-        ///  information about your creature's health, damage, and other stats available
-        ///  on the AnimalState object.
-        /// </summary>
-        /// <returns>
-        ///  AnimalState representing the most current state of your creature.
-        /// </returns>
-        new public AnimalState State
-        {
-            get
-            {
-                return (AnimalState) World.CurrentAnimalState;
-            }
-        }
-
-        /// <summary>
-        ///  Returns the immutable species object containing information about
-        ///  your creature's species related information.  This includes how
-        ///  many points were placed into creature attributes and other values
-        ///  calculated from those points allocations.
-        /// </summary>
-        /// <returns>
-        ///  IAnimalSpecies representing the immutable characteristics of your creature.
-        /// </returns>
-        public IAnimalSpecies Species
-        {
-            get
-            {
-                return (IAnimalSpecies) State.Species;
-            }
-        }
-
-        /// <summary>
         ///  <para>
         ///   Clears any pending movement operations your creature might be performing.
         ///  </para>
         /// </summary>
         public void StopMoving()
         {
-            lock (this.PendingActions)
+            lock (PendingActions)
             {
                 PendingActions.SetMoveToAction(null);
                 InProgressActions.SetMoveToAction(null);
             }
         }
 
-    
+
         /// <summary>
         ///  <para>
         ///   Method used to command a creature to begin moving towards a specific location
@@ -415,61 +578,10 @@ namespace OrganismBase
 
             int actionID = GetNextActionID();
             MoveToAction action = new MoveToAction(ID, actionID, vector);
-            lock (this.PendingActions)
+            lock (PendingActions)
             {
                 PendingActions.SetMoveToAction(action);
                 InProgressActions.SetMoveToAction(action);
-            }
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   After your creature has begun moving you can get the MoveToAction object that
-        ///   represents your creature's current movement action.  You can use this to examine
-        ///   the movement location and speed that your creature moving to see if you'll need
-        ///   to alter your course.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  A MoveToAction object representing the current movement and the values
-        ///  passed into BeginMoving.
-        /// </returns>
-        public MoveToAction CurrentMoveToAction
-        {
-            get
-            {
-                if (PendingActions.MoveToAction != null)
-                {
-                    return PendingActions.MoveToAction;
-                }
-                else if (InProgressActions.MoveToAction != null)
-                {
-                    return InProgressActions.MoveToAction;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   Used to determine if your creature has been commanded to move.
-        ///   You can also check the CurrentMoveToAction property to get
-        ///   the actual movement vector for your creature.  Because moving
-        ///   is asynchronous your creature might not have started moving
-        ///   yet.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  True if your creature is or will be moving, False otherwise.
-        /// </returns>
-        public Boolean IsMoving
-        {
-            get
-            {
-                return CurrentMoveToAction != null;
             }
         }
 
@@ -501,60 +613,10 @@ namespace OrganismBase
 
             int actionID = GetNextActionID();
             DefendAction action = new DefendAction(ID, actionID, targetAnimal);
-            lock (this.PendingActions)
+            lock (PendingActions)
             {
                 PendingActions.SetDefendAction(action);
                 InProgressActions.SetDefendAction(action);
-            }
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   After your creature has begun defending you can get the DefendAction object that
-        ///   represents you're creatures current defend action.  You can use this to examine
-        ///   the target creature you're defending against and determine if there might be a
-        ///   more appropriate enemy.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  A DefendAction object representing the current defend action and the values
-        ///  passed into BeginDefending.
-        /// </returns>
-        public DefendAction CurrentDefendAction
-        {
-            get
-            {
-                if (PendingActions.DefendAction != null)
-                {
-                    return PendingActions.DefendAction;
-                }
-                else if (InProgressActions.DefendAction != null)
-                {
-                    return InProgressActions.DefendAction;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   Used to determine if your creature has been commanded to defend.
-        ///   You can also check the CurrentDefendAction property to get
-        ///   the actual target creature you're defending against.  Because defending
-        ///   is asynchronous your creature won't defend until the upcoming tick.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  True if your creature will defend the next tick, False otherwise.
-        /// </returns>
-        public Boolean IsDefending
-        {
-            get
-            {
-                return CurrentDefendAction  != null;
             }
         }
 
@@ -598,60 +660,10 @@ namespace OrganismBase
 
             int actionID = GetNextActionID();
             AttackAction action = new AttackAction(ID, actionID, targetAnimal);
-            lock (this.PendingActions)
+            lock (PendingActions)
             {
                 PendingActions.SetAttackAction(action);
                 InProgressActions.SetAttackAction(action);
-            }
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   After your creature has begun attacking you can get the AttackAction object that
-        ///   represents your creature's current attack action.  You can use this to examine
-        ///   the target creature you're attacking and determine if there might be a
-        ///   more appropriate enemy.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  AttackAction object representing the current attack action and the values
-        ///  passed into BeginAttacking.
-        /// </returns>
-        public AttackAction CurrentAttackAction
-        {
-            get
-            {
-                if (PendingActions.AttackAction != null)
-                {
-                    return PendingActions.AttackAction;
-                }
-                else if (InProgressActions.AttackAction != null)
-                {
-                    return InProgressActions.AttackAction;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   Used to determine if your creature has been commanded to attack.
-        ///   You can also check the CurrentAttackAction property to get
-        ///   the actual target creature you're attacking.  Because attacking
-        ///   is asynchronous your creature won't attack until the upcoming tick.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  True if your creature will attack the next tick, False otherwise.
-        /// </returns>
-        public Boolean IsAttacking
-        {
-            get
-            {
-                return CurrentAttackAction != null;
             }
         }
 
@@ -757,8 +769,6 @@ namespace OrganismBase
         /// </exception>
         public void BeginEating(OrganismState targetOrganism)
         {
-            int actionID;
-
             if (targetOrganism == null)
             {
                 throw new ArgumentNullException("targetOrganism", "The argument 'targetOrganism' cannot be null");
@@ -776,7 +786,7 @@ namespace OrganismBase
             {
                 throw new NotVisibleException();
             }
-            else if (!WithinEatingRange(currentOrganism))
+            if (!WithinEatingRange(currentOrganism))
             {
                 throw new NotWithinDistanceException();
             }
@@ -788,7 +798,7 @@ namespace OrganismBase
                 {
                     throw new ImproperFoodException();
                 }
-            
+
                 if (currentOrganism.IsAlive)
                 {
                     throw new NotDeadException();
@@ -802,80 +812,12 @@ namespace OrganismBase
                 }
             }
 
-            actionID = GetNextActionID();
+            int actionID = GetNextActionID();
             EatAction action = new EatAction(ID, actionID, targetOrganism);
-            lock (this.PendingActions)
+            lock (PendingActions)
             {
                 PendingActions.SetEatAction(action);
                 InProgressActions.SetEatAction(action);
-            }
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   After your creature has begun eating you can get the EatAction object that
-        ///   represents you're creatures current eat action.  You can use this to examine
-        ///   the target creature your eating and determine if their might be a better
-        ///   target to eat.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  EatAction object representing the current eat action and the values
-        ///  passed into BeginEating.
-        /// </returns>
-        public EatAction CurrentEatAction
-        {
-            get
-            {
-                if (PendingActions.EatAction != null)
-                {
-                    return PendingActions.EatAction;
-                }
-                else if (InProgressActions.EatAction != null)
-                {
-                    return InProgressActions.EatAction;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   Used to determine if your creature has been commanded to eat.
-        ///   You can also check the CurrentEatAction property to get
-        ///   the actual target creature you're eating.  Because eating
-        ///   is asynchronous your creature won't actually eat until the upcoming tick.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  True if your creature will eat the next tick, False otherwise.
-        /// </returns>
-        public Boolean IsEating
-        {
-            get
-            {
-                return CurrentEatAction != null;
-            }
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   Used to determine if your creature is capable of eating depending
-        ///   on the creature's current energy state.  You can also trap the
-        ///   AlreadyFullException from BeginEating.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  True if your creature is hungry enough to eat, False otherwise.
-        /// </returns>
-        public Boolean CanEat
-        {
-            get
-            {
-                return State.EnergyState <= EnergyState.Normal;
             }
         }
 
@@ -904,11 +846,11 @@ namespace OrganismBase
         /// </exception>
         public Boolean CanAttack(AnimalState targetAnimal)
         {
-            if (this.State.AnimalSpecies.IsCarnivore)
+            if (State.AnimalSpecies.IsCarnivore)
             {
                 return true;
             }
-            
+
             if (targetAnimal == null)
             {
                 throw new ArgumentNullException("targetAnimal", "The argument 'targetAnimal' cannot be null");

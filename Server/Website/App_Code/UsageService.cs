@@ -1,16 +1,7 @@
-//------------------------------------------------------------------------------
-//      Copyright (c) Microsoft Corporation.  All rights reserved.                                                          
-//------------------------------------------------------------------------------
-
-
 using System;
-using System.Web;
-using System.Collections;
-using System.Web.Services;
-using System.Web.Services.Protocols;
 using System.Data;
 using System.Data.SqlClient;
-using Terrarium.Server;
+using System.Web.Services;
 
 namespace Terrarium.Server
 {
@@ -19,14 +10,8 @@ namespace Terrarium.Server
     /// </summary>
     [WebService(Namespace = "http://tempuri.org/")]
     [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
-    public class UsageService : System.Web.Services.WebService
+    public class UsageService : WebService
     {
-
-        public UsageService()
-        {
-
-        }
-
         [WebMethod]
         public void ReportUsage(UsageData data)
         {
@@ -41,7 +26,7 @@ namespace Terrarium.Server
 
                     command.Parameters.AddWithValue("@Alias", data.Alias);
                     command.Parameters.AddWithValue("@Domain", data.Domain);
-                    command.Parameters.AddWithValue("@IPAddress", Context.Request.ServerVariables["REMOTE_ADDR"].ToString());
+                    command.Parameters.AddWithValue("@IPAddress", Context.Request.ServerVariables["REMOTE_ADDR"]);
                     command.Parameters.AddWithValue("@GameVersion", data.GameVersion);
                     command.Parameters.AddWithValue("@PeerChannel", data.PeerChannel);
                     command.Parameters.AddWithValue("@PeerCount", data.PeerCount);
@@ -71,4 +56,3 @@ namespace Terrarium.Server
         }
     }
 }
-
