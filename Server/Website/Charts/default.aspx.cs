@@ -2,32 +2,27 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                          
 //------------------------------------------------------------------------------
 
-
 using System;
-using System.IO;
 using System.Collections;
-using System.ComponentModel;
 using System.Data;
-using System.Data .SqlClient ;
-using System.Drawing;
+using System.Data.SqlClient;
+using System.IO;
 using System.Web;
-using System.Web.SessionState;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-using System.Web.UI.HtmlControls;
 
 namespace Terrarium.Server.Charts
 {
     /// <summary>
     /// Summary description for ChartNew.
     /// </summary>
-    public partial class ChartNew : System.Web.UI.Page
+    public partial class ChartNew : Page
     {
-        protected System.Web.UI.WebControls.Panel ChartControls;
-        protected string SortExpression;
-		protected System.Web.UI.WebControls.Image Image1;
+        protected Panel ChartControls;
+        protected Image Image1;
         protected string SortDirection;
-        
+        protected string SortExpression;
+
         /*
             Method:     Page_Load
             Purpose:    This method runs whenever the page is visited.
@@ -40,46 +35,40 @@ namespace Terrarium.Server.Charts
             to 0 and a default filter is applied which selects all creatures
             that are present in the most current version.
         */
-            protected void Page_Load(Object Src, EventArgs E ) 
+        protected void Page_Load(Object Src, EventArgs E)
+        {
+            if (!IsPostBack)
             {
-                if (!IsPostBack) 
-                {
-                    ViewState["SortExpression"] = "Population";
-                    ViewState["SortDirection"] = "DESC";
-                    Chart.Visible = false;
-                }
-                
-                if ( StartTime.SelectedItem.Text == "Last 24 hours" ) 
-                {
-                    Calendar1.Visible = false;
-                }
-                else 
-                {
-                    Calendar1.Visible = true;
-                }
+                ViewState["SortExpression"] = "Population";
+                ViewState["SortDirection"] = "DESC";
+                Chart.Visible = false;
+            }
 
-                SortExpression = (string) ViewState["SortExpression"];
-                SortDirection = (string) ViewState["SortDirection"];
+            Calendar1.Visible = StartTime.SelectedItem.Text != "Last 24 hours";
 
-                if (!IsPostBack) 
-                {
-                    Trace.Write("Adding Version Items");
-                    Version.DataSource = ChartBuilder.SpeciesList.Tables["Versions"].DefaultView;
-                    Version.DataTextField = "VERSION";
-                    Version.DataValueField = "VERSION";
-                    Version.DataBind();
-                    Version.Items.Add("All Versions");
-        
-                    included.DataSource = new ArrayList(); 
-                    included.DataBind();
+            SortExpression = (string) ViewState["SortExpression"];
+            SortDirection = (string) ViewState["SortDirection"];
 
-                    Calendar1.SelectedDate = DateTime.UtcNow;
-                    notIncluded.CurrentPageIndex = 0;
-                    ApplyFilter();
-                }
+            if (!IsPostBack)
+            {
+                Trace.Write("Adding Version Items");
+                Version.DataSource = ChartBuilder.SpeciesList.Tables["Versions"].DefaultView;
+                Version.DataTextField = "VERSION";
+                Version.DataValueField = "VERSION";
+                Version.DataBind();
+                Version.Items.Add("All Versions");
+                Version.SelectedIndex = Version.Items.Count - 1;
+
+                included.DataSource = new ArrayList();
+                included.DataBind();
+
+                Calendar1.SelectedDate = DateTime.UtcNow;
+                notIncluded.CurrentPageIndex = 0;
+                ApplyFilter();
+            }
         }
 
-        
+
         /*
             Method:     ApplyFilter
             Purpose:    This method contains all of the logic to generate a filter
@@ -88,55 +77,55 @@ namespace Terrarium.Server.Charts
             all filtering controls and building a working row filter based on the
             contents of those controls.
         */
-        protected void ApplyFilter() 
+
+        protected void ApplyFilter()
         {
             DataView dv = ChartBuilder.SpeciesList.Tables["Species"].DefaultView;
 
-            if ( dv == null ) 
+            if (dv == null)
             {
                 return;
             }
 
             string rowFilter = "";
 
-            if ( FilterValue.Text != null && FilterValue.Text != "" ) 
+            if (!string.IsNullOrEmpty(FilterValue.Text))
             {
-                if ( FilterColumn.SelectedItem.Text == "Population" ) 
+                if (FilterColumn.SelectedItem.Text == "Population")
                 {
                     int population = 0;
-                    try 
+                    try
                     {
                         population = Int32.Parse(FilterValue.Text);
                     }
-                    catch 
+                    catch
                     {
                     }
 
                     rowFilter = FilterColumn.SelectedItem.Text + " >= " + population + "";
                 }
-                else 
+                else
                 {
                     rowFilter = FilterColumn.SelectedItem.Text + " Like '" + FilterValue.Text + "%'";
                 }
-
             }
 
-            if ( Version.SelectedItem != null ) 
+            if (Version.SelectedItem != null)
             {
-                if ( Version.SelectedItem.Text != "All Versions" ) 
+                if (Version.SelectedItem.Text != "All Versions")
                 {
-                    if ( rowFilter != "" ) 
+                    if (rowFilter != "")
                     {
                         rowFilter += " AND ";
                     }
                     rowFilter += " Version = '" + Version.SelectedItem.Value + "'";
                 }
             }
-            else 
+            else
             {
-                if ( Version.Items.Count > 0 ) 
+                if (Version.Items.Count > 0)
                 {
-                    if ( rowFilter != "" ) 
+                    if (rowFilter != "")
                     {
                         rowFilter += " AND ";
                     }
@@ -151,7 +140,6 @@ namespace Terrarium.Server.Charts
             notIncluded.DataBind();
         }
 
-        
 
         /*
             Method:     Page_PreRender
@@ -163,11 +151,12 @@ namespace Terrarium.Server.Charts
             share the same data, and that a user can more easily construct
             different graphs to display side by side.
         */
-        protected void Page_PreRender(Object Src, EventArgs E ) 
+
+        protected void Page_PreRender(Object Src, EventArgs E)
         {
             DataSet includedData = LoadXmlDataFromViewState();
 
-            if ( includedData != null ) 
+            if (includedData != null)
             {
                 included.DataSource = includedData.Tables["Species"].DefaultView;
                 included.DataBind();
@@ -178,16 +167,15 @@ namespace Terrarium.Server.Charts
             Method:     MakeHeader
             Purpose:    This method generates a UI for a sorted column header.
         */
-        protected string MakeHeader(string headerText) 
+
+        protected string MakeHeader(string headerText)
         {
-            if ( String.Join("", headerText.Split(new char[]{' '})) == SortExpression ) 
+            if (String.Join("", headerText.Split(new char[] {' '})) == SortExpression)
             {
-                return "<B>" + headerText + " <font style='font-family: Webdings'>" + ((SortDirection == "DESC") ? "6" : "5") + "</font></B>";
-            } 
-            else 
-            {
-                return headerText;
+                return "<B>" + headerText + " <font style='font-family: Webdings'>" +
+                       ((SortDirection == "DESC") ? "6" : "5") + "</font></B>";
             }
+            return headerText;
         }
 
         /*
@@ -196,15 +184,16 @@ namespace Terrarium.Server.Charts
             viewstate information by first reading the schema and finally
             the xml data.
         */
-        protected DataSet LoadXmlDataFromViewState() 
+
+        protected DataSet LoadXmlDataFromViewState()
         {
             DataSet d = new DataSet();
-            if ( ViewState["SelectedSpeciesSchema"] != null && ViewState["SelectedSpecies"] != null ) 
+            if (ViewState["SelectedSpeciesSchema"] != null && ViewState["SelectedSpecies"] != null)
             {
                 d.ReadXmlSchema(new StringReader((string) ViewState["SelectedSpeciesSchema"]));
                 d.ReadXml(new StringReader((string) ViewState["SelectedSpecies"]));
             }
-            else 
+            else
             {
                 d = null;
             }
@@ -219,7 +208,8 @@ namespace Terrarium.Server.Charts
             is set to 0 since a filter can modify the number of pages
             shown.
         */
-        protected void applyFilterButton_Click(Object sender, EventArgs e) 
+
+        protected void applyFilterButton_Click(Object sender, EventArgs e)
         {
             notIncluded.CurrentPageIndex = 0;
             ApplyFilter();
@@ -229,7 +219,8 @@ namespace Terrarium.Server.Charts
             Method:     notIncluded_Page
             Purpose:    This method allows for paging of the creatures datagrid.
         */
-        protected void notIncluded_Page(Object sender, DataGridPageChangedEventArgs e) 
+
+        protected void notIncluded_Page(Object sender, DataGridPageChangedEventArgs e)
         {
             notIncluded.CurrentPageIndex = e.NewPageIndex;
             ApplyFilter();
@@ -242,57 +233,66 @@ namespace Terrarium.Server.Charts
             particular function looks for the Command of "Add" and then adds
             the creature to the list of selected creatures.
         */
-        protected void notIncluded_Command(Object sender, DataGridCommandEventArgs e) 
+
+        protected void notIncluded_Command(Object sender, DataGridCommandEventArgs e)
         {
-            if (((LinkButton) e.CommandSource).CommandName == "Add") 
+            if (((LinkButton) e.CommandSource).CommandName == "Add")
             {
                 DataSet includedData = LoadXmlDataFromViewState();
-                if ( includedData != null ) 
+                if (includedData != null)
                 {
                     // First check to see how many we have
                     // If 10 then exit
-                    if ( includedData.Tables["Species"].Rows.Count >= 10 ) 
+                    if (includedData.Tables["Species"].Rows.Count >= 10)
                     {
                         return;
                     }
 
                     // Ensure primary key
                     includedData.Tables["Species"].DefaultView.Sort = "SpeciesName DESC";
-                    includedData.Tables["Species"].PrimaryKey = new DataColumn[] { includedData.Tables["Species"].Columns["SpeciesName"] };
+                    includedData.Tables["Species"].PrimaryKey = new DataColumn[]
+                                                                    {
+                                                                        includedData.Tables["Species"].Columns[
+                                                                            "SpeciesName"]
+                                                                    };
                     // Check to see if we already have this one
-                    if ( includedData.Tables["Species"].Rows.Find(HttpUtility.HtmlDecode(((DataBoundLiteralControl) e.Item.Cells[2].Controls[0]).Text)) != null ) 
+                    if (
+                        includedData.Tables["Species"].Rows.Find(
+                            HttpUtility.HtmlDecode(((DataBoundLiteralControl) e.Item.Cells[2].Controls[0]).Text)) !=
+                        null)
                     {
                         return;
                     }
                 }
 
-                SqlConnection myConnection = new SqlConnection(ServerSettings.SpeciesDsn); 
-                
-                    myConnection.Open();
+                SqlConnection myConnection = new SqlConnection(ServerSettings.SpeciesDsn);
 
-                    SqlCommand command = new SqlCommand("TerrariumGrabLatestSpeciesData", myConnection);
-                    SqlDataAdapter adapter = new SqlDataAdapter(command);
-                    command.CommandType = CommandType.StoredProcedure;
+                myConnection.Open();
 
-                    SqlParameter parmSpecies = command.Parameters.Add("@SpeciesName", SqlDbType.VarChar, 50);
-                    parmSpecies.Value = HttpUtility.HtmlDecode(((DataBoundLiteralControl) e.Item.Cells[2].Controls[0]).Text.Trim ());
+                SqlCommand command = new SqlCommand("TerrariumGrabLatestSpeciesData", myConnection);
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                command.CommandType = CommandType.StoredProcedure;
 
-                    DataSet tempData = new DataSet();
-                    adapter.Fill(tempData, "Species");
+                SqlParameter parmSpecies = command.Parameters.Add("@SpeciesName", SqlDbType.VarChar, 50);
+                parmSpecies.Value =
+                    HttpUtility.HtmlDecode(((DataBoundLiteralControl) e.Item.Cells[2].Controls[0]).Text.Trim());
 
-                    if ( includedData != null ) 
-                    {
-                        includedData.Merge(tempData);
-                    }
-                    else 
-                    {
-                        includedData = tempData;
-                    }
+                DataSet tempData = new DataSet();
+                adapter.Fill(tempData, "Species");
 
-                    myConnection.Close();
+                if (includedData != null)
+                {
+                    includedData.Merge(tempData);
+                }
+                else
+                {
+                    includedData = tempData;
+                }
 
-                included .DataSource = includedData ;
-                included .DataBind ();  
+                myConnection.Close();
+
+                included.DataSource = includedData;
+                included.DataBind();
 
                 ViewState["SelectedSpecies"] = includedData.GetXml();
                 ViewState["SelectedSpeciesSchema"] = includedData.GetXmlSchema();
@@ -308,29 +308,33 @@ namespace Terrarium.Server.Charts
             creature from the selected dataset.  The "Chart" command is responsible
             for charting the particular creatures vital statistics graph.
         */
-        protected void included_Command(Object sender, DataGridCommandEventArgs e) 
+
+        protected void included_Command(Object sender, DataGridCommandEventArgs e)
         {
             DataSet includedData;
-            DataRow drow;
 
-            switch(((LinkButton) e.CommandSource).CommandName) 
+            switch (((LinkButton) e.CommandSource).CommandName)
             {
                 case "Remove":
                     includedData = LoadXmlDataFromViewState();
-                    if ( includedData != null ) 
+                    if (includedData != null)
                     {
                         // Ensure primary key
                         includedData.Tables["Species"].DefaultView.Sort = "SpeciesName DESC";
-                        includedData.Tables["Species"].PrimaryKey = new DataColumn[] { includedData.Tables["Species"].Columns["SpeciesName"] };
+                        includedData.Tables["Species"].PrimaryKey = new DataColumn[]
+                                                                        {
+                                                                            includedData.Tables["Species"].Columns[
+                                                                                "SpeciesName"]
+                                                                        };
 
-                        drow = includedData.Tables["Species"].Rows.Find(HttpUtility.HtmlDecode(e.Item.Cells[2].Text));
-                        if ( drow != null ) 
+                        DataRow drow = includedData.Tables["Species"].Rows.Find(HttpUtility.HtmlDecode(e.Item.Cells[2].Text));
+                        if (drow != null)
                         {
                             includedData.Tables["Species"].Rows.Remove(drow);
                         }
 
-                        included .DataSource = includedData ;
-                        included .DataBind ();
+                        included.DataSource = includedData;
+                        included.DataBind();
 
                         ViewState["SelectedSpecies"] = includedData.GetXml();
                         ViewState["SelectedSpeciesSchema"] = includedData.GetXmlSchema();
@@ -348,27 +352,29 @@ namespace Terrarium.Server.Charts
             a sort based on a single column.  This function enables the setting
             of a SortExpression, and decides which direction to sort the data.
         */
-        protected void notIncluded_Sort(Object sender, DataGridSortCommandEventArgs e) 
+
+        protected void notIncluded_Sort(Object sender, DataGridSortCommandEventArgs e)
         {
-            if ( SortExpression == e.SortExpression.ToString() ) 
+            if (SortExpression == e.SortExpression)
             {
                 SortDirection = (SortDirection == "DESC") ? "ASC" : "DESC";
-            } 
-            else 
+            }
+            else
             {
                 SortDirection = "DESC";
             }
-            SortExpression = e.SortExpression.ToString();
-    
+            SortExpression = e.SortExpression;
+
             ViewState["SortExpression"] = SortExpression;
             ViewState["SortDirection"] = SortDirection;
-    
-    
+
+
             ApplyFilter();
         }
 
         #region Web Form Designer generated code
-        override protected void OnInit(EventArgs e)
+
+        protected override void OnInit(EventArgs e)
         {
             //
             // CODEGEN: This call is required by the ASP.NET Web Form Designer.
@@ -376,15 +382,15 @@ namespace Terrarium.Server.Charts
             InitializeComponent();
             base.OnInit(e);
         }
-        
+
         /// <summary>
         /// Required method for Designer support - do not modify
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent()
-        {    
+        {
+        }
 
-		}
         #endregion
     }
 }
