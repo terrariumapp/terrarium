@@ -3,27 +3,22 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Drawing;
-using System.Threading;
-using System.Net.Sockets;
-using System.Collections.Specialized;
 using System.Collections;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Diagnostics;
-using System.Reflection;
 using System.Data;
+using System.Diagnostics;
+using System.Globalization;
+using System.Net;
+using System.Reflection;
 using System.Runtime.Remoting.Messaging;
+using System.Text;
+using System.Threading;
 using OrganismBase;
 using Terrarium.Configuration;
+using Terrarium.Forms;
 using Terrarium.Game;
 using Terrarium.Net;
-using Terrarium.Tools;
-using Terrarium.Forms;
 using Terrarium.Services.Discovery;
-using System.Globalization;
+using Terrarium.Tools;
 
 namespace Terrarium.PeerToPeer
 {
@@ -33,62 +28,145 @@ namespace Terrarium.PeerToPeer
     /// </summary>
     public class NetworkEngine
     {
-        /// <summary>
-        ///  The thread used by the network engine in order to announce this peers presence asynchronously.
-        /// </summary>
-        internal Thread          announceThread = null;
-        PeerManager peerManager = new PeerManager();
-        private HttpNamespaceManager namespaceManager = null;
-
-        IAsyncResult lastAsyncCall;
-        private const bool oneTeleportAtATime = false;  // used for debugging
-
-        private IPAddress        hostIP = IPAddress.Parse("127.0.0.1");
-        private string           peerChannel = "EcoSystem";
-        private string           lastTeleportationException = "none";
-        private int              totalPeersOnChannel = 0;
-        private Version          peerVersion = Assembly.GetExecutingAssembly().GetName().Version;
-        private const int        networkTimeoutMsec = 60000; // 5 minute timeout
-        private const int        portNumber = 50000;
-        private const int        announceAndRegisterPeerWaitMsec = 300000;
-        private string networkStatusMessage = "";
+        private const int AnnounceAndRegisterPeerWaitMsec = 300000;
+        private const int NetworkTimeoutMsec = 60000; // 5 minute timeout
+        private const int PortNumber = 50000;
 
         /// <summary>
         ///  Message to show if the user is detected to be behind a NAT
         /// </summary>
-        public static string NetworkBehindNatMessage = "Terrarium has detected that you are behind a NAT or Firewall. Check the FAQ at http://www.windowsforms.net/terrarium for how to set up Terrarium to work in this configuration.";
+        public static string NetworkBehindNatMessage =
+            "Terrarium has detected that you are behind a NAT or Firewall. Check the FAQ at http://www.windowsforms.net/terrarium for how to set up Terrarium to work in this configuration.";
 
-        private TerrariumLed discoveryLed;
-        private TerrariumLed peerConnectionLed;
-        private TerrariumLed receivedPeerConnectionLed;
+        private readonly PeerManager _peerManager = new PeerManager();
+        private TerrariumLed _discoveryLed;
+        private IPAddress _hostIP = IPAddress.Parse("127.0.0.1");
+        private string _lastTeleportationException = "none";
+        private HttpNamespaceManager _namespaceManager;
+        private string _networkStatusMessage = "";
+        private int _numberOfFailedTeleportationReceives;
+        private int _numberOfFailedTeleportationSends;
+        private int _numberOfLocalTeleportations;
+        private int _numberOfRemoteTeleportations;
+        private int _numberOfTeleportations;
+        private string _peerChannel = "EcoSystem";
+        private TerrariumLed _peerConnectionLed;
+        private BooleanSwitch _protocolDebuggingSwitch;
+        private TerrariumLed _receivedPeerConnectionLed;
+        private int _totalPeersOnChannel;
 
-        // Don't access these directly, use the Count... methods instead
-        // Multiple threads are incrementing them
-        int numberOfTeleportations = 0;
-        int numberOfLocalTeleportations = 0;
-        int numberOfRemoteTeleportations = 0;
-        int numberOfFailedTeleportationReceives = 0;
-        int numberOfFailedTeleportationSends = 0; 
- 
-        // Switch that is useful for debugging
-        BooleanSwitch protocolDebuggingSwitch;
+        /// <summary>
+        ///  The thread used by the network engine in order to announce this peers presence asynchronously.
+        /// </summary>
+        internal Thread announceThread;
 
-        internal void InitializeNetwork(string peerChannel, TerrariumLed [] leds)
+        /// <summary>
+        ///  Returns the PeerManager that tracks which peers are valid
+        /// </summary>
+        public PeerManager PeerManager
+        {
+            get { return _peerManager; }
+        }
+
+        /// <summary>
+        /// Returns messages that should be propagated from deep in the networking classes to the UI
+        /// </summary>
+        public string NetworkStatusMessage
+        {
+            get { return _networkStatusMessage; }
+        }
+
+        internal int PeerCount
+        {
+            get { return _totalPeersOnChannel; }
+        }
+
+        internal string LastTeleportationException
+        {
+            get { return _lastTeleportationException; }
+            set { _lastTeleportationException = value; }
+        }
+
+        internal string PeerChannel
+        {
+            get { return _peerChannel; }
+        }
+
+        internal BooleanSwitch ProtocolDebuggingSwitch
+        {
+            get
+            {
+                if (_protocolDebuggingSwitch == null)
+                {
+                    _protocolDebuggingSwitch = new BooleanSwitch("Terrarium.PeerToPeer.Protocol",
+                                                                 "Enable tracing for high level peer to peer protocol interactions.");
+                }
+
+                return _protocolDebuggingSwitch;
+            }
+        }
+
+        internal string HostIP
+        {
+            get  { return _hostIP != null ? _hostIP.ToString() : ""; }
+        }
+
+        /// <summary>
+        /// The total number of teleportations
+        /// </summary>
+        public int Teleportations
+        {
+            get { return _numberOfTeleportations; }
+        }
+
+        /// <summary>
+        /// Number of local teleportations
+        /// </summary>
+        public int LocalTeleportations
+        {
+            get { return _numberOfLocalTeleportations; }
+        }
+
+        /// <summary>
+        /// Number of remote teleportations
+        /// </summary>
+        public int RemoteTeleportations
+        {
+            get { return _numberOfRemoteTeleportations; }
+        }
+
+        /// <summary>
+        /// Number of failures receiving a creature
+        /// </summary>
+        public int FailedTeleportationReceives
+        {
+            get { return _numberOfFailedTeleportationReceives; }
+        }
+
+        /// <summary>
+        /// Number of failures sending a creature
+        /// </summary>
+        public int FailedTeleportationSends
+        {
+            get { return _numberOfFailedTeleportationSends; }
+        }
+
+        internal void InitializeNetwork(string peerChannel, TerrariumLed[] leds)
         {
             // Set up the LEDs
-            discoveryLed = leds[(int)LedIndicators.DiscoveryWebService];
-            peerConnectionLed = leds[(int)LedIndicators.PeerConnection];
-            receivedPeerConnectionLed = leds[(int)LedIndicators.PeerReceivedConnection];
+            _discoveryLed = leds[(int) LedIndicators.DiscoveryWebService];
+            _peerConnectionLed = leds[(int) LedIndicators.PeerConnection];
+            _receivedPeerConnectionLed = leds[(int) LedIndicators.PeerReceivedConnection];
 
             // Start listening on HTTP
-            this.peerChannel = peerChannel;        
+            _peerChannel = peerChannel;
             //GlobalProxySelection.Select = GlobalProxySelection.GetEmptyWebProxy();
             WebRequest.DefaultWebProxy = null;
             SetHostIPInformation();
             StartHttpNamespaceManager();
 
             // Start our announcement thread
-            announceThread = new Thread(new ThreadStart(this.AnnounceAndRegisterPeer));
+            announceThread = new Thread(AnnounceAndRegisterPeer);
             announceThread.Name = "Peer Discovery Thread"; // Useful for debugging
             announceThread.Start();
         }
@@ -99,12 +177,12 @@ namespace Terrarium.PeerToPeer
             {
                 announceThread.Abort();
             }
-            
+
             // Stop Listening
             StopHttpNamespaceManager();
 
-            discoveryLed = null;
-            peerConnectionLed = null; 
+            _discoveryLed = null;
+            _peerConnectionLed = null;
         }
 
         /// <summary>
@@ -112,19 +190,19 @@ namespace Terrarium.PeerToPeer
         /// </summary>
         public void StartHttpNamespaceManager()
         {
-            namespaceManager = new HttpNamespaceManager();
-            namespaceManager.BeforeProcessRequest += new EventHandler(BeforeProcessRequest);
-            namespaceManager.AfterProcessRequest += new EventHandler(AfterProcessRequest);
+            _namespaceManager = new HttpNamespaceManager();
+            _namespaceManager.BeforeProcessRequest += BeforeProcessRequest;
+            _namespaceManager.AfterProcessRequest += AfterProcessRequest;
 
             // Starting the manager starts the http listener
-            namespaceManager.Start(HostIP, portNumber);
+            _namespaceManager.Start(HostIP, PortNumber);
 
             // Register the namespaces we intend to service
             VersionNamespaceHandler versionHandler = new VersionNamespaceHandler();
             OrganismsNamespaceHandler organismsHandler = new OrganismsNamespaceHandler(this);
-            namespaceManager.RegisterNamespace("version", versionHandler);
-            namespaceManager.RegisterNamespace("organisms", organismsHandler);
-            namespaceManager.RegisterNamespace("organisms/", organismsHandler);
+            _namespaceManager.RegisterNamespace("version", versionHandler);
+            _namespaceManager.RegisterNamespace("organisms", organismsHandler);
+            _namespaceManager.RegisterNamespace("organisms/", organismsHandler);
         }
 
         /// <summary>
@@ -132,8 +210,8 @@ namespace Terrarium.PeerToPeer
         /// </summary>
         public void StopHttpNamespaceManager()
         {
-            namespaceManager.Stop();
-            namespaceManager = null;
+            _namespaceManager.Stop();
+            _namespaceManager = null;
         }
 
         // Used to find other peers on the network
@@ -145,47 +223,49 @@ namespace Terrarium.PeerToPeer
             {
                 PeerDiscoveryService peerService = new PeerDiscoveryService();
                 peerService.Url = GameConfig.WebRoot + "/discovery/discoverydb.asmx";
-                peerService.Timeout = networkTimeoutMsec;
+                peerService.Timeout = NetworkTimeoutMsec;
 
-                while(true)
+                while (true)
                 {
                     // Make sure our bad peer list remains manageable
-                    peerManager.TruncateBadPeerList();
+                    _peerManager.TruncateBadPeerList();
 
                     // Register with the central server and get peers
                     try
                     {
                         if (GameConfig.UseConfigForDiscovery || ValidatePeer(peerService.ValidatePeer()))
                         {
-                            networkStatusMessage = "";
+                            _networkStatusMessage = "";
 
-                            if (discoveryLed != null)
-                                discoveryLed.LedState = LedStates.Waiting;
+                            if (_discoveryLed != null)
+                                _discoveryLed.LedState = LedStates.Waiting;
 
-                            DataSet data = null;
+                            DataSet data;
 
                             if (GameConfig.UseConfigForDiscovery)
                             {
                                 // Get it from the config file
-                                totalPeersOnChannel = GetNumPeersFromConfig(peerChannel);
-                                if (discoveryLed != null)
-                                    discoveryLed.LedState = LedStates.Idle;
+                                _totalPeersOnChannel = GetNumPeersFromConfig(_peerChannel);
+                                if (_discoveryLed != null)
+                                    _discoveryLed.LedState = LedStates.Idle;
 
-                                if (discoveryLed != null)
-                                    discoveryLed.LedState = LedStates.Waiting;
-                            
-                                data = GetAllPeersFromConfig(peerChannel);
-                                if (discoveryLed != null)
-                                    discoveryLed.LedState = LedStates.Idle;
+                                if (_discoveryLed != null)
+                                    _discoveryLed.LedState = LedStates.Waiting;
+
+                                data = GetAllPeersFromConfig(_peerChannel);
+                                if (_discoveryLed != null)
+                                    _discoveryLed.LedState = LedStates.Idle;
                             }
                             else
                             {
-                                // Talk to the webservice
-                                RegisterPeerResult rpe = peerService.RegisterMyPeerGetCountAndPeerList(Assembly.GetExecutingAssembly().GetName().Version.ToString(), peerChannel, GameEngine.Current.CurrentVector.State.StateGuid, out data, out totalPeersOnChannel);
+                                    peerService.RegisterMyPeerGetCountAndPeerList(
+                                        Assembly.GetExecutingAssembly().GetName().Version.ToString(), _peerChannel,
+                                        GameEngine.Current.CurrentVector.State.StateGuid, out data,
+                                        out _totalPeersOnChannel);
                             }
-                        
-                            if (discoveryLed != null)
-                                discoveryLed.LedState = LedStates.Idle;
+
+                            if (_discoveryLed != null)
+                                _discoveryLed.LedState = LedStates.Idle;
 
                             if (data != null)
                             {
@@ -195,37 +275,37 @@ namespace Terrarium.PeerToPeer
                                 {
                                     string ipAddress = (string) row["IPAddress"];
                                     DateTime peerLease = (DateTime) row["Lease"];
-                                    if (ipAddress == hostIP.ToString())
+                                    if (ipAddress == _hostIP.ToString())
                                     {
                                         continue;
                                     }
-                                    
+
                                     // If the bad peer has updated their lease, then they
                                     // are online again, count them as good
-                                    if(!peerManager.ClearBadPeer(ipAddress, peerLease))
+                                    if (!_peerManager.ClearBadPeer(ipAddress, peerLease))
                                         continue;
 
                                     newPeersHash.Add(ipAddress, new Peer(ipAddress, peerLease));
                                 }
 
-                                peerManager.KnownPeers = newPeersHash;
+                                _peerManager.KnownPeers = newPeersHash;
                             }
                         }
                         else
                         {
-                            networkStatusMessage = NetworkBehindNatMessage;
+                            _networkStatusMessage = NetworkBehindNatMessage;
                         }
                     }
                     catch (Exception ex)
                     {
-                        if (discoveryLed != null)
-                            discoveryLed.LedState = LedStates.Failed;
+                        if (_discoveryLed != null)
+                            _discoveryLed.LedState = LedStates.Failed;
 
                         ErrorLog.LogHandledException(ex);
                     }
 
                     // Sleep for a while so we don't flood the network
-                    Thread.Sleep(announceAndRegisterPeerWaitMsec);
+                    Thread.Sleep(AnnounceAndRegisterPeerWaitMsec);
                 }
             }
             catch (ThreadAbortException)
@@ -261,36 +341,35 @@ namespace Terrarium.PeerToPeer
             if (PeerManager.KnownPeers.Count != 0)
             {
                 // Pick a random peer
-                sendAddress = peerManager.GetRandomPeer();
+                sendAddress = _peerManager.GetRandomPeer();
 
                 // If we pick ourselves, short circuit for perf (and so things don't get announced 
                 // on the screen as a valid teleport)
-                if (sendAddress.Equals(hostIP))
+                if (sendAddress.Equals(_hostIP))
                     sendAddress = null;
             }
 
-            if(sendAddress == null)
-            {                
+            if (sendAddress == null)
+            {
                 // Otherwise, teleport back to self
 //                GameEngine.Current.ReceiveTeleportation(state, true);
 //                CountLocalTeleportation();
-                sendAddress = hostIP;
+                sendAddress = _hostIP;
 //                return;
             }
 
-            TeleportWorkItem workItem = new TeleportWorkItem(this, sendAddress.ToString(), state, portNumber, networkTimeoutMsec, peerConnectionLed);
+            TeleportWorkItem workItem = new TeleportWorkItem(this, sendAddress.ToString(), state, PortNumber,
+                                                             NetworkTimeoutMsec, _peerConnectionLed);
 
             // Actually do the teleportation asynchronously so we don't block the UI
-            TeleportDelegate teleport = new TeleportDelegate(workItem.DoTeleport);
-            lastAsyncCall = teleport.BeginInvoke(new AsyncCallback(TeleportCallback), null);
+            TeleportDelegate teleport = workItem.DoTeleport;
+            teleport.BeginInvoke(TeleportCallback, null);
         }
 
         internal void TeleportCallback(IAsyncResult ar)
         {
-            lastAsyncCall = null;
-
             // Extract the delegate from the AsyncResult
-            TeleportDelegate teleportDelegate = (TeleportDelegate)((AsyncResult)ar).AsyncDelegate;
+            TeleportDelegate teleportDelegate = (TeleportDelegate) ((AsyncResult) ar).AsyncDelegate;
 
             // Obtain the result
             object unteleportedObject = teleportDelegate.EndInvoke(ar);
@@ -318,9 +397,9 @@ namespace Terrarium.PeerToPeer
         /// </summary>
         internal void BeforeProcessRequest(object sender, EventArgs e)
         {
-            if (receivedPeerConnectionLed != null)
+            if (_receivedPeerConnectionLed != null)
             {
-                receivedPeerConnectionLed.AddActivityCount();
+                _receivedPeerConnectionLed.AddActivityCount();
             }
         }
 
@@ -329,30 +408,19 @@ namespace Terrarium.PeerToPeer
         /// </summary>
         internal void AfterProcessRequest(object sender, EventArgs e)
         {
-            if (receivedPeerConnectionLed != null)
+            if (_receivedPeerConnectionLed != null)
             {
-                receivedPeerConnectionLed.RemoveActivityCount();
+                _receivedPeerConnectionLed.RemoveActivityCount();
             }
         }
 
-        /// <summary>
-        ///  Returns the PeerManager that tracks which peers are valid
-        /// </summary>
-        public PeerManager PeerManager
-        {
-            get 
-            {
-                return peerManager;
-            }
-        }
-        
-        internal int GetNumPeersFromConfig(string channel)
+        internal static int GetNumPeersFromConfig(string channel)
         {
             DataSet data = GetAllPeersFromConfig(channel);
             return data.Tables["Peers"].Rows.Count;
         }
 
-        internal DataSet GetAllPeersFromConfig(string channel)
+        internal static DataSet GetAllPeersFromConfig(string channel)
         {
             string peerList = GameConfig.PeerList;
 
@@ -360,53 +428,57 @@ namespace Terrarium.PeerToPeer
             data.Locale = CultureInfo.InvariantCulture;
 
             DataTable peerTable = data.Tables.Add("Peers");
-            peerTable.Columns.Add("IPAddress", typeof(System.String));  
-            peerTable.Columns.Add("Lease", typeof(System.DateTime));    
+            peerTable.Columns.Add("IPAddress", typeof (String));
+            peerTable.Columns.Add("Lease", typeof (DateTime));
 
             // The string needs to be Channel,IP,Channel,IP, etc.
-            string [] peers = peerList.Split(',');
+            string[] peers = peerList.Split(',');
             for (int i = 0; i < peers.Length; i += 2)
             {
-                if (peers[i].Trim().ToLower(CultureInfo.InvariantCulture) == channel.ToLower(CultureInfo.InvariantCulture) || 
+                if (peers[i].Trim().ToLower(CultureInfo.InvariantCulture) ==
+                    channel.ToLower(CultureInfo.InvariantCulture) ||
                     peers[i].Trim().ToLower(CultureInfo.InvariantCulture) == "all")
                 {
                     DataRow row = peerTable.NewRow();
-                
+
                     // If we get a bad format in the config file, we should throw an exception so that the 
                     // discovery engine shows red.  having a 0.0.0.0 should count as a problem since it
                     // will teleport locally                                                                              
-                    if (IPAddress.Parse(peers[i+1].Trim()).ToString() == "0.0.0.0")
+                    if (IPAddress.Parse(peers[i + 1].Trim()).ToString() == "0.0.0.0")
                     {
                         throw new ApplicationException("An IP Address in the config file resolved to 0.0.0.0");
                     }
 
-                    row["IPAddress"] = peers[i+1].Trim();
-                    row["Lease"] = DateTime.Now.AddDays(5);   // make it expire in 5 days from now, so it is always different, and always far away  
-                    peerTable.Rows.Add(row);    
+                    row["IPAddress"] = peers[i + 1].Trim();
+                    row["Lease"] = DateTime.Now.AddDays(5);
+                    // make it expire in 5 days from now, so it is always different, and always far away  
+                    peerTable.Rows.Add(row);
                 }
             }
 
             return data;
         }
-        
+
         // This forms an XML document that reports lots of statistics that are useful for debugging
         internal string GetNetworkStatistics()
         {
             StringBuilder stats = new StringBuilder();
             stats.Append("<?xml version=\"1.0\"?>");
             stats.Append("<stats>");
-            stats.Append("<guid>" + GameEngine.Current.CurrentVector.State.StateGuid.ToString() + "</guid>");
-            stats.Append("<worldHeight>" + GameEngine.Current.WorldHeight.ToString() + "</worldHeight>");
+            stats.Append("<guid>" + GameEngine.Current.CurrentVector.State.StateGuid + "</guid>");
+            stats.Append("<worldHeight>" + GameEngine.Current.WorldHeight + "</worldHeight>");
             stats.Append("<teleportations>");
-            stats.Append("<totalteleportations>" + numberOfTeleportations + "</totalteleportations>" );
-            stats.Append("<localteleportations>" + numberOfLocalTeleportations + "</localteleportations>" );
-            stats.Append("<remoteteleportations>" + numberOfRemoteTeleportations + "</remoteteleportations>" ); 
-            stats.Append("<failedteleportationreceives>" + numberOfFailedTeleportationReceives + "</failedteleportationreceives>" );
-            stats.Append("<failedteleportationsends>" + numberOfFailedTeleportationSends + "</failedteleportationsends>" );
-            stats.Append("<lastteleportationexception>" + lastTeleportationException + "</lastteleportationexception>" );           
+            stats.Append("<totalteleportations>" + _numberOfTeleportations + "</totalteleportations>");
+            stats.Append("<localteleportations>" + _numberOfLocalTeleportations + "</localteleportations>");
+            stats.Append("<remoteteleportations>" + _numberOfRemoteTeleportations + "</remoteteleportations>");
+            stats.Append("<failedteleportationreceives>" + _numberOfFailedTeleportationReceives +
+                         "</failedteleportationreceives>");
+            stats.Append("<failedteleportationsends>" + _numberOfFailedTeleportationSends +
+                         "</failedteleportationsends>");
+            stats.Append("<lastteleportationexception>" + _lastTeleportationException + "</lastteleportationexception>");
             stats.Append("</teleportations> \t");
 
-            stats.Append(peerManager.GetReport());        
+            stats.Append(_peerManager.GetReport());
 
             int availableWorkerThreads, maxWorkerThreads;
             int availableIOThreads, maxIOThreads;
@@ -414,8 +486,8 @@ namespace Terrarium.PeerToPeer
             ThreadPool.GetMaxThreads(out maxWorkerThreads, out maxIOThreads);
 
             stats.Append("<threadPool>");
-            stats.Append("<workerThreadsInUse>" + (maxWorkerThreads - availableWorkerThreads).ToString() + "</workerThreadsInUse>");
-            stats.Append("<ioThreadsInUse>" + (maxIOThreads - availableIOThreads).ToString() + "</ioThreadsInUse>");
+            stats.Append("<workerThreadsInUse>" + (maxWorkerThreads - availableWorkerThreads) + "</workerThreadsInUse>");
+            stats.Append("<ioThreadsInUse>" + (maxIOThreads - availableIOThreads) + "</ioThreadsInUse>");
             stats.Append("</threadPool>");
 
             stats.Append("<gameVersion>");
@@ -450,8 +522,8 @@ namespace Terrarium.PeerToPeer
                             {
                                 continue;
                             }
-                        
-                            string speciesName = ((Species)organism.Species).Name;
+
+                            string speciesName = ((Species) organism.Species).Name;
                             if (animals[speciesName] == null)
                             {
                                 animals[speciesName] = 1;
@@ -469,8 +541,8 @@ namespace Terrarium.PeerToPeer
             foreach (DictionaryEntry entry in animals)
             {
                 stats.AppendFormat("<creature name=\"{0}\" value=\"{1}\" />",
-                    entry.Key.ToString(),
-                    entry.Value.ToString());
+                                   entry.Key,
+                                   entry.Value);
             }
             stats.Append("</liveCreatures>");
 
@@ -480,76 +552,24 @@ namespace Terrarium.PeerToPeer
                 if (pac != null)
                 {
                     stats.Append("<blacklistedCreatures>");
-                    string [] blacklistedAssemblies = pac.GetBlacklistedAssemblies();
+                    string[] blacklistedAssemblies = pac.GetBlacklistedAssemblies();
                     foreach (string creature in blacklistedAssemblies)
                     {
                         stats.AppendFormat("<creature name=\"{0}\" />",
-                            creature);
+                                           creature);
                     }
                     stats.Append("</blacklistedCreatures>");
                 }
             }
-        
+
             stats.Append("</stats>");
 
             return stats.ToString();
         }
 
-        /// <summary>
-        /// Returns messages that should be propagated from deep in the networking classes to the UI
-        /// </summary>
-        public string NetworkStatusMessage
-        {
-            get
-            {
-                return networkStatusMessage;
-            }
-        }
-
-        internal int PeerCount 
-        {
-            get 
-            {
-                return totalPeersOnChannel;
-            }
-        }
-
-        internal string LastTeleportationException 
-        {
-            get 
-            {
-                return lastTeleportationException;
-            }
-            set
-            {
-                lastTeleportationException = value;
-            }
-        }
-
-        internal string PeerChannel
-        {
-            get
-            {
-                return peerChannel;
-            }
-        }
-        
-        internal BooleanSwitch ProtocolDebuggingSwitch
-        {
-            get
-            {
-                if(protocolDebuggingSwitch == null)
-                {
-                    protocolDebuggingSwitch = new BooleanSwitch("Terrarium.PeerToPeer.Protocol", "Enable tracing for high level peer to peer protocol interactions.");
-                }
-
-                return protocolDebuggingSwitch;
-            }
-        }
-
         internal void WriteProtocolInfo(string output)
         {
-            if(ProtocolDebuggingSwitch.Enabled)
+            if (ProtocolDebuggingSwitch.Enabled)
             {
                 Debug.WriteLine("P2P Protocol: " + output);
             }
@@ -557,56 +577,58 @@ namespace Terrarium.PeerToPeer
 
         // Figure out what IP Address to listen on
         internal void SetHostIPInformation()
-        {   
-            networkStatusMessage = "";
+        {
+            _networkStatusMessage = "";
 
             if (GameConfig.LocalIPAddress.Length != 0)
             {
-                hostIP = IPAddress.Parse(GameConfig.LocalIPAddress.Trim());     
-                if (hostIP.ToString() == "0.0.0.0")
+                _hostIP = IPAddress.Parse(GameConfig.LocalIPAddress.Trim());
+                if (_hostIP.ToString() == "0.0.0.0")
                 {
-                    Debug.Assert(networkStatusMessage.Length == 0);
-                    networkStatusMessage = "You have not entered a valid ipAddress in the localIPAddress tag of the Userconfig.xml file.\nUse the format: <localIPAddress>X.X.X.X</localIPAddress>.";
+                    Debug.Assert(_networkStatusMessage.Length == 0);
+                    _networkStatusMessage =
+                        "You have not entered a valid ipAddress in the localIPAddress tag of the Userconfig.xml file.\nUse the format: <localIPAddress>X.X.X.X</localIPAddress>.";
                 }
                 return;
             }
-        
+
             PeerDiscoveryService peerService = new PeerDiscoveryService();
             peerService.Url = GameConfig.WebRoot + "/discovery/discoverydb.asmx";
-            peerService.Timeout = networkTimeoutMsec;
+            peerService.Timeout = NetworkTimeoutMsec;
 
-            string address = null;
+            string address;
             bool isVisibleNetworkAddress = false;
             bool contactedDiscoveryServer = false;
 
             try
-            {               
+            {
                 address = peerService.ValidatePeer();
-                contactedDiscoveryServer = true;        
+                contactedDiscoveryServer = true;
             }
             catch (Exception e)
             {
-                Trace.WriteLine("HANDLED EXCEPTION: There was a problem accessing the Peer Discovery Web Service. " + e.ToString());
-                Debug.Assert(networkStatusMessage.Length == 0);
-                networkStatusMessage = "The .NET Terrarium is unable to connect to the Terrarium server. \nThis means you won't receive any creatures from other peers.\nYou'll need to restart the Terrarium when it is accessible again to receive creatures.";
+                Trace.WriteLine("HANDLED EXCEPTION: There was a problem accessing the Peer Discovery Web Service. " + e);
+                Debug.Assert(_networkStatusMessage.Length == 0);
+                _networkStatusMessage =
+                    "The .NET Terrarium is unable to connect to the Terrarium server. \nThis means you won't receive any creatures from other peers.\nYou'll need to restart the Terrarium when it is accessible again to receive creatures.";
                 address = "127.0.0.1";
             }
-        
+
             if (contactedDiscoveryServer)
             {
                 isVisibleNetworkAddress = ValidatePeer(address);
             }
-        
+
             if (isVisibleNetworkAddress)
             {
-                hostIP = IPAddress.Parse(address);      
+                _hostIP = IPAddress.Parse(address);
             }
             else
             {
                 if (contactedDiscoveryServer)
                 {
-                    Debug.Assert(networkStatusMessage.Length == 0);
-                    networkStatusMessage = NetworkBehindNatMessage;
+                    Debug.Assert(_networkStatusMessage.Length == 0);
+                    _networkStatusMessage = NetworkBehindNatMessage;
                     IPHostEntry he = null;
                     try
                     {
@@ -614,41 +636,24 @@ namespace Terrarium.PeerToPeer
                     }
                     catch (Exception ex)
                     {
-                        Trace.WriteLine("There was a problem resolving the hostname for this peer: " + address + " : " + ex.ToString());
+                        Trace.WriteLine("There was a problem resolving the hostname for this peer: " + address + " : " +
+                                        ex);
                     }
 
-                    if (he != null)
-                    {
-                        hostIP = he.AddressList[0];
-                    }
-                    else
-                    {
-                        hostIP = IPAddress.Parse("127.0.0.1");
-                    }
+                    _hostIP = he != null ? he.AddressList[0] : IPAddress.Parse("127.0.0.1");
                 }
             }
 
-            Trace.WriteLine("The IP address used for listening is " + hostIP);
+            Trace.WriteLine("The IP address used for listening is " + _hostIP);
         }
 
-        internal string HostIP
-        {
-            get
-            {
-                if (hostIP != null)
-                {
-                    return hostIP.ToString();
-                }
-                else
-                {
-                    return "";
-                }
-            }
-        }
-
-        // Figure out if our local DNS thinks the passed in ipAddress is
-        // valid for us.
-        internal bool ValidatePeer(string ipAddress)
+        /// <summary>
+        /// Figure out if our local DNS thinks the passed in ipAddress is
+        /// valid for us.
+        /// </summary>
+        /// <param name="ipAddress"></param>
+        /// <returns></returns>
+        internal static bool ValidatePeer(string ipAddress)
         {
             try
             {
@@ -677,27 +682,27 @@ namespace Terrarium.PeerToPeer
         // This is threadsafe
         internal void CountLocalTeleportation()
         {
-            Interlocked.Increment(ref numberOfTeleportations);
-            Interlocked.Increment(ref numberOfLocalTeleportations);
+            Interlocked.Increment(ref _numberOfTeleportations);
+            Interlocked.Increment(ref _numberOfLocalTeleportations);
         }
 
         // This is threadsafe
         internal void CountRemoteTeleportation()
         {
-            Interlocked.Increment(ref numberOfTeleportations);
-            Interlocked.Increment(ref numberOfRemoteTeleportations);
-        }
-    
-        // This is threadsafe
-        internal void CountFailedTeleportationReceives() 
-        {
-            Interlocked.Increment(ref numberOfFailedTeleportationReceives);     
+            Interlocked.Increment(ref _numberOfTeleportations);
+            Interlocked.Increment(ref _numberOfRemoteTeleportations);
         }
 
         // This is threadsafe
-        internal void CountFailedTeleportationSends() 
+        internal void CountFailedTeleportationReceives()
         {
-            Interlocked.Increment(ref numberOfFailedTeleportationSends);        
+            Interlocked.Increment(ref _numberOfFailedTeleportationReceives);
+        }
+
+        // This is threadsafe
+        internal void CountFailedTeleportationSends()
+        {
+            Interlocked.Increment(ref _numberOfFailedTeleportationSends);
         }
 
         /// <summary>
@@ -709,17 +714,16 @@ namespace Terrarium.PeerToPeer
         /// <returns>The value between the start and end tag.</returns>
         public static string GetValueFromContent(string startTag, string endTag, string content)
         {
-            int startIndex, endIndex, lastIndex;
-            startIndex = content.IndexOf(startTag);
+            int startIndex = content.IndexOf(startTag);
             string valueFromContent = null;
 
-            if (startIndex>-1)
+            if (startIndex > -1)
             {
-                lastIndex = startIndex + startTag.Length;
-                endIndex = content.IndexOf(endTag, lastIndex, content.Length - lastIndex);
-                if (endIndex>-1)
+                int lastIndex = startIndex + startTag.Length;
+                int endIndex = content.IndexOf(endTag, lastIndex, content.Length - lastIndex);
+                if (endIndex > -1)
                 {
-                    valueFromContent = content.Substring(lastIndex, endIndex-lastIndex);
+                    valueFromContent = content.Substring(lastIndex, endIndex - lastIndex);
                 }
             }
             return valueFromContent;
@@ -734,17 +738,16 @@ namespace Terrarium.PeerToPeer
         /// <returns>A collection of values parsed from the content.</returns>
         public static ArrayList GetValuesFromContent(string startTag, string endTag, string content)
         {
-            int startIndex, endIndex, lastIndex;
             ArrayList items = new ArrayList();
 
-            startIndex = content.IndexOf(startTag);
-            while (startIndex>-1)
+            int startIndex = content.IndexOf(startTag);
+            while (startIndex > -1)
             {
-                lastIndex = startIndex + startTag.Length;
-                endIndex = content.IndexOf(endTag, lastIndex, content.Length - lastIndex);
-                if (endIndex>-1)
+                int lastIndex = startIndex + startTag.Length;
+                int endIndex = content.IndexOf(endTag, lastIndex, content.Length - lastIndex);
+                if (endIndex > -1)
                 {
-                    items.Add(content.Substring(lastIndex, endIndex-lastIndex));
+                    items.Add(content.Substring(lastIndex, endIndex - lastIndex));
                 }
 
                 startIndex = content.IndexOf(startTag, lastIndex, content.Length - lastIndex);
@@ -752,60 +755,5 @@ namespace Terrarium.PeerToPeer
 
             return items;
         }
-
-		/// <summary>
-		/// The total number of teleportations
-		/// </summary>
-		public int Teleportations
-		{
-			get
-			{
-				return this.numberOfTeleportations;
-			}
-		}
-
-		/// <summary>
-		/// Number of local teleportations
-		/// </summary>
-		public int LocalTeleportations
-		{
-			get
-			{
-				return this.numberOfLocalTeleportations;
-			}
-		}
-
-		/// <summary>
-		/// Number of remote teleportations
-		/// </summary>
-		public int RemoteTeleportations
-		{
-			get
-			{
-				return this.numberOfRemoteTeleportations;
-			}
-		}
-
-		/// <summary>
-		/// Number of failures receiving a creature
-		/// </summary>
-		public int FailedTeleportationReceives
-		{
-			get
-			{
-				return this.numberOfFailedTeleportationReceives;
-			}
-		}
-
-		/// <summary>
-		/// Number of failures sending a creature
-		/// </summary>
-		public int FailedTeleportationSends
-		{
-			get
-			{
-				return this.numberOfFailedTeleportationSends;
-			}
-		}
     }
 }

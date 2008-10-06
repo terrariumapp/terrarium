@@ -4,7 +4,7 @@
 
 using System;
 
-namespace Terrarium.PeerToPeer 
+namespace Terrarium.PeerToPeer
 {
     /// <summary>
     ///  Represents information about a peer.  Currently this
@@ -13,25 +13,9 @@ namespace Terrarium.PeerToPeer
     /// </summary>
     internal class Peer
     {
-        /// <summary>
-        ///  The peer's IP address
-        /// </summary>
-        string ipAddress;
-
-        /// <summary>
-        ///  The time the lease will expire and this peer will become
-        ///  invalid.  A new call to the discovery service will
-        ///  renew the peer.
-        /// </summary>
-        DateTime leaseTimeout;
-
-        /// <summary>
-        ///  The last time data was received from this peer.  This
-        ///  is used to make sure a malicious peer can't spam us with a
-        ///  enormous set of organisms.  We will only allow one every so
-        ///  often (throttling).
-        /// </summary>
-        DateTime lastReceipt;
+        private readonly string _ipAddress;
+        private readonly DateTime _leaseTimeout;
+        private DateTime _lastReceipt;
 
         /// <summary>
         ///  Initialize a new peer using an IP Address and the timeout
@@ -42,8 +26,8 @@ namespace Terrarium.PeerToPeer
         /// <param name="leaseTimeout">The timeout date on the peer's lease.</param>
         internal Peer(string ipAddress, DateTime leaseTimeout)
         {
-            this.ipAddress = ipAddress;
-            this.leaseTimeout = leaseTimeout;
+            _ipAddress = ipAddress;
+            _leaseTimeout = leaseTimeout;
         }
 
         /// <summary>
@@ -53,10 +37,7 @@ namespace Terrarium.PeerToPeer
         /// </summary>
         internal string IPAddress
         {
-            get
-            {
-                return ipAddress;
-            }
+            get { return _ipAddress; }
         }
 
         /// <summary>
@@ -67,10 +48,7 @@ namespace Terrarium.PeerToPeer
         /// </summary>
         internal DateTime LeaseTimeout
         {
-            get
-            {
-                return leaseTimeout;
-            }
+            get { return _leaseTimeout; }
         }
 
         /// <summary>
@@ -87,14 +65,8 @@ namespace Terrarium.PeerToPeer
         /// </summary>
         internal DateTime LastReceipt
         {
-            get
-            {
-                return lastReceipt;
-            }
-            set
-            {
-                lastReceipt = value;
-            }
+            get { return _lastReceipt; }
+            set { _lastReceipt = value; }
         }
     }
 }

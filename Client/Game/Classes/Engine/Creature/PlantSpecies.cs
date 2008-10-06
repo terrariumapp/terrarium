@@ -6,7 +6,6 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Text;
-
 using OrganismBase;
 
 namespace Terrarium.Game
@@ -15,10 +14,10 @@ namespace Terrarium.Game
     /// Holds all species information about a plant.  See Species for more information.
     /// </summary>
     [Serializable]
-    public sealed class PlantSpecies : Species, IPlantSpecies 
+    public sealed class PlantSpecies : Species, IPlantSpecies
     {
-        PlantSkinFamily skinFamily = PlantSkinFamily.Plant;
-        int seedSpreadDistance;
+        private readonly int _seedSpreadDistance;
+        private readonly PlantSkinFamily _skinFamily = PlantSkinFamily.Plant;
 
         /// <summary>
         ///  Creates a new species object from a CLR Type by
@@ -28,22 +27,57 @@ namespace Terrarium.Game
         public PlantSpecies(Type clrType) : base(clrType)
         {
             Debug.Assert(clrType != null, "Null type passed to PlantSpecies");
-            Debug.Assert(typeof(Plant).IsAssignableFrom(clrType));
+            Debug.Assert(typeof (Plant).IsAssignableFrom(clrType));
 
-            PlantSkinAttribute skinAttribute = (PlantSkinAttribute) Attribute.GetCustomAttribute(clrType, typeof(PlantSkinAttribute));
+            PlantSkinAttribute skinAttribute =
+                (PlantSkinAttribute) Attribute.GetCustomAttribute(clrType, typeof (PlantSkinAttribute));
             if (skinAttribute != null)
             {
-                skinFamily = skinAttribute.SkinFamily;
-                animalSkin = skinAttribute.Skin;
+                _skinFamily = skinAttribute.SkinFamily;
+                _animalSkin = skinAttribute.Skin;
             }
 
-            SeedSpreadDistanceAttribute seedSpreadAttribute = (SeedSpreadDistanceAttribute) Attribute.GetCustomAttribute(clrType, typeof(SeedSpreadDistanceAttribute));
+            SeedSpreadDistanceAttribute seedSpreadAttribute =
+                (SeedSpreadDistanceAttribute)
+                Attribute.GetCustomAttribute(clrType, typeof (SeedSpreadDistanceAttribute));
             if (seedSpreadAttribute == null)
             {
                 throw new AttributeRequiredException("SeedSpreadDistanceAttribute");
             }
 
-            seedSpreadDistance = seedSpreadAttribute.SeedSpreadDistance;
+            _seedSpreadDistance = seedSpreadAttribute.SeedSpreadDistance;
+        }
+
+        /// <summary>
+        /// The maximum distance that seeds can go from the parent plant when reproducing.
+        /// </summary>
+        public int SeedSpreadDistance
+        {
+            get { return _seedSpreadDistance; }
+        }
+
+        /// <summary>
+        /// The skin family for the organism.
+        /// </summary>
+        public PlantSkinFamily SkinFamily
+        {
+            get { return _skinFamily; }
+        }
+
+        /// <summary>
+        /// See Species.LifeSpan for information about this member.
+        /// </summary>
+        public override int LifeSpan
+        {
+            get { return MatureRadius*EngineSettings.PlantLifeSpanPerUnitMaximumRadius; }
+        }
+
+        /// <summary>
+        /// See Species.ReproductionWait for information about this member.
+        /// </summary>
+        public override int ReproductionWait
+        {
+            get { return MatureRadius*EngineSettings.PlantReproductionWaitPerUnitRadius; }
         }
 
         /// <summary>
@@ -51,11 +85,10 @@ namespace Terrarium.Game
         ///  and so delegates to the base class for warnings.
         /// </summary>
         /// <returns>A message with available attribute warnings.</returns>
-        public override string GetAttributeWarnings() 
+        public override string GetAttributeWarnings()
         {
             StringBuilder warnings = new StringBuilder();
             warnings.Append(base.GetAttributeWarnings());
-
             return warnings.ToString();
         }
 
@@ -75,51 +108,6 @@ namespace Terrarium.Game
             newState.StoredEnergy = newState.UpperBoundaryForEnergyState(EnergyState.Hungry);
             newState.ResetGrowthWait();
             return newState;
-        }
-
-        /// <summary>
-        /// The skin family for the organism.
-        /// </summary>
-        public PlantSkinFamily SkinFamily
-        {
-            get
-            {
-                return skinFamily;
-            }
-        }
-
-
-        /// <summary>
-        /// See Species.LifeSpan for information about this member.
-        /// </summary>
-        public override int LifeSpan
-        {
-            get
-            {
-                return MatureRadius * EngineSettings.PlantLifeSpanPerUnitMaximumRadius;
-            }
-        }
-
-        /// <summary>
-        /// See Species.ReproductionWait for information about this member.
-        /// </summary>
-        public override int ReproductionWait
-        {
-            get 
-            {
-                return MatureRadius * EngineSettings.PlantReproductionWaitPerUnitRadius;
-            }
-        }
-
-        /// <summary>
-        /// The maximum distance that seeds can go from the parent plant when reproducing.
-        /// </summary>
-        public int SeedSpreadDistance 
-        {
-            get 
-            {
-                return seedSpreadDistance;
-            }
         }
     }
 }

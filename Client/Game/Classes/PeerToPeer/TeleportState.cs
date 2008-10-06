@@ -6,7 +6,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-
 using OrganismBase;
 using Terrarium.Hosting;
 
@@ -15,35 +14,25 @@ namespace Terrarium.PeerToPeer
     // This is the object that is sent between Terrariums to transport
     // an organism
     [Serializable]
-    internal class TeleportState 
+    internal class TeleportState
     {
-        OrganismState organismState;
-    
-        // Used for local teleporations
-        [NonSerialized]
-        Organism org;
-        string countryInfo; 
-        string stateInfo;   
-        bool teleportedToSelf = false;
-        Guid originator;
+        private string _countryInfo;
+        [NonSerialized] private Organism _org;
+        private OrganismState _organismState;
+        private Guid _originator;
 
         // We can't hold on to the actual organism object here, because
         // when it gets deserialized on the other peer, it would look for the
         // assembly which may not be there.  Instead we serialize it into a 
         // byte array.
-        byte[] serializedWrapper;
-    
-        internal Organism Organism 
+        private byte[] _serializedWrapper;
+        private string _stateInfo;
+        private bool _teleportedToSelf;
+
+        internal Organism Organism
         {
-            get 
-            {
-                return org;
-            }
-        
-            set 
-            {
-                org = value;
-            }
+            get { return _org; }
+            set { _org = value; }
         }
 
         internal OrganismWrapper OrganismWrapper
@@ -56,85 +45,53 @@ namespace Terrarium.PeerToPeer
                 // Use a binder to ensure that only a certain set of objects
                 // can be deserialized that we know to be safe from a
                 // Code Access Security perspective.
-                b.Binder = new OrganismWrapperBinder(); 
-                MemoryStream stream = new MemoryStream(serializedWrapper);
+                b.Binder = new OrganismWrapperBinder();
+                MemoryStream stream = new MemoryStream(_serializedWrapper);
                 return (OrganismWrapper) b.Deserialize(stream);
             }
-        
             // Serialize the organism into a byte stream;
-            set 
+            set
             {
                 BinaryFormatter b = new BinaryFormatter();
                 MemoryStream stream = new MemoryStream();
                 b.Serialize(stream, value);
-                serializedWrapper = stream.GetBuffer();
+                _serializedWrapper = stream.GetBuffer();
             }
         }
 
-        internal OrganismState OrganismState 
+        internal OrganismState OrganismState
         {
-            get 
-            {
-                return organismState;
-            }
+            get { return _organismState; }
 
-            set 
+            set
             {
                 Debug.Assert(value.IsImmutable);
-                organismState = value;
+                _organismState = value;
             }
         }
 
-        internal Guid Originator 
+        internal Guid Originator
         {
-            get 
-            {
-                return originator;
-            }
-
-            set 
-            {
-                originator = value;
-            }
+            get { return _originator; }
+            set { _originator = value; }
         }
 
         internal bool TeleportedToSelf
         {
-            get 
-            {
-                return teleportedToSelf;
-            }
-
-            set
-            {
-                teleportedToSelf = value;
-            }
+            get { return _teleportedToSelf; }
+            set { _teleportedToSelf = value; }
         }
-    
-        internal string Country 
+
+        internal string Country
         {
-            get 
-            {
-                return countryInfo;
-            }
-        
-            set
-            {
-                countryInfo = value;
-            }
+            get { return _countryInfo; }
+            set { _countryInfo = value; }
         }
 
         internal string State
         {
-            get 
-            {
-                return stateInfo;
-            }
-        
-            set 
-            {
-                stateInfo = value;
-            }
+            get { return _stateInfo; }
+            set { _stateInfo = value; }
         }
     }
 }

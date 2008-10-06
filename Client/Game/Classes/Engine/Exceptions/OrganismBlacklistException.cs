@@ -13,12 +13,13 @@ namespace Terrarium.Game
     ///  been blacklisted globally.
     /// </summary>
     [Serializable]
-    public class OrganismBlacklistException : GameEngineException 
+    public class OrganismBlacklistException : GameEngineException
     {
         /// <summary>
         ///  Generates a default OrganismBlacklistException
         /// </summary>
-        public OrganismBlacklistException() : base("You have an organism that needs to be cleaned out because it was blacklisted.")
+        public OrganismBlacklistException()
+            : base("You have an organism that needs to be cleaned out because it was blacklisted.")
         {
         }
     }

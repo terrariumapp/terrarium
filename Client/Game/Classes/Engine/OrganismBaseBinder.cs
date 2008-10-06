@@ -3,9 +3,10 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Collections;
 using System.Diagnostics;
+using System.Drawing;
+using System.Runtime.Serialization;
 using OrganismBase;
 
 namespace Terrarium.Game
@@ -40,32 +41,25 @@ namespace Terrarium.Game
                 string[] ver2 = parts2[1].Split('=');
                 Version v1 = new Version(ver1[1]);
                 Version v2 = new Version(ver2[1]);
-            
-                if (parts1[0] != parts2[0] ||
-                    parts1[2] != parts2[2] ||
-                    parts1[3] != parts2[3])
-                {
-                    return false;
-                }
-            
-                return true;
+
+                return (parts1[0] == parts2[0] && parts1[2] == parts2[2]) && parts1[3] == parts2[3];
             }
             catch
             {
                 Trace.WriteLine("Error parsing assembly strings");
             }
-        
+
             return false;
         }
 
-         /// <summary>
+        /// <summary>
         ///  Determines if an assembly full name matches that of OrganismBase.dll
         /// </summary>
         /// <param name="asm">assembly full name to match.</param>
         /// <returns>True if the assembly is OrganismBase.dll</returns>
         protected static bool IsOrganismBase(string asm)
         {
-            return CompareParts(typeof(Animal).Assembly.FullName, asm);
+            return CompareParts(typeof (Animal).Assembly.FullName, asm);
         }
 
         /// <summary>
@@ -75,7 +69,7 @@ namespace Terrarium.Game
         /// <returns>True if the assembly is MSCorLib.dll</returns>
         protected static bool IsMscorlib(string asm)
         {
-            return CompareParts(typeof(Guid).Assembly.FullName, asm);
+            return CompareParts(typeof (Guid).Assembly.FullName, asm);
         }
 
         /// <summary>
@@ -85,9 +79,9 @@ namespace Terrarium.Game
         /// <returns>True if the assembly is System.Drawing.dll</returns>
         protected static bool IsSystemDrawing(string asm)
         {
-            return CompareParts(typeof(System.Drawing.Point).Assembly.FullName, asm);
+            return CompareParts(typeof (Point).Assembly.FullName, asm);
         }
-    
+
         /// <summary>
         ///  Determines if an assembly full name matches that of TerrariumEngine.dll
         /// </summary>
@@ -95,7 +89,7 @@ namespace Terrarium.Game
         /// <returns>True if the assembly is TerrariumEngine.dll</returns>
         protected static bool IsTerrarium(string asm)
         {
-            return CompareParts(typeof(GameEngine).Assembly.FullName, asm);
+            return CompareParts(typeof (GameEngine).Assembly.FullName, asm);
         }
 
         /// <summary>
@@ -105,7 +99,7 @@ namespace Terrarium.Game
         /// <returns>True if the assembly is System.dll</returns>
         protected static bool IsSystem(string asm)
         {
-            return CompareParts(typeof(System.Collections.Hashtable).Assembly.FullName, asm);
+            return CompareParts(typeof (Hashtable).Assembly.FullName, asm);
         }
     }
 }

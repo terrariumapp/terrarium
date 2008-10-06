@@ -2,15 +2,14 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                               
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections;
 using System.Diagnostics;
 
-namespace Terrarium.PeerToPeer 
+namespace Terrarium.PeerToPeer
 {
-    class LeaseComparer : IComparer
+    internal class LeaseComparer : IComparer
     {
-        public int Compare (object x, object y)
+        public int Compare(object x, object y)
         {
             Debug.Assert(x is Peer && y is Peer);
 

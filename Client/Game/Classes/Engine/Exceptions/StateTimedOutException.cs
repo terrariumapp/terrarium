@@ -13,12 +13,12 @@ namespace Terrarium.Game
     ///  hours.
     /// </summary>
     [Serializable]
-    public class StateTimedOutException : GameEngineException 
+    public class StateTimedOutException : GameEngineException
     {
         /// <summary>
         ///  Generates a default StateTimedOutException
         /// </summary>
-        public StateTimedOutException() : base("Your ecosystem state timed out.") 
+        public StateTimedOutException() : base("Your ecosystem state timed out.")
         {
         }
     }

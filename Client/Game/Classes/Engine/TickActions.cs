@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections;
-
 using OrganismBase;
 using Terrarium.Hosting;
 
@@ -17,44 +16,68 @@ namespace Terrarium.Game
     public class TickActions
     {
         /// <summary>
-        ///  All of the movement actions that organisms have performed in this tick.
-        /// </summary>
-        Hashtable moveToActions = new Hashtable();
-
-        /// <summary>
         ///  All of the attack actions that organisms have performed in this tick.
         /// </summary>
-        Hashtable attackActions = new Hashtable();
-
-        /// <summary>
-        ///  All of the eat actions that organisms have performed in this tick.
-        /// </summary>
-        Hashtable eatActions = new Hashtable();
-
-        /// <summary>
-        ///  All of the reproduce actions that organisms have performed in this tick.
-        /// </summary>
-        Hashtable reproduceActions = new Hashtable();
+        private readonly Hashtable _attackActions = new Hashtable();
 
         /// <summary>
         ///  All of the defend actions that organisms have performed in this tick.
         /// </summary>
-        Hashtable defendActions = new Hashtable();
+        private readonly Hashtable _defendActions = new Hashtable();
 
         /// <summary>
-        ///  The world state for the corresponding actions.
+        ///  All of the eat actions that organisms have performed in this tick.
         /// </summary>
-        WorldState correspondingState;  
+        private readonly Hashtable _eatActions = new Hashtable();
 
         /// <summary>
-        ///  Sets the state for the TickActions object.
+        ///  All of the movement actions that organisms have performed in this tick.
         /// </summary>
-        public WorldState CorrespondingState
+        private readonly Hashtable _moveToActions = new Hashtable();
+
+        /// <summary>
+        ///  All of the reproduce actions that organisms have performed in this tick.
+        /// </summary>
+        private readonly Hashtable _reproduceActions = new Hashtable();
+
+        /// <summary>
+        ///  Provides access to the Movement actions.
+        /// </summary>
+        public Hashtable MoveToActions
         {
-            set 
-            {
-                correspondingState = value;
-            }
+            get { return (Hashtable) _moveToActions.Clone(); }
+        }
+
+        /// <summary>
+        ///  Provides access to the Attack actions.
+        /// </summary>
+        public Hashtable AttackActions
+        {
+            get { return (Hashtable) _attackActions.Clone(); }
+        }
+
+        /// <summary>
+        ///  Provides access to the Eat actions.
+        /// </summary>
+        public Hashtable EatActions
+        {
+            get { return (Hashtable) _eatActions.Clone(); }
+        }
+
+        /// <summary>
+        ///  Provides access to the Reproduction actions.
+        /// </summary>
+        public Hashtable ReproduceActions
+        {
+            get { return (Hashtable) _reproduceActions.Clone(); }
+        }
+
+        /// <summary>
+        ///  Provides access to the Defend actions.
+        /// </summary>
+        public Hashtable DefendActions
+        {
+            get { return (Hashtable) _defendActions.Clone(); }
         }
 
         /// <summary>
@@ -69,83 +92,28 @@ namespace Terrarium.Game
                 PendingActions pendingActions = organism.GetThenErasePendingActions();
                 if (pendingActions.MoveToAction != null)
                 {
-                    moveToActions[organism.ID] = pendingActions.MoveToAction;
+                    _moveToActions[organism.ID] = pendingActions.MoveToAction;
                 }
-            
+
                 if (pendingActions.AttackAction != null)
                 {
-                    attackActions[organism.ID] = pendingActions.AttackAction;
+                    _attackActions[organism.ID] = pendingActions.AttackAction;
                 }
-            
+
                 if (pendingActions.EatAction != null)
                 {
-                    eatActions[organism.ID] = pendingActions.EatAction;
+                    _eatActions[organism.ID] = pendingActions.EatAction;
                 }
-            
+
                 if (pendingActions.ReproduceAction != null)
                 {
-                    reproduceActions[organism.ID] = pendingActions.ReproduceAction;
+                    _reproduceActions[organism.ID] = pendingActions.ReproduceAction;
                 }
-            
+
                 if (pendingActions.DefendAction != null)
                 {
-                    defendActions[organism.ID] = pendingActions.DefendAction;
+                    _defendActions[organism.ID] = pendingActions.DefendAction;
                 }
-            }
-        }
-    
-        /// <summary>
-        ///  Provides access to the Movement actions.
-        /// </summary>
-        public Hashtable MoveToActions
-        {
-            get 
-            { 
-                return (Hashtable) moveToActions.Clone();
-            }
-        }
-
-        /// <summary>
-        ///  Provides access to the Attack actions.
-        /// </summary>
-        public Hashtable AttackActions
-        {
-            get 
-            {
-                return (Hashtable) attackActions.Clone();
-            }
-        }
-    
-        /// <summary>
-        ///  Provides access to the Eat actions.
-        /// </summary>
-        public Hashtable EatActions
-        {
-            get 
-            {
-                return (Hashtable) eatActions.Clone();
-            }
-        }
- 
-        /// <summary>
-        ///  Provides access to the Reproduction actions.
-        /// </summary>
-        public Hashtable ReproduceActions
-        {
-            get 
-            {
-                return (Hashtable) reproduceActions.Clone();
-            }
-        }
-
-        /// <summary>
-        ///  Provides access to the Defend actions.
-        /// </summary>
-        public Hashtable DefendActions
-        {
-            get 
-            {
-                return (Hashtable) defendActions.Clone();
             }
         }
     }

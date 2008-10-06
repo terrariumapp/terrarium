@@ -2,9 +2,7 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                              
 //------------------------------------------------------------------------------
 
-using System;
-
-namespace Terrarium.Game 
+namespace Terrarium.Game
 {
     /// <summary>
     ///  Delegate used to define an event on the gaming engine

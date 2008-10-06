@@ -5,29 +5,29 @@
 using System;
 using OrganismBase;
 
-namespace Terrarium.Game 
+namespace Terrarium.Game
 {
     /// <summary>
     ///  Represents an organism that has been killed and will soon be removed
     ///  from the Terrarium game world.
     /// </summary>
     [Serializable]
-    public class KilledOrganism 
+    public class KilledOrganism
     {
-        /// <summary>
-        ///  The Unique ID of the organism.
-        /// </summary>
-        string id;
-
         /// <summary>
         ///  The reason the organism was killed.
         /// </summary>
-        PopulationChangeReason deathReason;
+        private readonly PopulationChangeReason _deathReason;
 
         /// <summary>
         ///  Extra information about the death of the organism.
         /// </summary>
-        string extraInformation = "";
+        private readonly string _extraInformation = "";
+
+        /// <summary>
+        ///  The Unique ID of the organism.
+        /// </summary>
+        private readonly string _id;
 
         /// <summary>
         ///  Creates a new KilledOrganism based on the ID, the reason for death, and
@@ -38,9 +38,9 @@ namespace Terrarium.Game
         /// <param name="extraInformation">Extra information about the death.</param>
         public KilledOrganism(string id, PopulationChangeReason reason, string extraInformation)
         {
-            this.id = id;
-            this.deathReason = reason;
-            this.extraInformation = extraInformation;
+            _id = id;
+            _deathReason = reason;
+            _extraInformation = extraInformation;
         }
 
         /// <summary>
@@ -50,8 +50,8 @@ namespace Terrarium.Game
         /// <param name="reason">The reason the organism was killed.</param>
         public KilledOrganism(string id, PopulationChangeReason reason)
         {
-            this.id = id;
-            this.deathReason = reason;
+            _id = id;
+            _deathReason = reason;
         }
 
         /// <summary>
@@ -60,19 +60,16 @@ namespace Terrarium.Game
         /// <param name="state">The state object that ID and death reason will be pulled from.</param>
         public KilledOrganism(OrganismState state)
         {
-            this.id = state.ID;
-            this.deathReason = state.DeathReason;
+            _id = state.ID;
+            _deathReason = state.DeathReason;
         }
 
         /// <summary>
         ///  Retrieves the ID of the killed organism.
         /// </summary>
-        public string ID 
+        public string ID
         {
-            get
-            {
-                return id;
-            }
+            get { return _id; }
         }
 
         /// <summary>
@@ -80,21 +77,15 @@ namespace Terrarium.Game
         /// </summary>
         public string ExtraInformation
         {
-            get 
-            {
-                return extraInformation;
-            }
+            get { return _extraInformation; }
         }
 
         /// <summary>
         ///  Retrieves the reason this organism was killed.
         /// </summary>
-        public PopulationChangeReason DeathReason 
+        public PopulationChangeReason DeathReason
         {
-            get 
-            {
-                return deathReason;
-            }
+            get { return _deathReason; }
         }
     }
 }

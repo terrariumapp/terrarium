@@ -19,7 +19,8 @@ namespace Terrarium.Game
         ///  characteristic.
         /// </summary>
         /// <param name="characteristic">The missing characteristic.</param>
-        public AttributeRequiredException(string characteristic) : base("You must define the '" + characteristic + "' attribute on your organism")
+        public AttributeRequiredException(string characteristic)
+            : base(string.Format("You must define the '{0}' attribute on your organism", characteristic))
         {
         }
     }

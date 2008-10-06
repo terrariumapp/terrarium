@@ -2,8 +2,6 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                                
 //------------------------------------------------------------------------------
 
-using System;
-
 using OrganismBase;
 using Terrarium.Hosting;
 
@@ -20,8 +18,8 @@ namespace Terrarium.Game
         ///  plant and the plant's unique ID.
         /// </summary>
         /// <param name="plant">The plant used to initialize the world boundary.</param>
-        /// <param name="ID">The plant's Unique ID</param>
-        internal PlantWorldBoundary(Plant plant, string ID) : base(plant, ID)
+        /// <param name="id">The plant's Unique ID</param>
+        internal PlantWorldBoundary(Organism plant, string id) : base(plant, id)
         {
         }
 
@@ -30,10 +28,7 @@ namespace Terrarium.Game
         /// </summary>
         public PlantState CurrentPlantState
         {
-            get
-            {
-                return (PlantState) AppMgr.CurrentScheduler.CurrentState.GetOrganismState(ID);
-            }
+            get { return (PlantState) AppMgr.CurrentScheduler.CurrentState.GetOrganismState(ID); }
         }
     }
 }
