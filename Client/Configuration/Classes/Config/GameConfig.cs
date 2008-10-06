@@ -422,7 +422,15 @@ namespace Terrarium.Configuration
             {
                 if (string.IsNullOrEmpty(_mediaDirectory))
                 {
-                    _mediaDirectory = new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName;
+                    Assembly executingAssembly = Assembly.GetExecutingAssembly();
+                    if (executingAssembly != null && executingAssembly.Location != null)
+                    {
+                        _mediaDirectory = new FileInfo(executingAssembly.Location).DirectoryName;
+                    }
+                    else
+                    {
+                        _mediaDirectory = Directory.GetCurrentDirectory();
+                    }
                 }
 
                 return _mediaDirectory;
@@ -438,7 +446,11 @@ namespace Terrarium.Configuration
             {
                 if (string.IsNullOrEmpty(_applicationDirectory))
                 {
-                    _applicationDirectory = new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName;
+                    Assembly executingAssembly = Assembly.GetExecutingAssembly();
+                    if (executingAssembly != null && executingAssembly.Location != null)
+                        _applicationDirectory = new FileInfo(executingAssembly.Location).DirectoryName;
+                    else
+                        _applicationDirectory = Directory.GetCurrentDirectory();
                 }
 
                 return _applicationDirectory;
@@ -720,17 +732,20 @@ namespace Terrarium.Configuration
             else
             {
                 XmlNode root = myXmlDocument.DocumentElement;
-                foreach (XmlNode node in root.ChildNodes)
+                if (root != null)
                 {
-                    if (node.Name != settingName) continue;
-                    node.InnerText = settingValue;
-                    foundElement = true;
-                }
+                    foreach (XmlNode node in root.ChildNodes)
+                    {
+                        if (node.Name != settingName) continue;
+                        node.InnerText = settingValue;
+                        foundElement = true;
+                    }
 
-                if (!foundElement)
-                {
-                    XmlNode newNode = root.AppendChild(myXmlDocument.CreateNode(XmlNodeType.Element, settingName, ""));
-                    newNode.InnerText = settingValue;
+                    if (!foundElement)
+                    {
+                        XmlNode newNode = root.AppendChild(myXmlDocument.CreateNode(XmlNodeType.Element, settingName, ""));
+                        newNode.InnerText = settingValue;
+                    }
                 }
             }
 
@@ -753,22 +768,22 @@ namespace Terrarium.Configuration
                 FileInfo configFileInfo = new FileInfo(configFile);
                 DirectoryInfo configDirectory = configFileInfo.Directory;
 
-                if (!configDirectory.Exists)
+                if (configDirectory != null && !configDirectory.Exists)
                 {
                     configDirectory.Create();
                 }
 
                 // Using hard-coded name here.  We aren't enumerating since that might be dangerous
                 // and we wouldn't want to load the wrong default configuration.
-                using (
-                    StreamReader sr =
-                        new StreamReader(
-                            Assembly.GetExecutingAssembly().GetManifestResourceStream(
-                                "Terrarium.Configuration.userconfig.xml")))
+                Assembly executingAssembly = Assembly.GetExecutingAssembly();
+                if (executingAssembly != null)
                 {
-                    using (StreamWriter sw = new StreamWriter(configFile))
+                    using (StreamReader sr = new StreamReader(executingAssembly.GetManifestResourceStream("Terrarium.Configuration.userconfig.xml")))
                     {
-                        sw.Write(sr.ReadToEnd());
+                        using (StreamWriter sw = new StreamWriter(configFile))
+                        {
+                            sw.Write(sr.ReadToEnd());
+                        }
                     }
                 }
             }
