@@ -3,15 +3,13 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
-
 using Terrarium.Game;
 using Terrarium.Net;
 
-namespace Terrarium.PeerToPeer 
+namespace Terrarium.PeerToPeer
 {
     /// <summary>
     ///  The version namespace handler implements the version namespace for the
@@ -36,10 +34,10 @@ namespace Terrarium.PeerToPeer
 
             if (webapp.HttpRequest.Method == "GET")
             {
-                body = "<version><build>" + peerVersion.Build.ToString() + "</build>";
-                body +="<major>" + peerVersion.Major.ToString() + "</major>\t";
-                body +="<minor>" + peerVersion.Minor.ToString() + "</minor>\t</version>";
-                body +="<channel>" + GameEngine.Current.PeerChannel + "</channel>";
+                body = "<version><build>" + peerVersion.Build + "</build>";
+                body += "<major>" + peerVersion.Major + "</major>\t";
+                body += "<minor>" + peerVersion.Minor + "</minor>\t</version>";
+                body += "<channel>" + GameEngine.Current.PeerChannel + "</channel>";
             }
             else
             {
@@ -52,7 +50,7 @@ namespace Terrarium.PeerToPeer
 
             // Encode the body message and place it on the stream.
             byte[] bodyBytes = Encoding.ASCII.GetBytes(body);
-            webapp.HttpResponse.ContentLength = (long)bodyBytes.Length;
+            webapp.HttpResponse.ContentLength = bodyBytes.Length;
             webapp.HttpResponse.Close(bodyBytes);
         }
     }

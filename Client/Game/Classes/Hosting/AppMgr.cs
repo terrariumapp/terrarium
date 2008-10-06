@@ -3,62 +3,57 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics;
-using System.IO;
-using System.Reflection;
 using Terrarium.Game;
 
-namespace Terrarium.Hosting 
+namespace Terrarium.Hosting
 {
 
-    // AppMgr is a set of static routines used to set up the Game Scheduler
-    // that does time slices for creatures as well as the security environment they
-    // execute in.
-    internal class AppMgr 
-    { 
-        // single instance of the game scheduler which runs in the untrusted app domain
-        static IGameScheduler theScheduler = null;
-        static IGameScheduler theLocalScheduler = null;
+    /// <summary>
+    /// AppMgr is a set of static routines used to set up the Game Scheduler
+    /// that does time slices for creatures as well as the security environment they
+    /// execute in.
+    /// </summary>
+    internal class AppMgr
+    {
+        private static IGameScheduler _theLocalScheduler;
+        private static IGameScheduler _theScheduler;
 
-        // Creates the scheduler in the same appdomain as the rest of the game
-        internal static IGameScheduler CreateSameDomainScheduler(GameEngine engine) 
+        /// <summary>
+        /// only call this from the organism app domain
+        /// </summary>
+        internal static IGameScheduler CurrentScheduler
         {
-            if (theScheduler == null) 
+            get { return _theLocalScheduler; }
+
+            set { _theLocalScheduler = value; }
+        }
+
+        /// <summary>
+        /// Creates the scheduler in the same appdomain as the rest of the game
+        /// </summary>
+        /// <param name="engine"></param>
+        /// <returns></returns>
+        internal static IGameScheduler CreateSameDomainScheduler(GameEngine engine)
+        {
+            if (_theScheduler == null)
             {
-                theScheduler = new GameScheduler();
+                _theScheduler = new GameScheduler();
             }
             else
             {
                 throw new ApplicationException("A Scheduler already exists.");
             }
 
-            theScheduler.CurrentGameEngine = engine;
+            _theScheduler.CurrentGameEngine = engine;
 
-            return theScheduler;
-        }
-
-        // only call this from the organism app domain
-        internal static IGameScheduler CurrentScheduler 
-        {
-            get
-            { 
-                return theLocalScheduler;
-            }
-
-            set
-            {
-                theLocalScheduler = value;
-            }
+            return _theScheduler;
         }
 
         internal static void DestroyScheduler()
         {
-            if (theScheduler != null)
-            {
-                theScheduler.Close();
-                theScheduler = null;
-            }
+            if (_theScheduler == null) return;
+            _theScheduler.Close();
+            _theScheduler = null;
         }
-
     }
 }

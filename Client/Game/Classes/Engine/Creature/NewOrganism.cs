@@ -6,27 +6,27 @@ using System;
 using System.Diagnostics;
 using OrganismBase;
 
-namespace Terrarium.Game 
+namespace Terrarium.Game
 {
     /// <summary>
     ///  Contains the information needed to intialize a new organism within the Terrarium.
     /// </summary>
-    public class NewOrganism 
+    public class NewOrganism
     {
         /// <summary>
         ///  The DNA of the new creature if it was born.
         /// </summary>
-        byte[] dna;
+        private readonly byte[] _dna;
 
         /// <summary>
         ///  The state of the new creature.  This is pre-created and pre-located.
         /// </summary>
-        OrganismState state;
+        private readonly OrganismState _state;
 
         /// <summary>
         ///  This determines if the creature should be added at a random location.
         /// </summary>
-        Boolean addAtRandomLocation = true;
+        private Boolean _addAtRandomLocation = true;
 
         /// <summary>
         ///  Creates a NewOrganism object intialized with the creature's state, some
@@ -40,8 +40,8 @@ namespace Terrarium.Game
             // Must be mutable
             Debug.Assert(!state.IsImmutable);
 
-            this.state = state;
-            this.dna = dna;
+            _state = state;
+            _dna = dna;
         }
 
         /// <summary>
@@ -49,27 +49,18 @@ namespace Terrarium.Game
         /// </summary>
         public OrganismState State
         {
-            get
-            {
-                return state;
-            }
+            get { return _state; }
         }
-    
+
         /// <summary>
         ///  Determines if the creature should be added at a random location
         ///  or the location available in their organism state.
         /// </summary>
         public Boolean AddAtRandomLocation
         {
-            get
-            {
-                return addAtRandomLocation;
-            }
-        
-            set
-            {
-                addAtRandomLocation = value;
-            }
+            get { return _addAtRandomLocation; }
+
+            set { _addAtRandomLocation = value; }
         }
 
         /// <summary>
@@ -82,8 +73,9 @@ namespace Terrarium.Game
         {
             get
             {
-                if ( dna != null ) {
-                    return (byte[]) dna.Clone();
+                if (_dna != null)
+                {
+                    return (byte[]) _dna.Clone();
                 }
 
                 return new byte[0]; // Empty byte array

@@ -4,17 +4,16 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Net;
-using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using System.Globalization;
 using Terrarium.Game;
 using Terrarium.Net;
 using Terrarium.Tools;
 
-namespace Terrarium.PeerToPeer 
+namespace Terrarium.PeerToPeer
 {
     /// <summary>
     ///  Handles querying for organisms, transfering organism assemblies
@@ -24,11 +23,11 @@ namespace Terrarium.PeerToPeer
     /// </summary>
     internal class OrganismsNamespaceHandler : IHttpNamespaceHandler
     {
-        NetworkEngine engine;
+        private readonly NetworkEngine _engine;
 
         public OrganismsNamespaceHandler(NetworkEngine engine)
         {
-            this.engine = engine;
+            _engine = engine;
         }
 
         /// <summary>
@@ -48,7 +47,7 @@ namespace Terrarium.PeerToPeer
             webapp.HttpResponse.Date = DateTime.Now;
             webapp.HttpResponse.ContentType = "text/xml";
             webapp.HttpResponse.StatusCode = HttpStatusCode.OK;
-            webapp.HttpResponse.StatusDescription = "OK";       
+            webapp.HttpResponse.StatusDescription = "OK";
             webapp.HttpResponse.KeepAlive = false;
             string failureReason = "none";
             string body = "";
@@ -63,12 +62,12 @@ namespace Terrarium.PeerToPeer
                 {
                     // Gets XML statistics information from the
                     // network engine.
-                    body = engine.GetNetworkStatistics();
+                    body = _engine.GetNetworkStatistics();
                 }
                 else
                 {
                     body = "<HTML><BODY>" + "Sorry, GET is not supported for ";
-                    body += webapp.HttpRequest.RequestUri.ToString();       
+                    body += webapp.HttpRequest.RequestUri.ToString();
                     body += "</BODY></HTML>";
                     webapp.HttpResponse.ContentType = "text/html";
                     // Return an error stream.  The namespace being requested
@@ -84,7 +83,7 @@ namespace Terrarium.PeerToPeer
 
                 // Prepares a binary formatter to serialize/deserialize
                 // state information.
-                BinaryFormatter channel = new BinaryFormatter();  
+                BinaryFormatter channel = new BinaryFormatter();
 
                 // Add a special binder to the BinaryFormatter to ensure that
                 // the stream hasn't been hacked to try to get us to instantiate an
@@ -94,7 +93,7 @@ namespace Terrarium.PeerToPeer
 
                 if (requestedNamespace == "/organisms/state")
                 {
-                    engine.WriteProtocolInfo("/organisms/state: Start receiving TeleportState.");
+                    _engine.WriteProtocolInfo("/organisms/state: Start receiving TeleportState.");
 
                     // Provides an implementation for the /organisms/state
                     // resource.  This resource handles the retrieval of
@@ -106,48 +105,51 @@ namespace Terrarium.PeerToPeer
 
                     // If they aren't on the same channel, set the exception bit
                     // this will cause the teleportation to fail
-                    if (webapp.HttpRequest.Headers["peerChannel"].ToUpper(CultureInfo.InvariantCulture) != 
+                    if (webapp.HttpRequest.Headers["peerChannel"].ToUpper(CultureInfo.InvariantCulture) !=
                         GameEngine.Current.PeerChannel.ToUpper(CultureInfo.InvariantCulture))
                     {
-                        exceptionOccurred = true;                   
+                        exceptionOccurred = true;
                         failureReason = "Peer channel mismatch";
-                        engine.WriteProtocolInfo("/organisms/state: Sender is wrong peer channel. Denied.");
-
+                        _engine.WriteProtocolInfo("/organisms/state: Sender is wrong peer channel. Denied.");
                     }
-            
-                    if (engine.PeerManager.BadPeer(ipAddress) || !engine.PeerManager.ShouldReceive(ipAddress))
+
+                    if (_engine.PeerManager.BadPeer(ipAddress) || !_engine.PeerManager.ShouldReceive(ipAddress))
                     {
-                        exceptionOccurred = true;               
-                        failureReason = "The peer " + ipAddress + " did not pass the check for badpeer/shouldreceive on the remote peer";
-                        engine.WriteProtocolInfo("/organisms/state: Sender is marked as a bad peer or is sending too often. Denied.");
+                        exceptionOccurred = true;
+                        failureReason = "The peer " + ipAddress +
+                                        " did not pass the check for badpeer/shouldreceive on the remote peer";
+                        _engine.WriteProtocolInfo(
+                            "/organisms/state: Sender is marked as a bad peer or is sending too often. Denied.");
                     }
                     else
                     {
                         try
                         {
-                            theOrganism = (TeleportState) channel.Deserialize(webapp.Buffer); 
+                            theOrganism = (TeleportState) channel.Deserialize(webapp.Buffer);
                         }
                         catch (Exception e)
                         {
                             ErrorLog.LogHandledException(e);
                             GameEngine.Current.NetworkEngine.LastTeleportationException = e.ToString();
-                            exceptionOccurred = true;                       
+                            exceptionOccurred = true;
                             failureReason = "Exception occured during deserialization of the organism state";
                         }
                     }
 
                     if (!exceptionOccurred)
                     {
-                        engine.WriteProtocolInfo("/organisms/state: TeleportState successfully deserialized.");
+                        _engine.WriteProtocolInfo("/organisms/state: TeleportState successfully deserialized.");
 
                         // Check to see if the assembly is installed locally
                         Debug.Assert(GameEngine.Current != null);
                         Debug.Assert(theOrganism.OrganismState != null);
                         Debug.Assert(theOrganism.OrganismState.Species != null);
                         Debug.Assert(((Species) theOrganism.OrganismState.Species).AssemblyInfo != null);
-                        if (GameEngine.Current.Pac.Exists(((Species) theOrganism.OrganismState.Species).AssemblyInfo.FullName))
+                        if (
+                            GameEngine.Current.Pac.Exists(
+                                ((Species) theOrganism.OrganismState.Species).AssemblyInfo.FullName))
                         {
-                            engine.WriteProtocolInfo("/organisms/state: Assembly exists, add organism to game.");
+                            _engine.WriteProtocolInfo("/organisms/state: Assembly exists, add organism to game.");
 
                             // Add the teleported organism to the game
                             GameEngine.Current.ReceiveTeleportation(theOrganism, false);
@@ -157,17 +159,18 @@ namespace Terrarium.PeerToPeer
                         }
                         else
                         {
-                            engine.WriteProtocolInfo("/organisms/state: Assembly doesn't exist, don't add organism to game.");
+                            _engine.WriteProtocolInfo(
+                                "/organisms/state: Assembly doesn't exist, don't add organism to game.");
 
                             // Let the peer know that we'll need the assembly
-                            body = "<assemblyreceived>false</assemblyreceived>";                        
+                            body = "<assemblyreceived>false</assemblyreceived>";
                         }
 
-                        engine.PeerManager.SetReceive(ipAddress);
+                        _engine.PeerManager.SetReceive(ipAddress);
                     }
                     else
                     {
-                        engine.WriteProtocolInfo("/organisms/state: Problem occurred:" + failureReason);
+                        _engine.WriteProtocolInfo("/organisms/state: Problem occurred:" + failureReason);
 
                         body = "<organismArrived>false</organismArrived><reason>" + failureReason + "</reason>";
                         GameEngine.Current.NetworkEngine.CountFailedTeleportationReceives();
@@ -175,15 +178,16 @@ namespace Terrarium.PeerToPeer
                 }
                 else if (requestedNamespace == "/organisms/assemblies")
                 {
-                    engine.WriteProtocolInfo("/organisms/assemblies: Start receiving organism assembly");
+                    _engine.WriteProtocolInfo("/organisms/assemblies: Start receiving organism assembly");
 
                     // Someone is sending us an assembly to save
                     try
                     {
                         string ipAddress = webapp.HttpRequest.RemoteEndPoint.Address.ToString();
-                        if (engine.PeerManager.BadPeer(ipAddress) || !engine.PeerManager.ShouldReceive(ipAddress))
+                        if (_engine.PeerManager.BadPeer(ipAddress) || !_engine.PeerManager.ShouldReceive(ipAddress))
                         {
-                            engine.WriteProtocolInfo("/organisms/assemblies: Sender is marked as a bad peer or is sending too often. Denied.");
+                            _engine.WriteProtocolInfo(
+                                "/organisms/assemblies: Sender is marked as a bad peer or is sending too often. Denied.");
                             body = "<assemblysaved>false</assemblysaved>";
                         }
                         else
@@ -195,23 +199,23 @@ namespace Terrarium.PeerToPeer
                             string tempFile = PrivateAssemblyCache.GetSafeTempFileName();
                             using (Stream fileStream = File.OpenWrite(tempFile))
                             {
-                                Byte [] bufferBytes = webapp.Buffer.GetBuffer();
+                                Byte[] bufferBytes = webapp.Buffer.GetBuffer();
                                 fileStream.Write(bufferBytes, 0, bufferBytes.Length);
-                            }                   
-                    
+                            }
+
                             // Now save the assembly in the Private Assembly Cache
                             string assemblyFullName = webapp.HttpRequest.Headers["Assembly"];
-                            try 
+                            try
                             {
-                                GameEngine.Current.Pac.SaveOrganismAssembly(tempFile, assemblyFullName); 
-                                engine.WriteProtocolInfo("/organisms/assemblies: Assembly saved in PAC.");
+                                GameEngine.Current.Pac.SaveOrganismAssembly(tempFile, assemblyFullName);
+                                _engine.WriteProtocolInfo("/organisms/assemblies: Assembly saved in PAC.");
                             }
                             catch (Exception e)
                             {
                                 // The assembly could fail validation
                                 ErrorLog.LogHandledException(e);
                                 GameEngine.Current.NetworkEngine.LastTeleportationException = e.ToString();
-                                GameEngine.Current.NetworkEngine.CountFailedTeleportationReceives();                               
+                                GameEngine.Current.NetworkEngine.CountFailedTeleportationReceives();
                             }
 
                             File.Delete(tempFile);
@@ -229,23 +233,23 @@ namespace Terrarium.PeerToPeer
                 }
                 else if (requestedNamespace == "/organisms/assemblycheck")
                 {
-                    engine.WriteProtocolInfo("/organisms/assemblycheck: Checking to see if we have an assembly.");
+                    _engine.WriteProtocolInfo("/organisms/assemblycheck: Checking to see if we have an assembly.");
 
                     // Check to see if the assembly is installed locally
                     StreamReader reader = new StreamReader(webapp.Buffer, Encoding.ASCII);
                     string assemblyName = reader.ReadToEnd();
-                
+
                     Debug.Assert(GameEngine.Current != null);
                     if (GameEngine.Current.Pac.Exists(assemblyName))
                     {
                         // Let the peer know that we don't need the assembly
-                        engine.WriteProtocolInfo("/organisms/assemblycheck: We have it.");
+                        _engine.WriteProtocolInfo("/organisms/assemblycheck: We have it.");
                         body = "<assemblyexists>true</assemblyexists>";
-                    }               
+                    }
                     else
                     {
                         // Let the peer know that we need the assembly
-                        engine.WriteProtocolInfo("/organisms/assemblycheck: Don't have it.");
+                        _engine.WriteProtocolInfo("/organisms/assemblycheck: Don't have it.");
                         body = "<assemblyexists>false</assemblyexists>";
                     }
                 }
@@ -253,7 +257,7 @@ namespace Terrarium.PeerToPeer
                 {
                     // Handles unsupported namespaces.  This could have been
                     // offloaded to a helper function in the HttpNamespaceManager.
-                    body = "<HTML><BODY>" + "The namespace " + webapp.HttpRequest.RequestUri.ToString();        
+                    body = "<HTML><BODY>" + "The namespace " + webapp.HttpRequest.RequestUri;
                     body += " is not supported.</BODY></HTML>";
                     webapp.HttpResponse.ContentType = "text/html";
                 }
@@ -265,14 +269,14 @@ namespace Terrarium.PeerToPeer
                 // or another class.
                 webapp.HttpResponse.StatusCode = HttpStatusCode.MethodNotAllowed;
                 webapp.HttpResponse.StatusDescription = "Method Not Allowed";
-                body = "<HTML><BODY>" + "The method " + webapp.HttpRequest.Method;      
+                body = "<HTML><BODY>" + "The method " + webapp.HttpRequest.Method;
                 body += " is not allowed.</BODY></HTML>";
                 webapp.HttpResponse.ContentType = "text/html";
             }
 
             // Encode the body response and output the response.
-            byte[] bodyBytes = Encoding.ASCII.GetBytes(body);       
-            webapp.HttpResponse.ContentLength = (long)bodyBytes.Length;
+            byte[] bodyBytes = Encoding.ASCII.GetBytes(body);
+            webapp.HttpResponse.ContentLength = bodyBytes.Length;
             webapp.HttpResponse.Close(bodyBytes);
         }
     }

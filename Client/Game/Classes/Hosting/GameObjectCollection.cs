@@ -4,22 +4,19 @@
 
 using System;
 using System.Collections;
-
 using OrganismBase;
-using Terrarium.Configuration;
 using Terrarium.Game;
 using Terrarium.Tools;
-using Terrarium.Forms;
 
-namespace Terrarium.Hosting 
+namespace Terrarium.Hosting
 {
     // GameObjectCollection is a collection of animals currently hosted
     // by the GameScheduler.
     [Serializable]
-    internal class GameObjectCollection : ICollection, IList, IEnumerable 
+    internal class GameObjectCollection : IList
     {
-        ArrayList _list;
-        Hashtable _orgMap;
+        private readonly ArrayList _list;
+        private readonly Hashtable _orgMap;
 
         public GameObjectCollection()
         {
@@ -27,28 +24,27 @@ namespace Terrarium.Hosting
             _orgMap = new Hashtable();
         }
 
-        public int Count
+        public object this[string index]
         {
             get
             {
-                return _list.Count;
+                return _orgMap.Contains(index) ? ((OrganismWrapper) _orgMap[index]).Organism : null;
             }
+        }
+
+        public int Count
+        {
+            get { return _list.Count; }
         }
 
         public bool IsSynchronized
         {
-            get 
-            {
-                return _list.IsSynchronized;
-            }
+            get { return _list.IsSynchronized; }
         }
 
         public object SyncRoot
         {
-            get 
-            {
-                return _list.SyncRoot;
-            }
+            get { return _list.SyncRoot; }
         }
 
         public void CopyTo(Array array, int index)
@@ -56,65 +52,31 @@ namespace Terrarium.Hosting
             _list.CopyTo(array, index);
         }
 
-        public IEnumerator GetEnumerator() 
+        public IEnumerator GetEnumerator()
         {
             return new SimpleSequentialEnumerator(_list);
         }
 
-        public bool IsFixedSize 
+        public bool IsFixedSize
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
-        public bool IsReadOnly 
+        public bool IsReadOnly
         {
-            get 
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         public object this[int index]
         {
-            get 
-            { 
-                return _list[index];
-            }
-        
-            set 
-            {
-                _list[index] = value;
-            }
-        }
+            get { return _list[index]; }
 
-        public object this[string index]
-        {
-            get
-            {
-                if (_orgMap.Contains(index))
-                {
-                    return ((OrganismWrapper)_orgMap[index]).Organism;
-                }
-                return null;
-            }
-        }
-
-        public OrganismWrapper GetWrapperForOrganism(string id)
-        {
-            if (_orgMap.Contains(id))
-            {
-                return (OrganismWrapper)_orgMap[id];
-            }
-
-            return null;
+            set { _list[index] = value; }
         }
 
         public int Add(object value)
         {
-            OrganismWrapper wrap = (OrganismWrapper)value;
+            OrganismWrapper wrap = (OrganismWrapper) value;
             _orgMap.Add(wrap.Organism.ID, wrap);
             return _list.Add(value);
         }
@@ -128,11 +90,6 @@ namespace Terrarium.Hosting
         public Boolean Contains(object value)
         {
             return _list.Contains(value);
-        }
-
-        public Boolean ContainsKey(object value)
-        {
-            return _orgMap.ContainsKey(value);
         }
 
         public int IndexOf(object value)
@@ -159,12 +116,10 @@ namespace Terrarium.Hosting
                 OrganismWrapper wrap;
                 for (int i = 0; i < _list.Count; i++)
                 {
-                    wrap = (OrganismWrapper)_list[i];
-                    if (wrap.Organism.ID == strVal)
-                    {
-                        ndx = i;
-                        break;
-                    }
+                    wrap = (OrganismWrapper) _list[i];
+                    if (wrap.Organism.ID != strVal) continue;
+                    ndx = i;
+                    break;
                 }
 
                 if (-1 != ndx)
@@ -181,6 +136,21 @@ namespace Terrarium.Hosting
         public void RemoveAt(int index)
         {
             _list.RemoveAt(index);
+        }
+
+        public OrganismWrapper GetWrapperForOrganism(string id)
+        {
+            if (_orgMap.Contains(id))
+            {
+                return (OrganismWrapper) _orgMap[id];
+            }
+
+            return null;
+        }
+
+        public Boolean ContainsKey(object value)
+        {
+            return _orgMap.ContainsKey(value);
         }
 
         // After being deserialized we need to reset the world boundaries since they aren't serialized.
@@ -208,9 +178,11 @@ namespace Terrarium.Hosting
 
                     if (GameEngine.Current != null)
                     {
-                        GameEngine.Current.OnEngineStateChanged(new EngineStateChangedEventArgs(EngineStateChangeType.Other,
-                            "Organism Deserialization Failure.",
-                            organism.GetType().Assembly.GetName().Name + "refuses to come out of Cryogenic Stasis until a cure is found for Terrarium Syndrome (aka Deserialization Failure)"));
+                        GameEngine.Current.OnEngineStateChanged(
+                            new EngineStateChangedEventArgs(EngineStateChangeType.Other,
+                                                            "Organism Deserialization Failure.",
+                                                            organism.GetType().Assembly.GetName().Name +
+                                                            "refuses to come out of Cryogenic Stasis until a cure is found for Terrarium Syndrome (aka Deserialization Failure)"));
                     }
                 }
 

@@ -4,7 +4,7 @@
 
 using System;
 
-namespace Terrarium.Game 
+namespace Terrarium.Game
 {
     /// <summary>
     ///  The worldvector contains:
@@ -18,16 +18,9 @@ namespace Terrarium.Game
     [Serializable]
     public class WorldVector
     {
-        /// <summary>
-        ///  The rolled up Tick Actions used for easy enumeration
-        /// </summary>
-        TickActions currentActions;
+        private readonly WorldState _currentState;
+        private TickActions _currentActions;
 
-        /// <summary>
-        ///  The world state
-        /// </summary>
-        WorldState currentState;
-        
         /// <summary>
         ///  Attach a new state to a world vector.
         /// </summary>
@@ -38,41 +31,34 @@ namespace Terrarium.Game
             {
                 throw new ApplicationException("WorldState must be immutable to be added to vector.");
             }
-        
-            this.currentState = state;      
+
+            _currentState = state;
         }
 
         /// <summary>
         ///  Provides access to the rolled up tick actions for the state object.
         /// </summary>
-        public TickActions Actions 
+        public TickActions Actions
         {
-            get 
-            {
-                return currentActions;
-            }
-        
-            set 
+            get { return _currentActions; }
+
+            set
             {
                 if (value == null)
                 {
                     throw new ApplicationException("Actions can't be null.");
                 }
 
-                currentActions = value;
-                currentActions.CorrespondingState = this.State;
+                _currentActions = value;
             }
         }
-    
+
         /// <summary>
-        ///  Provides access to the state object.
+        ///  Provides access to the current world state.
         /// </summary>
         public WorldState State
         {
-            get
-            {
-                return currentState;
-            }        
-        }    
+            get { return _currentState; }
+        }
     }
 }

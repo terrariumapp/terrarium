@@ -20,19 +20,69 @@ namespace Terrarium.Game
     public sealed class EngineStateChangedEventArgs : EventArgs
     {
         /// <summary>
-        ///  The type of engine change.
+        ///  A long description of the event.
         /// </summary>
-        private EngineStateChangeType stateChange; 
+        private readonly string _longDescription;
 
         /// <summary>
         ///  The short message for the event.
         /// </summary>
-        private string shortDescription;
+        private readonly string _shortDescription;
 
         /// <summary>
-        ///  A long description of the event.
+        ///  The type of engine change.
         /// </summary>
-        private string longDescription;
+        private readonly EngineStateChangeType _stateChange;
+
+        /// <summary>
+        ///  Creates a new set of event arguments for a state change with short message.
+        /// </summary>
+        /// <param name="stateChange">The state change type</param>
+        /// <param name="shortDescription">A short description</param>
+        public EngineStateChangedEventArgs(EngineStateChangeType stateChange, string shortDescription)
+        {
+            _stateChange = stateChange;
+            _shortDescription = shortDescription;
+            _longDescription = shortDescription;
+        }
+
+        /// <summary>
+        ///  Creates a new set of event arguments for a state change with short and long messages.
+        /// </summary>
+        /// <param name="stateChange">The state change type</param>
+        /// <param name="shortDescription">A short description</param>
+        /// <param name="longDescription">A detailed description</param>
+        public EngineStateChangedEventArgs(EngineStateChangeType stateChange, string shortDescription,
+                                           string longDescription)
+        {
+            _stateChange = stateChange;
+            _shortDescription = shortDescription;
+            _longDescription = longDescription;
+        }
+
+        /// <summary>
+        ///  Retrieves the long description from these event arguments.
+        /// </summary>
+        public string LongDescription
+        {
+            get { return _longDescription; }
+        }
+
+        /// <summary>
+        ///  Retrieves the short description from these event arguments.
+        /// </summary>
+        public string ShortDescription
+        {
+            get { return _shortDescription; }
+        }
+
+        /// <summary>
+        ///  Retrieves the engine state change type for these event arguments.
+        /// </summary>
+        public EngineStateChangeType StateChange
+        {
+            get { return _stateChange; }
+        }
 
         /// <summary>
         ///  Creates a new event relating to a creature arriving.
@@ -41,10 +91,10 @@ namespace Terrarium.Game
         /// <returns>State change initialized for a teleporting creature with messages.</returns>
         public static EngineStateChangedEventArgs AnimalArrived(OrganismState organismState)
         {
-            return new EngineStateChangedEventArgs
-                (   EngineStateChangeType.AnimalTeleported
-                , "A new " + ((Species) organismState.Species).Name + " arrived at " + DateTime.Now.TimeOfDay.ToString()
-                , "A new " + ((Species) organismState.Species).Name + " was teleported into your world at " + DateTime.Now
+            return new EngineStateChangedEventArgs(
+                EngineStateChangeType.AnimalTeleported, 
+                string.Format("A new {0} arrived at {1}", ((Species) organismState.Species).Name, DateTime.Now.TimeOfDay), 
+                string.Format("A new {0} was teleported into your world at {1}", ((Species) organismState.Species).Name, DateTime.Now)
                 );
         }
 
@@ -54,7 +104,8 @@ namespace Terrarium.Game
         /// <param name="organismState">The creature being destroyed.</param>
         /// <param name="reason">The reason the creature is being destroyed.</param>
         /// <returns>State change initialized for a creature being destroyed with messages.</returns>
-        public static EngineStateChangedEventArgs AnimalDestroyed(OrganismState organismState, PopulationChangeReason reason)
+        public static EngineStateChangedEventArgs AnimalDestroyed(OrganismState organismState,
+                                                                  PopulationChangeReason reason)
         {
             string reasonDescription = "";
 
@@ -63,80 +114,25 @@ namespace Terrarium.Game
                 case PopulationChangeReason.Timeout:
                     reasonDescription = "thought for too long";
                     break;
+
                 case PopulationChangeReason.Error:
                     reasonDescription = "had an error";
                     break;
+
                 case PopulationChangeReason.SecurityViolation:
                     reasonDescription = "attempted to violate security";
                     break;
+
                 case PopulationChangeReason.OrganismBlacklisted:
                     reasonDescription = "is blacklisted due to past bad behavior and won't be loaded";
                     break;
             }
 
-            return new EngineStateChangedEventArgs
-                (   EngineStateChangeType.Other
-                , "A " + ((Species) organismState.Species).Name + " was destroyed because it " + reasonDescription + "."
-                , "A " + ((Species) organismState.Species).Name + " was destroyed because it " + reasonDescription + "."
+            return new EngineStateChangedEventArgs(
+                EngineStateChangeType.Other, 
+                string.Format("A {0} was destroyed because it {1}.", ((Species) organismState.Species).Name, reasonDescription), 
+                string.Format("A {0} was destroyed because it {1}.", ((Species) organismState.Species).Name, reasonDescription)
                 );
-        }
-
-        /// <summary>
-        ///  Creates a new set of event arguments for a state change with short message.
-        /// </summary>
-        /// <param name="stateChange">The state change type</param>
-        /// <param name="shortDescription">A short description</param>
-        public EngineStateChangedEventArgs(EngineStateChangeType stateChange, string shortDescription)
-        {
-            this.stateChange = stateChange;
-            this.shortDescription = shortDescription;
-            this.longDescription = shortDescription;
-        }
-
-        /// <summary>
-        ///  Creates a new set of event arguments for a state change with short and long messages.
-        /// </summary>
-        /// <param name="stateChange">The state change type</param>
-        /// <param name="shortDescription">A short description</param>
-        /// <param name="longDescription">A detailed description</param>
-        public EngineStateChangedEventArgs(EngineStateChangeType stateChange, string shortDescription, string longDescription)
-        {
-            this.stateChange = stateChange;
-            this.shortDescription = shortDescription;
-            this.longDescription = longDescription;
-        }
-
-        /// <summary>
-        ///  Retrieves the long description from these event arguments.
-        /// </summary>
-        public string LongDescription
-        {
-            get
-            {
-                return longDescription;
-            }
-        }
-
-        /// <summary>
-        ///  Retrieves the short description from these event arguments.
-        /// </summary>
-        public string ShortDescription
-        {
-            get
-            {
-                return shortDescription;
-            }
-        }
-
-        /// <summary>
-        ///  Retrieves the engine state change type for these event arguments.
-        /// </summary>
-        public EngineStateChangeType StateChange 
-        {
-            get 
-            {
-                return stateChange;
-            }
         }
     }
 }

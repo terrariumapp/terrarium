@@ -13,12 +13,12 @@ namespace Terrarium.Game
     ///  of feedback from the reporting web service.
     /// </summary>
     [Serializable]
-    public sealed class StateCorruptedException : GameEngineException 
+    public sealed class StateCorruptedException : GameEngineException
     {
         /// <summary>
         ///  The last tick reported to the reporting server.
         /// </summary>
-        int lastReportedTick;
+        private readonly int _lastReportedTick;
 
         /// <summary>
         ///  Creates a new corruption exception using the last reported tick
@@ -27,7 +27,7 @@ namespace Terrarium.Game
         /// <param name="lastReportedTick">The game tick number for the last reported tick.</param>
         public StateCorruptedException(int lastReportedTick) : base("Your Ecosystem state is corrupted, restarting.")
         {
-            this.lastReportedTick = lastReportedTick;
+            _lastReportedTick = lastReportedTick;
         }
 
         /// <summary>
@@ -35,10 +35,7 @@ namespace Terrarium.Game
         /// </summary>
         public int LastReportedTick
         {
-            get
-            {
-                return lastReportedTick;
-            }
+            get { return _lastReportedTick; }
         }
     }
 }

@@ -6,7 +6,7 @@ using System;
 using System.Diagnostics;
 using Terrarium.Game;
 
-namespace Terrarium.PeerToPeer 
+namespace Terrarium.PeerToPeer
 {
     // This is a serialization binder that is used to make sure Terrarium never deserializes an
     // object that shouldn't be able to be used by an organism. A malicious person could send
@@ -22,22 +22,22 @@ namespace Terrarium.PeerToPeer
             // If the object isn't from one of these assemblies, then it might not be safe
             if (!IsOrganismBase(asm) && !IsTerrarium(asm) && !IsMscorlib(asm) && !IsSystemDrawing(asm))
             {
-                Trace.WriteLine("Unhandled Type - " + asm + "|" + type);
-                throw new ApplicationException("Invalid Type in TeleportStateBinder " + asm + "|" + type);
+                Trace.WriteLine(string.Format("Unhandled Type - {0}|{1}", asm, type));
+                throw new ApplicationException(string.Format("Invalid Type in TeleportStateBinder {0}|{1}", asm, type));
             }
-    
+
             switch (type)
             {
                 case "System.UnitySerializationHolder":
                 case "Terrarium.PeerToPeer.TeleportState":
-                
-                // TeleportState
+
+                    // TeleportState
                 case "System.Guid":
                 case "OrganismBase.PlantState":
                 case "OrganismBase.AnimalState":
                 case "Terrarium.Hosting.OrganismWrapper":
 
-                // OrganismState
+                    // OrganismState
                 case "OrganismBase.DefendAction":
                 case "OrganismBase.AttackAction":
                 case "OrganismBase.EatAction":
@@ -50,21 +50,21 @@ namespace Terrarium.PeerToPeer
                 case "OrganismBase.PopulationChangeReason":
                 case "OrganismBase.AntennaState":
                 case "OrganismBase.AntennaPosition":
-                
-                // AnimalSpecies
+
+                    // AnimalSpecies
                 case "OrganismBase.AnimalSkinFamily":
-                
-                // PlantSpecies
+
+                    // PlantSpecies
                 case "OrganismBase.PlantSkinFamily":
-                
-                // OrganismSpecies
+
+                    // OrganismSpecies
                 case "System.Drawing.KnownColor":
-                                    
-                // MoveToAction
+
+                    // MoveToAction
                 case "OrganismBase.MovementVector":
                 case "OrganismBase.ReasonForStop":
 
-                // OrganismEventResults
+                    // OrganismEventResults
                 case "OrganismBase.LoadEventArgs":
                 case "OrganismBase.IdleEventArgs":
                 case "OrganismBase.TeleportedEventArgs":
@@ -77,12 +77,13 @@ namespace Terrarium.PeerToPeer
                 case "OrganismBase.AttackCompletedEventArgs":
                 case "OrganismBase.ReproduceCompletedEventArgs":
                 case "OrganismBase.DefendCompletedEventArgs":
-                case "System.Collections.ArrayList":    // for AttackedEventArgsCollection because it has an arraylist in ReadOnlyCollectionBase
+                case "System.Collections.ArrayList":
+                    // for AttackedEventArgsCollection because it has an arraylist in ReadOnlyCollectionBase
                     return null;
 
                 default:
-                    Trace.WriteLine("Unhandled Type - " + asm + "|" + type);
-                    throw new ApplicationException("Invalid Type in TeleportStateBinder " + asm + "|" + type);
+                    Trace.WriteLine(string.Format("Unhandled Type - {0}|{1}", asm, type));
+                    throw new ApplicationException(string.Format("Invalid Type in TeleportStateBinder {0}|{1}", asm, type));
             }
         }
     }

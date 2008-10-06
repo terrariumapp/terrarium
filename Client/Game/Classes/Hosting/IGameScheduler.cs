@@ -5,17 +5,74 @@
 using System;
 using System.Collections;
 using System.IO;
-
 using OrganismBase;
 using Terrarium.Game;
 
-namespace Terrarium.Hosting 
+namespace Terrarium.Hosting
 {
     /// <summary>
     ///  Used to define a game scheduler that can be used to host organisms.
     /// </summary>
-    public interface IGameScheduler 
+    public interface IGameScheduler
     {
+        /// <summary>
+        ///  Provides collection based access to the organisms in the scheduler.
+        /// </summary>
+        ICollection Organisms { get; }
+
+        /// <summary>
+        ///  Returns the number of creatures run per tick.
+        /// </summary>
+        int OrganismsPerTick { get; }
+
+        /// <summary>
+        ///  Control the number of ticks per second (which is really the number of buckets
+        ///  the animals should be broken into).
+        /// </summary>
+        int TicksPerSec { get; set; }
+
+        /// <summary>
+        ///  Maximum amount of time a creature can run.
+        /// </summary>
+        int Quantum { get; set; }
+
+        /// <summary>
+        ///  The maximum amount of overtime that can be accrued before
+        ///  a creature is penalized.
+        /// </summary>
+        Int64 MaxOverage { get; set; }
+
+        /// <summary>
+        ///  The maximum amount of time that a creature can run before
+        ///  it is terminated.
+        /// </summary>
+        Int64 MaxAllowance { get; set; }
+
+        /// <summary>
+        ///  The world state.
+        /// </summary>
+        WorldState CurrentState { get; set; }
+
+        /// <summary>
+        ///  Set whether creatures should be penalized for time.
+        /// </summary>
+        Boolean PenalizeForTime { get; set; }
+
+        /// <summary>
+        ///  The AppDomain the organisms are run in.
+        /// </summary>
+        AppDomain OrganismAppDomain { get; }
+
+        /// <summary>
+        ///  Set the current game engine.
+        /// </summary>
+        GameEngine CurrentGameEngine { set; }
+
+        /// <summary>
+        ///  Suspend blacklisting entirely.
+        /// </summary>
+        bool SuspendBlacklisting { get; set; }
+
         /// <summary>
         ///  The method that notifies the scheduler to run one set of creatures.
         /// </summary>
@@ -36,14 +93,6 @@ namespace Terrarium.Hosting
         Organism GetOrganism(string id);
 
         /// <summary>
-        ///  Provides collection based access to the organisms in the scheduler.
-        /// </summary>
-        ICollection Organisms
-        {
-            get;
-        }
-
-        /// <summary>
         ///  Method for serializing all organisms in the scheduler.
         /// </summary>
         /// <param name="stream">The stream to serialize to.</param>
@@ -59,49 +108,6 @@ namespace Terrarium.Hosting
         ///  Finalize the deserialization of the organisms.
         /// </summary>
         void CompleteOrganismDeserialization();
-
-        /// <summary>
-        ///  Returns the number of creatures run per tick.
-        /// </summary>
-        int OrganismsPerTick
-        {
-            get;
-        }
-
-        /// <summary>
-        ///  Control the number of ticks per second (which is really the number of buckets
-        ///  the animals should be broken into).
-        /// </summary>
-        int TicksPerSec
-        {
-            get; set;
-        }
-
-        /// <summary>
-        ///  Maximum amount of time a creature can run.
-        /// </summary>
-        int Quantum
-        {
-            get; set;
-        }
-
-        /// <summary>
-        ///  The maximum amount of overtime that can be accrued before
-        ///  a creature is penalized.
-        /// </summary>
-        Int64 MaxOverage
-        {
-            get; set;
-        }
-
-        /// <summary>
-        ///  The maximum amount of time that a creature can run before
-        ///  it is terminated.
-        /// </summary>
-        Int64 MaxAllowance 
-        {
-            get; set;
-        }
 
         /// <summary>
         ///  Used to remove organisms from the scheduler.  Should always
@@ -124,14 +130,6 @@ namespace Terrarium.Hosting
         TickActions GatherTickActions();
 
         /// <summary>
-        ///  The world state.
-        /// </summary>
-        WorldState CurrentState
-        {
-            get; set;
-        }
-
-        /// <summary>
         ///  Get the timing report for an organism.
         /// </summary>
         /// <param name="organismID">The ID of the organism.</param>
@@ -139,40 +137,9 @@ namespace Terrarium.Hosting
         string GetOrganismTimingReport(string organismID);
 
         /// <summary>
-        ///  Set whether creatures should be penalized for time.
-        /// </summary>
-        Boolean PenalizeForTime
-        {
-            get; set;
-        }
-
-        /// <summary>
-        ///  The AppDomain the organisms are run in.
-        /// </summary>
-        AppDomain OrganismAppDomain 
-        {
-            get;
-        }
-
-        /// <summary>
-        ///  Set the current game engine.
-        /// </summary>
-        GameEngine CurrentGameEngine 
-        {
-            set;
-        }
-        /// <summary>
         ///  Suspend blacklisting and penalizing temporarily.
         /// </summary>
         void TemporarilySuspendBlacklisting();
-
-        /// <summary>
-        ///  Suspend blacklisting entirely.
-        /// </summary>
-        bool SuspendBlacklisting 
-        {
-            get; set;
-        }
 
         /// <summary>
         ///  Close down the game scheduler releasing any resources.

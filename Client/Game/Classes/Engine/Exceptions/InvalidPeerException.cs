@@ -21,7 +21,7 @@ namespace Terrarium.Game
         /// <summary>
         ///  Creates a default invalid peer exception object.
         /// </summary>
-        public InvalidPeerException() : base("Invalid Peer Issue\n\nYour peer appears to be behind a firewall or other network translation hardware.  Please go to our website for instructions on how to enable your system to run Terrarium in the peer to peer network.\n" + GameConfig.WebRoot)
+        public InvalidPeerException() : base(string.Format("Invalid Peer Issue\n\nYour peer appears to be behind a firewall or other network translation hardware.  Please go to our website for instructions on how to enable your system to run Terrarium in the peer to peer network.\n{0}", GameConfig.WebRoot))
         {
         }
     }

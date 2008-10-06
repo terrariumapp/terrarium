@@ -12,7 +12,7 @@ namespace Terrarium.Game
     ///  abort the communication and just teleport locally.
     /// </summary>
     [Serializable]
-    public sealed class AbortPeerDiscussionException : GameEngineException 
+    public sealed class AbortPeerDiscussionException : GameEngineException
     {
         /// <summary>
         ///  Creates a new peer abort exception given a reason for the

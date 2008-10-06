@@ -2,9 +2,7 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                               
 //------------------------------------------------------------------------------
 
-using System;
-
-namespace Terrarium.Game 
+namespace Terrarium.Game
 {
     /// <summary>
     ///  Contains assembly information about an organism.
@@ -15,13 +13,13 @@ namespace Terrarium.Game
         /// <summary>
         ///  The full name of the assembly used for loading the assembly.
         /// </summary>
-        string assemblyFullName;
+        private readonly string _assemblyFullName;
 
         /// <summary>
         ///  The short name of the assembly used for identification purposes.
         /// </summary>
-        string assemblyShortName;
-    
+        private readonly string _assemblyShortName;
+
         /// <summary>
         ///  Creates a new info object using the full name of the assembly
         ///  and the short name.
@@ -30,30 +28,24 @@ namespace Terrarium.Game
         /// <param name="assemblyShortName">The assembly short name.</param>
         public OrganismAssemblyInfo(string assemblyFullName, string assemblyShortName)
         {
-            this.assemblyFullName = assemblyFullName;
-            this.assemblyShortName = assemblyShortName;
+            _assemblyFullName = assemblyFullName;
+            _assemblyShortName = assemblyShortName;
         }
-    
+
         /// <summary>
         ///  Returns the assembly full name that was saved on this info object.
         /// </summary>
         public string FullName
         {
-            get
-            {
-                return assemblyFullName;
-            }
+            get { return _assemblyFullName; }
         }
-    
+
         /// <summary>
         ///  Returns the assembly short name that was saved on this info object.
         /// </summary>
         public string ShortName
         {
-            get
-            {
-                return assemblyShortName;
-            }
+            get { return _assemblyShortName; }
         }
 
         /// <summary>
@@ -63,7 +55,7 @@ namespace Terrarium.Game
         /// <returns>The assembly short name.</returns>
         public override string ToString()
         {
-            return assemblyShortName;
+            return _assemblyShortName;
         }
     }
 }

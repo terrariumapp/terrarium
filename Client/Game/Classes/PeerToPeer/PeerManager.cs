@@ -4,48 +4,34 @@
 
 using System;
 using System.Collections;
-using System.Text;
-using System.Net;
 using System.Diagnostics;
+using System.Net;
+using System.Text;
 using Terrarium.Configuration;
 
 namespace Terrarium.PeerToPeer
 {
-	/// <summary>
-	/// Manages the list of peers that this Terrarium knows about.  Each
-	/// Terrarium only knows about a small set of peers and the server
-	/// sets this up to make sure it is a fully connected graph through
-	/// the whole ecosystem.  This is to prevent any machine from knowing
-	/// about too many active internet IP addresses for security reasons.
-	/// </summary>
-	public class PeerManager
-	{
-        // Make sure we get a threadsafe version of this so that it can be modified safely from
-        // the listener threads
-        private Hashtable knownPeers = Hashtable.Synchronized(new Hashtable());
-        private Hashtable knownBadPeers = Hashtable.Synchronized(new Hashtable());
-        private const int        maxKnownBadPeers = 30;
-        private const int        secsBetweenPeerReceives = 30;
+    /// <summary>
+    /// Manages the list of peers that this Terrarium knows about.  Each
+    /// Terrarium only knows about a small set of peers and the server
+    /// sets this up to make sure it is a fully connected graph through
+    /// the whole ecosystem.  This is to prevent any machine from knowing
+    /// about too many active internet IP addresses for security reasons.
+    /// </summary>
+    public class PeerManager
+    {
+        private const int MaxKnownBadPeers = 30;
+        private const int SecsBetweenPeerReceives = 30;
+        private Hashtable _knownBadPeers = Hashtable.Synchronized(new Hashtable());
+        private Hashtable _knownPeers = Hashtable.Synchronized(new Hashtable());
 
         /// <summary>
-        /// Constructor for PeerManager.
+        /// The set of peers this client knows about and considers valid and active
         /// </summary>
-		public PeerManager()
-		{
-		}
-        
-        // The set of peers this client knows about and considers valid and active
         internal Hashtable KnownPeers
         {
-            get
-            {
-                return knownPeers;
-            }
-
-            set
-            {
-                knownPeers = value;
-            }
+            get { return _knownPeers; }
+            set { _knownPeers = value; }
         }
 
         // Allows a bad peer to be used again if they updated their lease on the server.
@@ -53,11 +39,11 @@ namespace Terrarium.PeerToPeer
         internal bool ClearBadPeer(string ipAddress, DateTime peerLease)
         {
             // Lock so we can check for existence and remove atomically
-            // We always lock knownPeers even though we are changing
+            // We always lock _knownPeers even though we are changing
             // bad peers so we don't deadlock
-            lock (knownPeers.SyncRoot)
+            lock (_knownPeers.SyncRoot)
             {
-                Peer badPeer = (Peer) knownBadPeers[ipAddress];
+                Peer badPeer = (Peer) _knownBadPeers[ipAddress];
                 if (badPeer != null)
                 {
                     // If the bad peer has updated their lease, then they
@@ -66,7 +52,7 @@ namespace Terrarium.PeerToPeer
                     // get to them
                     if (badPeer.LeaseTimeout < peerLease)
                     {
-                        knownBadPeers.Remove(ipAddress);
+                        _knownBadPeers.Remove(ipAddress);
                     }
                     else
                     {
@@ -74,7 +60,7 @@ namespace Terrarium.PeerToPeer
                     }
                 }
             }
-            
+
             return true;
         }
 
@@ -90,9 +76,9 @@ namespace Terrarium.PeerToPeer
                 return false;
             }
 
-            lock (knownBadPeers.SyncRoot)
+            lock (_knownBadPeers.SyncRoot)
             {
-                return knownBadPeers.ContainsKey(ipAddress);
+                return _knownBadPeers.ContainsKey(ipAddress);
             }
         }
 
@@ -100,14 +86,14 @@ namespace Terrarium.PeerToPeer
         // this is threadsafe
         internal void SetReceive(string ipAddress)
         {
-            lock (knownPeers.SyncRoot)
+            lock (_knownPeers.SyncRoot)
             {
-                if (knownPeers.ContainsKey(ipAddress))
+                if (_knownPeers.ContainsKey(ipAddress))
                 {
-                    ((Peer) knownPeers[ipAddress]).LastReceipt = DateTime.UtcNow;
+                    ((Peer) _knownPeers[ipAddress]).LastReceipt = DateTime.UtcNow;
                 }
             }
-        } 
+        }
 
         // Returns true if this peer hasn't sent to us in a while.
         // This is threadsafe
@@ -120,11 +106,12 @@ namespace Terrarium.PeerToPeer
             }
 
             bool receive = false;
-            lock (knownPeers.SyncRoot)
+            lock (_knownPeers.SyncRoot)
             {
-                if (knownPeers.ContainsKey(ipAddress))
+                if (_knownPeers.ContainsKey(ipAddress))
                 {
-                    if (((Peer) knownPeers[ipAddress]).LastReceipt.AddSeconds(secsBetweenPeerReceives) < DateTime.UtcNow)
+                    if (((Peer) _knownPeers[ipAddress]).LastReceipt.AddSeconds(SecsBetweenPeerReceives) <
+                        DateTime.UtcNow)
                     {
                         receive = true;
                     }
@@ -145,17 +132,17 @@ namespace Terrarium.PeerToPeer
             }
 
             // Lock so we can test for contains, and then remove safely
-            lock (knownPeers.SyncRoot)
+            lock (_knownPeers.SyncRoot)
             {
-                if (knownPeers.ContainsKey(ipAddress))
+                if (_knownPeers.ContainsKey(ipAddress))
                 {
-                    if (!knownBadPeers.ContainsKey(ipAddress))
+                    if (!_knownBadPeers.ContainsKey(ipAddress))
                     {
-                        Peer badPeer = new Peer(ipAddress, ((Peer) knownPeers[ipAddress]).LeaseTimeout.AddHours(1));
-                        knownBadPeers.Add(ipAddress, badPeer);
+                        Peer badPeer = new Peer(ipAddress, ((Peer) _knownPeers[ipAddress]).LeaseTimeout.AddHours(1));
+                        _knownBadPeers.Add(ipAddress, badPeer);
                     }
 
-                    knownPeers.Remove(ipAddress);
+                    _knownPeers.Remove(ipAddress);
                 }
             }
         }
@@ -165,38 +152,38 @@ namespace Terrarium.PeerToPeer
         /// </summary>
         public void ClearBadPeers()
         {
-            // We always lock knownPeers even though we are changing
+            // We always lock _knownPeers even though we are changing
             // bad peers so we don't deadlock
-            lock (knownPeers.SyncRoot)
+            lock (_knownPeers.SyncRoot)
             {
                 // Copy from bad peers back to known peers,
                 // or we'll quickly get into a blacklisted
                 // situation
-                foreach (string key in knownBadPeers.Keys)
+                foreach (string key in _knownBadPeers.Keys)
                 {
-                    knownPeers[key] = knownBadPeers[key];
+                    _knownPeers[key] = _knownBadPeers[key];
                 }
 
-                knownBadPeers = Hashtable.Synchronized(new Hashtable());
+                _knownBadPeers = Hashtable.Synchronized(new Hashtable());
             }
         }
 
         // Keeps the bad peer list down to a reasonable size
         internal void TruncateBadPeerList()
         {
-            // We always lock knownPeers even though we are changing
+            // We always lock _knownPeers even though we are changing
             // bad peers so we don't deadlock
-            lock (knownPeers.SyncRoot)
+            lock (_knownPeers.SyncRoot)
             {
-                if (knownBadPeers.Count > maxKnownBadPeers)
+                if (_knownBadPeers.Count > MaxKnownBadPeers)
                 {
                     // Remove the peers with the oldest leases
-                    Peer [] peers = new Peer[knownBadPeers.Count];
-                    knownBadPeers.Values.CopyTo(peers, 0);
+                    Peer[] peers = new Peer[_knownBadPeers.Count];
+                    _knownBadPeers.Values.CopyTo(peers, 0);
                     Array.Sort(peers, new LeaseComparer());
-                    for (int index = 0; index < knownBadPeers.Count - maxKnownBadPeers; index++)
+                    for (int index = 0; index < _knownBadPeers.Count - MaxKnownBadPeers; index++)
                     {
-                        knownBadPeers.Remove(peers[index].IPAddress);
+                        _knownBadPeers.Remove(peers[index].IPAddress);
                     }
                 }
             }
@@ -208,13 +195,13 @@ namespace Terrarium.PeerToPeer
             StringBuilder builder = new StringBuilder();
 
             // Lock the hashtable so that we don't get an exception if something is removed
-            lock (knownPeers.SyncRoot)
+            lock (_knownPeers.SyncRoot)
             {
                 builder.Append("<goodPeerCount>");
-                builder.Append(knownPeers.Count.ToString());
+                builder.Append(_knownPeers.Count.ToString());
                 builder.Append("</goodPeerCount>");
                 builder.Append("<badPeerCount>");
-                builder.Append(knownBadPeers.Count.ToString());
+                builder.Append(_knownBadPeers.Count.ToString());
                 builder.Append("</badPeerCount>");
             }
 
@@ -225,14 +212,13 @@ namespace Terrarium.PeerToPeer
         {
             // Lock the hashtable so it doesn't change out from under us and cause an exception
             Random randGen = new Random(DateTime.Now.Millisecond);
-            int location = 0;
             IPAddress sendAddress = null;
-            lock (knownPeers.SyncRoot)
+            lock (_knownPeers.SyncRoot)
             {
-                location = randGen.Next(0, knownPeers.Count);
+                int location = randGen.Next(0, _knownPeers.Count);
                 Peer selectedPeer = null;
                 int peerCount = 0;
-                foreach (Peer peer in knownPeers.Values)
+                foreach (Peer peer in _knownPeers.Values)
                 {
                     if (peerCount == location)
                     {
@@ -241,11 +227,11 @@ namespace Terrarium.PeerToPeer
                     }
                     peerCount++;
                 }
-                Debug.Assert(peerCount < knownPeers.Count);
-                sendAddress = IPAddress.Parse(selectedPeer.IPAddress);
+                Debug.Assert(peerCount < _knownPeers.Count);
+                if (selectedPeer != null) sendAddress = IPAddress.Parse(selectedPeer.IPAddress);
             }
 
             return sendAddress;
         }
-	}
+    }
 }

@@ -2,12 +2,10 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                              
 //------------------------------------------------------------------------------
 
-using System;
 using OrganismBase;
-
 using Terrarium.Hosting;
 
-namespace Terrarium.Game 
+namespace Terrarium.Game
 {
     /// <summary>
     ///  Represents an organisms world view.  Implements the IOrganismWorldBoundary
@@ -17,12 +15,12 @@ namespace Terrarium.Game
     /// </summary>
     public class OrganismWorldBoundary : IOrganismWorldBoundary
     {
-        Organism organism;
+        private Organism _organism;
 
         /// <summary>
         ///  The Unique ID of the creature in the system.
         /// </summary>
-        string organismID;
+        private string _organismID;
 
         /// <summary>
         ///  Initializes a new world boundary given the original organism and their ID.
@@ -31,8 +29,8 @@ namespace Terrarium.Game
         /// <param name="ID">The Unique ID of the organism.</param>
         internal OrganismWorldBoundary(Organism organism, string ID)
         {
-            this.organism = organism;
-            this.organismID = ID;
+            _organism = organism;
+            _organismID = ID;
         }
 
         /// <summary>
@@ -40,23 +38,8 @@ namespace Terrarium.Game
         /// </summary>
         protected Organism Organism
         {
-            get
-            {
-                return organism;
-            }
-
-            set
-            {
-                organism = value;
-            }
-        }
-
-        /// <summary>
-        ///  Sets the Unique ID of the creature in the system.
-        /// </summary>
-        protected void SetOrganismID(string ID)
-        {
-            organismID = ID;
+            get { return _organism; }
+            set { _organism = value; }
         }
 
         /// <summary>
@@ -64,10 +47,7 @@ namespace Terrarium.Game
         /// </summary>
         public OrganismState CurrentOrganismState
         {
-            get
-            {
-                return AppMgr.CurrentScheduler.CurrentState.GetOrganismState(ID);
-            }
+            get { return AppMgr.CurrentScheduler.CurrentState.GetOrganismState(ID); }
         }
 
         /// <summary>
@@ -75,10 +55,7 @@ namespace Terrarium.Game
         /// </summary>
         public string ID
         {
-            get
-            {
-                return this.organismID;
-            }
+            get { return _organismID; }
         }
 
         /// <summary>
@@ -86,10 +63,7 @@ namespace Terrarium.Game
         /// </summary>
         public int WorldWidth
         {
-            get
-            {
-                return GameEngine.Current.WorldWidth;
-            }
+            get { return GameEngine.Current.WorldWidth; }
         }
 
         /// <summary>
@@ -97,10 +71,15 @@ namespace Terrarium.Game
         /// </summary>
         public int WorldHeight
         {
-            get
-            {
-                return GameEngine.Current.WorldHeight;
-            }
+            get { return GameEngine.Current.WorldHeight; }
+        }
+
+        /// <summary>
+        ///  Sets the Unique ID of the creature in the system.
+        /// </summary>
+        protected void SetOrganismID(string id)
+        {
+            _organismID = id;
         }
 
         /// <summary>
@@ -112,7 +91,7 @@ namespace Terrarium.Game
         {
             if (organism is Animal)
             {
-                organism.SetWorldBoundary(new AnimalWorldBoundary((Animal) organism, id));
+                organism.SetWorldBoundary(new AnimalWorldBoundary(organism, id));
             }
             else
             {

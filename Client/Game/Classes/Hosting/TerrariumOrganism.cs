@@ -10,9 +10,11 @@ using Terrarium.Game;
 
 namespace Terrarium.Hosting 
 {
-    // Test animal whose sole purpose is to throw an exception.
-    // We use it when we are deserializing organisms and find one that won't load
-    // instead of aborting deserialization, we just use this organism so we can continue.
+    /// <summary>
+    /// Test animal whose sole purpose is to throw an exception.
+    /// We use it when we are deserializing organisms and find one that won't load
+    /// instead of aborting deserialization, we just use this organism so we can continue.
+    /// </summary>
     [CarnivoreAttribute(true)]
     [MatureSize(28)]
     [AnimalSkinAttribute(AnimalSkinFamily.Ant)]
@@ -28,11 +30,11 @@ namespace Terrarium.Hosting
     {
         protected override void Initialize()
         {
-            Load += new LoadEventHandler(LoadEvent);
+            Load += LoadEvent;
             throw new OrganismBlacklistedException();
         }
 
-        void LoadEvent(object sender, LoadEventArgs e)
+        static void LoadEvent(object sender, LoadEventArgs e)
         {
             throw new OrganismBlacklistedException();
         }

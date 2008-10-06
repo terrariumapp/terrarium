@@ -6,7 +6,6 @@ using System;
 using System.Collections;
 using System.Diagnostics;
 using System.Drawing;
-
 using OrganismBase;
 
 namespace Terrarium.Game
@@ -20,18 +19,20 @@ namespace Terrarium.Game
         // usage of this below and the asserts that go with it)
         // The only reason not to make it too large is that we might be able to use bucket sorting with it (but we're
         // not currently doing this)
-        const int timeWindow = 10000;
-
-        // Pointers to the MovementSegment that represents the start of every path
-        ArrayList startSegments = new ArrayList(300);
+        private const int TimeWindow = 10000;
 
         // A hashtable of every grid square that has a MovementSegment in it.
-        Hashtable gridSquares = new Hashtable();
+        private readonly Hashtable _gridSquares = new Hashtable();
 
         // Used to sort all MovementSegments in this turn
-        ArrayList sortedList = new ArrayList(300);
+        private readonly ArrayList _sortedList = new ArrayList(300);
+        private readonly ArrayList _startSegments = new ArrayList(300);
 
-        
+        public ArrayList StartSegments
+        {
+            get { return _startSegments; }
+        }
+
         // Terrarium needs to use a movement algorithm that moves a large number of elements down independent paths and has them
         // stop if they bump into each other during this movement (we make this problem more tractable by dividing the screen up
         // into cells so there aren't as many positions to calculate).  This is further complicated by the fact that creatures occupy
@@ -73,14 +74,14 @@ namespace Terrarium.Game
         //          once CellsLeftToResolve hits zero, this means that the state of all SegmentWrappers that use this segment have
         //          been resolved and the segment will get marked as "active" meaning that we know all of the cells the organism wants to 
         //          occupy can be used at this point in time.  We also unset the active bit on the previous segment in the chain.
-        internal void ResolvePaths() 
+        internal void ResolvePaths()
         {
             // Sort every Segment wrapper in the entire grid
-            sortedList.Sort(new SegmentWrapperComparer());
+            _sortedList.Sort(new SegmentWrapperComparer());
 
             // Walk through them all in sorted order.  Since the sort is time based, this ensures that 
             // organisms that try to occupy the same square at the same time will bump into each other
-            foreach (SegmentWrapper wrapper in sortedList)
+            foreach (SegmentWrapper wrapper in _sortedList)
             {
                 // Grab the actual segment we are dealing with
                 MovementSegment segment = wrapper.Segment;
@@ -99,7 +100,7 @@ namespace Terrarium.Game
                     // This segment's situation has already been resolved
                     continue;
                 }
-                else if (segment.IsStartingSegment)
+                if (segment.IsStartingSegment)
                 {
                     // Starting segments always get the cell they started in, don't clip
                     segment.CellsLeftToResolve = 0;
@@ -123,12 +124,11 @@ namespace Terrarium.Game
                             continue;
                         }
 
-                        if (testSegment.Active)
-                        {
-                            // There is an active segment in this cell, therefore, segment is Blocked
-                            segment.ClipSegment(testSegment.State);
-                            break;
-                        }
+                        if (!testSegment.Active) continue;
+
+                        // There is an active segment in this cell, therefore, segment is Blocked
+                        segment.ClipSegment(testSegment.State);
+                        break;
                     }
 
                     segment.CellsLeftToResolve--;
@@ -161,26 +161,25 @@ namespace Terrarium.Game
             int dy = y1 - y0;
             int dx = x1 - x0;
             int stepx, stepy;
-            int gridX, gridY;
             int timeslice = 0;
 
             Debug.Assert(x0 > -1 && x1 > -1 && y0 > -1 && y1 > -1);
             if (dy < 0)
-            { 
-                dy = -dy;  
-                stepy = -1; 
-            } 
+            {
+                dy = -dy;
+                stepy = -1;
+            }
             else
             {
                 stepy = 1;
             }
 
             if (dx < 0)
-            { 
-                dx = -dx;  
-                stepx = -1; 
-            } 
-            else 
+            {
+                dx = -dx;
+                stepx = -1;
+            }
+            else
             {
                 stepx = 1;
             }
@@ -189,8 +188,8 @@ namespace Terrarium.Game
             dx <<= 1;
 
             // start the first segment at the initial point at time 0
-            gridX = x0 >> EngineSettings.GridWidthPowerOfTwo;
-            gridY = y0 >> EngineSettings.GridWidthPowerOfTwo;
+            int gridX = x0 >> EngineSettings.GridWidthPowerOfTwo;
+            int gridY = y0 >> EngineSettings.GridWidthPowerOfTwo;
             Debug.Assert(gridX == state.GridX && gridY == state.GridY);
             MovementSegment segment = new MovementSegment(null, state, new Point(x0, y0), 0, gridX, gridY);
             segment.EndingPoint = new Point(p1.X, p1.Y);
@@ -205,22 +204,22 @@ namespace Terrarium.Game
                 // Determine how many points we'll plot and estimate time by that
                 if ((x1 - x0) != 0)
                 {
-                    Debug.Assert((x1 - x0) < timeWindow);
-                    timeslice = timeWindow / ((x1 - x0) * stepx);
+                    Debug.Assert((x1 - x0) < TimeWindow);
+                    timeslice = TimeWindow/((x1 - x0)*stepx);
                     Debug.Assert(timeslice != 0);
                 }
 
-                int fraction = dy - (dx >> 1);                         // same as 2*dy - dx
+                int fraction = dy - (dx >> 1); // same as 2*dy - dx
                 while (x0 != x1)
                 {
                     if (fraction >= 0)
                     {
                         y0 += stepy;
-                        fraction -= dx;                                // same as fraction -= 2*dx
+                        fraction -= dx; // same as fraction -= 2*dx
                     }
                     x0 += stepx;
-                    fraction += dy;                                    // same as fraction -= 2*dy
-                
+                    fraction += dy; // same as fraction -= 2*dy
+
                     // See if we've crossed into a new grid square
                     gridX = x0 >> EngineSettings.GridWidthPowerOfTwo;
                     gridY = y0 >> EngineSettings.GridHeightPowerOfTwo;
@@ -229,8 +228,8 @@ namespace Terrarium.Game
                     {
                         // End the segment since we've entered a new grid square
                         MovementSegment lastSegment = segment;
-                        segment = new MovementSegment(lastSegment, state, new Point(x0, y0), 
-                            lastSegment.ExitTime, gridX, gridY);
+                        segment = new MovementSegment(lastSegment, state, new Point(x0, y0),
+                                                      lastSegment.ExitTime, gridX, gridY);
                         segment.ExitTime = lastSegment.ExitTime;
                         lastSegment.Next = segment;
                         AddSegment(segment);
@@ -246,8 +245,8 @@ namespace Terrarium.Game
             {
                 if ((y1 - y0) != 0)
                 {
-                    Debug.Assert((y1 - y0) < timeWindow);
-                    timeslice = timeWindow / ((y1 - y0) * stepy);
+                    Debug.Assert((y1 - y0) < TimeWindow);
+                    timeslice = TimeWindow/((y1 - y0)*stepy);
                     Debug.Assert(timeslice != 0);
                 }
 
@@ -270,8 +269,8 @@ namespace Terrarium.Game
                     {
                         // End the segment since we've entered a new grid square
                         MovementSegment lastSegment = segment;
-                        segment = new MovementSegment(lastSegment, state, new Point(x0, y0), lastSegment.ExitTime, 
-                            gridX, gridY);
+                        segment = new MovementSegment(lastSegment, state, new Point(x0, y0), lastSegment.ExitTime,
+                                                      gridX, gridY);
                         segment.ExitTime = lastSegment.ExitTime;
 
                         lastSegment.Next = segment;
@@ -298,18 +297,18 @@ namespace Terrarium.Game
         {
             // Figure out how many cells on either side of the center we need to reserve
             int cellRadius = segment.State.CellRadius;
-    
+
             if (segment.Previous == null)
             {
                 // Beginning of a segment
                 // We should have never started in a position where the radius of the organism 
                 // went outside the bounds of the universe
-                Debug.Assert(segment.GridX >= 0 && segment.GridY >= 0 && 
-                    segment.GridX - cellRadius >= 0 &&
-                    segment.GridY - cellRadius >= 0 &&
-                    segment.GridX + cellRadius < GameEngine.Current.GridWidth &&
-                    segment.GridY + cellRadius < GameEngine.Current.GridHeight);
-    
+                Debug.Assert(segment.GridX >= 0 && segment.GridY >= 0 &&
+                             segment.GridX - cellRadius >= 0 &&
+                             segment.GridY - cellRadius >= 0 &&
+                             segment.GridX + cellRadius < GameEngine.Current.GridWidth &&
+                             segment.GridY + cellRadius < GameEngine.Current.GridHeight);
+
                 Debug.Assert(segment.EntryTime == 0);
                 StartSegments.Add(segment);
             }
@@ -328,10 +327,10 @@ namespace Terrarium.Game
                     return;
                 }
             }
-    
+
             // Do the top and bottom rows
             ArrayList list;
-            SegmentWrapper wrapper = null;
+            SegmentWrapper wrapper;
             for (int x = segment.GridX - cellRadius; x <= segment.GridX + cellRadius; x++)
             {
                 // *** Top row of square ***
@@ -339,12 +338,12 @@ namespace Terrarium.Game
                 int hash = (x << 16) | (segment.GridY - cellRadius);
 
                 // retrieve the set of SegmentWrappers that are already in the cell of the grid
-                list = (ArrayList) gridSquares[hash];
+                list = (ArrayList) _gridSquares[hash];
                 if (list == null)
                 {
                     // None exist yet, create an ArrayList to hold them
                     list = new ArrayList();
-                    gridSquares[hash] = list;
+                    _gridSquares[hash] = list;
                 }
 
                 // Make sure two organisms didn't start in the same place
@@ -358,7 +357,7 @@ namespace Terrarium.Game
                 list.Add(wrapper);
 
                 // Now add the SegmentWrapper to our master sorted list of all SegmentWrappers anywhere
-                sortedList.Add(wrapper);
+                _sortedList.Add(wrapper);
 
                 // CellsLeftToResolve is there to recognize the fact that an animal overlaps many squares.
                 // Until you know that it can occupy all of the squares it moves into, it can't move into
@@ -368,58 +367,73 @@ namespace Terrarium.Game
 
                 // *** Bottom row of square ***
                 hash = (x << 16) | (segment.GridY + cellRadius);
-                list = (ArrayList) gridSquares[hash];
+                list = (ArrayList) _gridSquares[hash];
                 if (list == null)
                 {
                     list = new ArrayList();
-                    gridSquares[hash] = list;
+                    _gridSquares[hash] = list;
                 }
-    
+
                 // Make sure two organisms didn't start in the same place
                 Debug.Assert(segment.EntryTime != 0 || !HasStartingSegments(list));
                 wrapper = new SegmentWrapper(segment, list);
                 list.Add(wrapper);
-                sortedList.Add(wrapper);
+                _sortedList.Add(wrapper);
                 segment.CellsLeftToResolve++;
             }
-    
+
             // Do left and right columns
             for (int y = segment.GridY - cellRadius + 1; y <= segment.GridY + cellRadius - 1; y++)
             {
                 // Make a unique hash for every square in the grid
                 int hash = ((segment.GridX - cellRadius) << 16) | y;
-                list = (ArrayList) gridSquares[hash];
+                list = (ArrayList) _gridSquares[hash];
                 if (list == null)
                 {
                     list = new ArrayList();
-                    gridSquares[hash] = list;
+                    _gridSquares[hash] = list;
                 }
                 // Make sure two organisms didn't start in the same place
                 Debug.Assert(segment.EntryTime != 0 || !HasStartingSegments(list));
                 wrapper = new SegmentWrapper(segment, list);
                 list.Add(wrapper);
-                sortedList.Add(wrapper);
+                _sortedList.Add(wrapper);
                 segment.CellsLeftToResolve++;
-    
+
                 hash = ((segment.GridX + cellRadius) << 16) | y;
-                list = (ArrayList) gridSquares[hash];
+                list = (ArrayList) _gridSquares[hash];
                 if (list == null)
                 {
                     list = new ArrayList();
-                    gridSquares[hash] = list;
+                    _gridSquares[hash] = list;
                 }
                 // Make sure two organisms didn't start in the same place
                 Debug.Assert(segment.EntryTime != 0 || !HasStartingSegments(list));
                 wrapper = new SegmentWrapper(segment, list);
                 list.Add(wrapper);
-                sortedList.Add(wrapper);
+                _sortedList.Add(wrapper);
                 segment.CellsLeftToResolve++;
-            }   
+            }
         }
 
-        // Sorts two segments by comparing when they entered a cell.  The earlier
-        // entry time into the cell wins
-        class SegmentWrapperComparer : IComparer
+        internal static Boolean HasStartingSegments(ArrayList list)
+        {
+            foreach (SegmentWrapper wrapper in list)
+            {
+                if (wrapper.Segment.EntryTime == 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Sorts two segments by comparing when they entered a cell.  The earlier
+        /// entry time into the cell wins
+        /// </summary>
+        private class SegmentWrapperComparer : IComparer
         {
             public int Compare(object x, object y)
             {
@@ -434,22 +448,22 @@ namespace Terrarium.Game
                     // alphabetical, so we use the hashcode
                     return segmentX.State.GetHashCode() - segmentY.State.GetHashCode();
                 }
-                else 
-                {
-                    return difference;
-                }
+                return difference;
             }
         }
 
-        // The segment wrapper allows us to put the same exact segment in several different cells of the grid.
-        // We do this because an animal occupies many cells at once and needs to either occupy them all, or none
-        // of them.  Thus, we wrap the segment in a segment wrapper and stick the wrapper into the cell to represent
-        // the fact that this segment is in that cell.  We give the SegmentWrapper a backpointer to the arraylist of
-        // other SegmentWrappers that are in the cell as well
+
+        /// <summary>
+        /// The segment wrapper allows us to put the same exact segment in several different cells of the grid.
+        /// We do this because an animal occupies many cells at once and needs to either occupy them all, or none
+        /// of them.  Thus, we wrap the segment in a segment wrapper and stick the wrapper into the cell to represent
+        /// the fact that this segment is in that cell.  We give the SegmentWrapper a backpointer to the arraylist of
+        /// other SegmentWrappers that are in the cell as well
+        /// </summary>
         public class SegmentWrapper
         {
-            MovementSegment segment;
-            ArrayList parentList;
+            private ArrayList parentList;
+            private MovementSegment segment;
 
             public SegmentWrapper(MovementSegment segment, ArrayList parentList)
             {
@@ -459,52 +473,16 @@ namespace Terrarium.Game
 
             public MovementSegment Segment
             {
-                get
-                {
-                    return segment;
-                }
+                get { return segment; }
 
-                set
-                {
-                    segment = value;
-                }
+                set { segment = value; }
             }
 
             public ArrayList ParentList
             {
-                get
-                {
-                    return parentList;
-                }
+                get { return parentList; }
 
-                set
-                {
-                    parentList = value;
-                }
-            }
-
-        }
-        
-        // Just for debugging: returns true if the list has a segment in it that is a
-        // starting segment
-        internal Boolean HasStartingSegments(ArrayList list)
-        {
-            foreach (SegmentWrapper wrapper in list)
-            {
-                if (wrapper.Segment.EntryTime == 0)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public ArrayList StartSegments
-        {
-            get
-            {
-                return startSegments;
+                set { parentList = value; }
             }
         }
     }

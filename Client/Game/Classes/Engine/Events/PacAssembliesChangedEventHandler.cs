@@ -4,7 +4,7 @@
 
 using System;
 
-namespace Terrarium.Game 
+namespace Terrarium.Game
 {
     /// <summary>
     ///  Delegate used to define an event for notifying clients

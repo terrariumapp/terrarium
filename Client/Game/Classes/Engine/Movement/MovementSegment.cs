@@ -13,66 +13,43 @@ namespace Terrarium.Game
     // Time is basically represented as a fraction of a tick.
     internal class MovementSegment
     {
-        // The coordinates of the line segment where this MovementSegment entered the cell that created this segment.
-        Point startingPoint;
+        private Boolean _active;
+        private OrganismState _blockedByState;
+        private int _cellsLeftToResolve;
+        private Point _endingPoint;
+        private int _entryTime;
+        private int _exitTime;
+        private int _gridX;
+        private int _gridY;
+        private MovementSegment _nextMovementSegment;
+        private OrganismState _organismState;
+        private MovementSegment _previousMovementSegment;
+        private Point _startingPoint;
 
-        // The coordinates of where the line segment exited the cell.
-        Point endingPoint = new Point();
-
-        // Position in the grid that we are entering and exiting from
-        int gridX, gridY;        
-
-        // At time 'EntryTime' the segment is already in the cell
-        // At time 'ExitTime' the segment has already left the cell
-        int entryTime = 0, exitTime = 0;  
-
-        // The organism that is doing the moving
-        OrganismState state;
-
-        // Pointers to the next and previous segments that make up the path the organism is moving on
-        // for this turn
-        MovementSegment previous = null;
-        MovementSegment next = null;
-
-        // Since an organism actually occupies multiple cells, this member variable tracks how many cells
-        // it is occupying that we haven't 'resolved' yet (see notes in GridIndex for a description of "resolving".  
-        // Once this goes to zero, we know that the movement this segment represents can occur, because all of
-        // the cells are not occupied at this point in time
-        int cellsLeftToResolve = 0;  
-
-        // True if we have validated that the organism can validly move to the spot this segment represents
-        Boolean active = false; 
-
-        // The organism that blocked the movement of this segment
-        OrganismState blockedByState = null;
-
-        internal MovementSegment(MovementSegment previous, OrganismState state, Point startingPoint, int entryTime, int gridX, int gridY)
+        internal MovementSegment(MovementSegment previous, OrganismState state, Point startingPoint, int entryTime,
+                                 int gridX, int gridY)
         {
             Debug.Assert((previous == null && entryTime == 0) || (previous != null && entryTime != 0));
 
-            this.State = state;
-            this.StartingPoint = startingPoint;
-            this.EntryTime = entryTime;     
-            this.GridX = gridX;
-            this.GridY = gridY;
-            this.Previous = previous;
-        }
-    
-        
-        public override string ToString()
-        {
-            return GridX.ToString() + ", " + GridY.ToString() + "EntryTime=" + EntryTime.ToString() + "ExitTime=" + ExitTime.ToString() +
-                "StartingPoint=" + StartingPoint.ToString() + "EndingPoint=" + EndingPoint.ToString();
+            State = state;
+            StartingPoint = startingPoint;
+            EntryTime = entryTime;
+            GridX = gridX;
+            GridY = gridY;
+            Previous = previous;
         }
 
-        public int CellsLeftToResolve 
+        /// <summary>
+        /// Since an organism actually occupies multiple cells, this member variable tracks how many cells
+        /// it is occupying that we haven't 'resolved' yet (see notes in GridIndex for a description of "resolving".  
+        /// Once this goes to zero, we know that the movement this segment represents can occur, because all of
+        /// the cells are not occupied at this point in time
+        /// </summary>
+        public int CellsLeftToResolve
         {
-            get 
-            {
-                return cellsLeftToResolve;
-            }
+            get { return _cellsLeftToResolve; }
 
-            set 
+            set
             {
                 if (value == 0)
                 {
@@ -93,18 +70,15 @@ namespace Terrarium.Game
                     value = 0;
                 }
 
-                cellsLeftToResolve = value;
+                _cellsLeftToResolve = value;
             }
         }
 
         public Boolean IsResolved
         {
-            get 
-            {
-                return CellsLeftToResolve == 0;
-            }
+            get { return CellsLeftToResolve == 0; }
 
-            set 
+            set
             {
                 if (value)
                 {
@@ -115,6 +89,117 @@ namespace Terrarium.Game
                     throw new ApplicationException("Should never get unresolved");
                 }
             }
+        }
+
+        public Point StartingPoint
+        {
+            get { return _startingPoint; }
+
+            set { _startingPoint = value; }
+        }
+
+        public Point EndingPoint
+        {
+            get { return _endingPoint; }
+
+            set { _endingPoint = value; }
+        }
+
+        public int GridX
+        {
+            get { return _gridX; }
+
+            set { _gridX = value; }
+        }
+
+        public int GridY
+        {
+            get { return _gridY; }
+
+            set { _gridY = value; }
+        }
+
+        public int EntryTime
+        {
+            get { return _entryTime; }
+
+            set { _entryTime = value; }
+        }
+
+        public int ExitTime
+        {
+            get { return _exitTime; }
+
+            set { _exitTime = value; }
+        }
+
+        public OrganismState State
+        {
+            get { return _organismState; }
+
+            set { _organismState = value; }
+        }
+
+        public MovementSegment Previous
+        {
+            get { return _previousMovementSegment; }
+
+            set { _previousMovementSegment = value; }
+        }
+
+        public MovementSegment Next
+        {
+            get { return _nextMovementSegment; }
+
+            set { _nextMovementSegment = value; }
+        }
+
+        public OrganismState BlockedByState
+        {
+            get { return _blockedByState; }
+
+            set { _blockedByState = value; }
+        }
+
+        internal Boolean Active
+        {
+            get { return _active; }
+
+            set
+            {
+                // Can't make a clipped segment active
+                Debug.Assert((value && !IsClipped) | !value);
+                _active = value;
+            }
+        }
+
+        // True if this segment represents a stationary creature
+        internal Boolean IsStationarySegment
+        {
+            get { return StartingPoint == EndingPoint && EntryTime == 0 && ExitTime == 0; }
+        }
+
+        internal Boolean IsClipped
+        {
+            get
+            {
+                // Segments are guaranteed to be able to stay in the cell they started in
+                // so if EntryTime == 0 it can't be clipped
+                // When a single segment is clipped, all subsequent segments get clipped too
+                // so we only need to check one back to see if it is clipped
+                return EntryTime != 0 && Previous.Next == null;
+            }
+        }
+
+        internal Boolean IsStartingSegment
+        {
+            get { return EntryTime == 0; }
+        }
+
+        public override string ToString()
+        {
+            return GridX + ", " + GridY + "EntryTime=" + EntryTime + "ExitTime=" + ExitTime +
+                   "StartingPoint=" + StartingPoint + "EndingPoint=" + EndingPoint;
         }
 
         public void ClipSegment(OrganismState blocker)
@@ -132,183 +217,9 @@ namespace Terrarium.Game
 
                 // Once one cell clips it, it doesn't matter what the other cells get, they are clipped as well
                 segment.CellsLeftToResolve = 0;
-            
+
                 // Clip all subsequent segments
                 segment = segment.Next;
-            }
-        }
-   
-        public Point StartingPoint
-        {
-            get
-            {
-                return startingPoint;
-            }
-
-            set
-            {
-                startingPoint = value;
-            }
-        }
-
-        public Point EndingPoint 
-        {
-            get
-            {
-                return endingPoint;
-            }
-
-            set
-            {
-                endingPoint = value;
-            }
-        }
-
-        public int GridX
-        {
-            get
-            {
-                return gridX;
-            }
-
-            set
-            {
-                gridX = value;
-            }
-        }
-
-        public int GridY
-        {
-            get
-            {
-                return gridY;
-            }
-
-            set
-            {
-                gridY = value;
-            }
-        }
-
-        public int EntryTime 
-        {
-            get
-            {
-                return entryTime;
-            }
-
-            set
-            {
-                entryTime = value;
-            }
-        }
-
-        public int ExitTime
-        {
-            get
-            {
-                return exitTime;
-            }
-
-            set
-            {
-                exitTime = value;
-            }
-        }
-
-        public OrganismState State
-        {
-            get
-            {
-                return state;
-            }
-
-            set
-            {
-                state = value;
-            }
-        }
-
-        public MovementSegment Previous
-        {
-            get
-            {
-                return previous;
-            }
-
-            set
-            {
-                previous = value;
-            }
-        }
-
-        public MovementSegment Next 
-        {
-            get
-            {
-                return next;
-            }
-
-            set
-            {
-                next = value;
-            }
-        }
-
-        public OrganismState BlockedByState
-        {
-            get
-            {
-                return blockedByState;
-            }
-
-            set
-            {
-                blockedByState = value;
-            }
-        }
-
-        internal Boolean Active 
-        {
-            get 
-            {
-                return active;
-            }
-
-            set
-            {
-                // Can't make a clipped segment active
-                Debug.Assert((value && !IsClipped) | !value);
-                active = value;
-            }
-        }
-
-        // True if this segment represents a stationary creature
-        internal Boolean IsStationarySegment 
-        {
-            get
-            {
-                return StartingPoint == EndingPoint && EntryTime == 0 && ExitTime == 0;
-            }
-        }
-
-        internal Boolean IsClipped
-        {
-            get
-            {
-                // Segments are guaranteed to be able to stay in the cell they started in
-                // so if EntryTime == 0 it can't be clipped
-                // When a single segment is clipped, all subsequent segments get clipped too
-                // so we only need to check one back to see if it is clipped
-                return EntryTime != 0 && Previous.Next == null;
-            }
-        }
-
-        internal Boolean IsStartingSegment 
-        {
-            get 
-            {
-                return EntryTime == 0;
             }
         }
     }

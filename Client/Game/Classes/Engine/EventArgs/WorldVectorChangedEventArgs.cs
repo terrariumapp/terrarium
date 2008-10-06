@@ -4,23 +4,23 @@
 
 using System;
 
-namespace Terrarium.Game 
+namespace Terrarium.Game
 {
     /// <summary>
     ///  Used to notify clients that the world vector of the
     ///  engine has been changed.
     /// </summary>
     public sealed class WorldVectorChangedEventArgs : EventArgs
-    { 
-        /// <summary>
-        ///  The old world vector
-        /// </summary>
-        WorldVector oldVector;
-
+    {
         /// <summary>
         ///  The new world vector
         /// </summary>
-        WorldVector newVector;
+        private readonly WorldVector _newVector;
+
+        /// <summary>
+        ///  The old world vector
+        /// </summary>
+        private readonly WorldVector _oldVector;
 
         /// <summary>
         ///  Creates a new set of event arguments for when the world vector changes.
@@ -29,8 +29,8 @@ namespace Terrarium.Game
         /// <param name="newVector">The new world vector object.</param>
         public WorldVectorChangedEventArgs(WorldVector oldVector, WorldVector newVector)
         {
-            this.oldVector = oldVector;
-            this.newVector = newVector;
+            _oldVector = oldVector;
+            _newVector = newVector;
         }
 
         /// <summary>
@@ -38,10 +38,7 @@ namespace Terrarium.Game
         /// </summary>
         public WorldVector OldVector
         {
-            get 
-            {
-                return oldVector;
-            }
+            get { return _oldVector; }
         }
 
         /// <summary>
@@ -49,10 +46,7 @@ namespace Terrarium.Game
         /// </summary>
         public WorldVector NewVector
         {
-            get 
-            {
-                return newVector;
-            }
+            get { return _newVector; }
         }
     }
 }

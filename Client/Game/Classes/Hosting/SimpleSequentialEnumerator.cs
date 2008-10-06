@@ -5,19 +5,19 @@
 using System;
 using System.Collections;
 
-namespace Terrarium.Hosting 
+namespace Terrarium.Hosting
 {
-    [Serializable] 
-    class SimpleSequentialEnumerator : IEnumerator, ICloneable
+    [Serializable]
+    internal class SimpleSequentialEnumerator : IEnumerator, ICloneable
     {
-        private ArrayList _list;
-        private int index;
-        private Object currentElement;
+        private readonly ArrayList _list;
+        private Object _currentElement;
+        private int _index;
 
         internal SimpleSequentialEnumerator(ArrayList list)
         {
             _list = list;
-            index = -1;
+            _index = -1;
         }
 
         public Object Clone()
@@ -27,43 +27,42 @@ namespace Terrarium.Hosting
 
         public virtual bool MoveNext()
         {
-            if (index < (_list.Count-1))
+            if (_index < (_list.Count - 1))
             {
-                index++;
-                currentElement = _list[index];
+                _index++;
+                _currentElement = _list[_index];
                 return true;
             }
             else
             {
-                index = _list.Count;
+                _index = _list.Count;
             }
-        
-            return false;
 
+            return false;
         }
 
         public virtual object Current
         {
             get
             {
-                if (index == -1)
+                if (_index == -1)
                 {
                     throw new InvalidOperationException("Enumeration not started");
                 }
-            
-                if (index >= _list.Count)
+
+                if (_index >= _list.Count)
                 {
                     throw new InvalidOperationException("Enumeration ended");
                 }
 
-                return currentElement;
+                return _currentElement;
             }
         }
 
         public virtual void Reset()
         {
-            currentElement = null;
-            index = -1;
+            _currentElement = null;
+            _index = -1;
         }
     }
 }

@@ -4,32 +4,30 @@
 
 using System;
 using System.Collections;
-using System.Drawing;
 using OrganismBase;
-
 using Terrarium.Hosting;
 
 namespace Terrarium.Game
 {
     /// <summary>
-    ///  This class implements the IAnimalWorldBoundary which is used by a creature
-    ///  to get information about the surrounding area.  It is the interface between the animal
-    ///  and the world.  This class is passed from
-    ///  the game engine to the actual creature, but we don't want them to have
-    ///  access to all the members.  So, we implement an interface that is defined
-    ///  in the OrganismBase assembly, and implement the class in the TerrariumEngine
-    ///  assembly.  Since the TerrariumEngine assembly doesn't have the AllowPartiallyTrustedCallers
-    ///  attribute animals won't be able to call the class directly and will only
-    ///  be able to call the members of the interface.
+    /// This class implements the IAnimalWorldBoundary which is used by a creature
+    /// to get information about the surrounding area. It is the interface between 
+    /// the animal and the world. This class is passed from the game engine to the 
+    /// actual creature, but we don't want them to have access to all the members.
+    /// So, we implement an interface that is defined in the OrganismBase assembly, 
+    /// and implement the class in the TerrariumEngine assembly. Since the 
+    /// TerrariumEngine assembly doesn't have the AllowPartiallyTrustedCallers
+    /// attribute animals won't be able to call the class directly and will only 
+    /// be able to call the members of the interface.
     /// </summary>
-    public class AnimalWorldBoundary : OrganismWorldBoundary, IAnimalWorldBoundary 
+    public class AnimalWorldBoundary : OrganismWorldBoundary, IAnimalWorldBoundary
     {
         /// <summary>
         ///  Creates a new animal world boundary for a given animal
         /// </summary>
         /// <param name="animal">The actual class representing the creature.</param>
         /// <param name="ID">The unique ID of the creature.</param>
-        internal AnimalWorldBoundary(Animal animal, string ID) : base(animal, ID)
+        internal AnimalWorldBoundary(Organism animal, string ID) : base(animal, ID)
         {
         }
 
@@ -41,10 +39,7 @@ namespace Terrarium.Game
         /// </summary>
         public AnimalState CurrentAnimalState
         {
-            get 
-            {
-                return (AnimalState) AppMgr.CurrentScheduler.CurrentState.GetOrganismState(ID);
-            }
+            get { return (AnimalState) AppMgr.CurrentScheduler.CurrentState.GetOrganismState(ID); }
         }
 
         /// <summary>
@@ -67,15 +62,13 @@ namespace Terrarium.Game
         /// <returns>Returns an ArrayList of OrganismState objects. One for each plant or animal that was seen.</returns>
         public ArrayList Scan()
         {
-            ArrayList foundList;
-
             // grab the state now so that it doesn't change over the course of the function
             WorldState worldState = AppMgr.CurrentScheduler.CurrentState;
             OrganismState thisState = worldState.GetOrganismState(ID);
-            Point myPosition = CurrentAnimalState.Position;
 
             // Look around
-            foundList = worldState.FindOrganismsInView(CurrentAnimalState, ((AnimalSpecies)thisState.Species).EyesightRadius);
+            ArrayList foundList = worldState.FindOrganismsInView(CurrentAnimalState,
+                                                                 ((AnimalSpecies) thisState.Species).EyesightRadius);
 
             // Remove the organism that is scanning
             foundList.Remove(thisState);
@@ -84,12 +77,12 @@ namespace Terrarium.Game
             for (int index = 0; index < foundList.Count;)
             {
                 OrganismState state = (OrganismState) foundList[index];
-            
+
                 // Dead animals aren't hidden
                 if (state is AnimalState && state.IsAlive)
                 {
                     int invisible = Organism.OrganismRandom.Next(1, 100);
-                    if (invisible <= ((AnimalSpecies)state.Species).InvisibleOdds)
+                    if (invisible <= ((AnimalSpecies) state.Species).InvisibleOdds)
                     {
                         foundList.Remove(state);
                         Organism.WriteTrace("#Camouflage hid animal from organism");
@@ -111,13 +104,13 @@ namespace Terrarium.Game
         /// </summary>
         /// <param name="organismState">The organism state that needs to be updated</param>
         /// <returns>An updated state if the creature is still visible and alive, else null</returns>
-        public OrganismState LookFor(OrganismState organismState) 
+        public OrganismState LookFor(OrganismState organismState)
         {
             if (organismState == null)
             {
                 throw new ArgumentNullException("organismState", "The argument organismState cannot be null");
             }
- 
+
             OrganismState targetOrganism = LookForNoCamouflage(organismState);
 
             if (targetOrganism != null)
@@ -126,7 +119,7 @@ namespace Terrarium.Game
                 {
                     // See if the camouflage hides it
                     int invisible = Organism.OrganismRandom.Next(1, 100);
-                    if (invisible <= ((AnimalSpecies)targetOrganism.Species).InvisibleOdds)
+                    if (invisible <= ((AnimalSpecies) targetOrganism.Species).InvisibleOdds)
                     {
                         Organism.WriteTrace("#Camouflage hid animal from organism");
                         return null;
@@ -135,10 +128,7 @@ namespace Terrarium.Game
 
                 return targetOrganism;
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         /// <summary>

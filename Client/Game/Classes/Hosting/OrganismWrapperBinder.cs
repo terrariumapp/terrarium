@@ -13,12 +13,12 @@ namespace Terrarium.Hosting
     // Code Access Security perspective.
     internal class OrganismWrapperBinder : OrganismBaseBinder
     {
-        public override Type BindToType(string asm, string type) 
+        public override Type BindToType(string asm, string type)
         {
             if (!IsTerrarium(asm) && !IsMscorlib(asm))
             {
-                Trace.WriteLine("Unhandled Type - " + asm + "|" + type);
-                throw new ApplicationException("Invalid Type in OrganismWrapperBinder " + asm + "|" + type);
+                Trace.WriteLine(string.Format("Unhandled Type - {0}|{1}", asm, type));
+                throw new ApplicationException(string.Format("Invalid Type in OrganismWrapperBinder {0}|{1}", asm, type));
             }
 
             switch (type)
@@ -28,8 +28,8 @@ namespace Terrarium.Hosting
                     return null;
 
                 default:
-                    Trace.WriteLine("Unhandled Type - " + asm + "|" + type);
-                    throw new ApplicationException("Invalid Type in OrganismWrapperBinder " + asm + "|" + type);
+                    Trace.WriteLine(string.Format("Unhandled Type - {0}|{1}", asm, type));
+                    throw new ApplicationException(string.Format("Invalid Type in OrganismWrapperBinder {0}|{1}", asm, type));
             }
         }
     }

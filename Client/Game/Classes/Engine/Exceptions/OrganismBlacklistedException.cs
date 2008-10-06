@@ -3,7 +3,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using OrganismBase;
 
 namespace Terrarium.Game
 {
@@ -13,11 +12,5 @@ namespace Terrarium.Game
     [Serializable]
     public sealed class OrganismBlacklistedException : Exception
     {
-        /// <summary>
-        ///  Generates a default OrganismBlacklistedException
-        /// </summary>
-        public OrganismBlacklistedException()
-        {
-        }
     }
 }

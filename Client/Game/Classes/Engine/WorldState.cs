@@ -5,10 +5,9 @@
 using System;
 using System.Collections;
 using System.Diagnostics;
-
 using OrganismBase;
 
-namespace Terrarium.Game 
+namespace Terrarium.Game
 {
     /// <summary>
     ///  Contains the full state of the world at a given tick.  Contains
@@ -18,29 +17,32 @@ namespace Terrarium.Game
     /// </summary>
     /// <immutable/>
     [Serializable]
-    public sealed class WorldState 
-    { 
-        Guid stateGuid;
-        int tickNumber = 0;
-        bool isImmutable = false;
-        Hashtable organisms = new Hashtable();
-
+    public sealed class WorldState
+    {
         // This is used to speed up scanning for organisms.  It is a giant array that
         // contains an element for every cell in the game grid.  If the cell is not null,
         // it points to the animal that is occupying the cell.
-        OrganismState [,] CellOrganisms;
+        private readonly OrganismState[,] _cellOrganisms;
 
-        Teleporter teleporter;
-        bool indexBuilt = false;
-        int gridWidth, gridHeight;
-    
-        [NonSerialized]
-        ArrayList orgs;
+        private readonly int _gridHeight;
+        private readonly int _gridWidth;
 
         // This member is here just so we don't create the visibility matrix for every call
         // to FindOrganismsInView.
-        Byte [,] invisible = new Byte[(EngineSettings.MaximumEyesightRadius + EngineSettings.BaseEyesightRadius + EngineSettings.MaxGridRadius) * 2 + 1,
-            (EngineSettings.MaximumEyesightRadius + EngineSettings.BaseEyesightRadius + EngineSettings.MaxGridRadius) * 2 + 1];
+        private readonly Byte[,] _invisible =
+            new Byte[
+                (EngineSettings.MaximumEyesightRadius + EngineSettings.BaseEyesightRadius + EngineSettings.MaxGridRadius)*
+                2 + 1,
+                (EngineSettings.MaximumEyesightRadius + EngineSettings.BaseEyesightRadius + EngineSettings.MaxGridRadius)*
+                2 + 1];
+
+        private readonly Hashtable _organisms = new Hashtable();
+        private bool _indexBuilt;
+        private bool _isImmutable;
+        [NonSerialized] private ArrayList _orgs;
+        private Guid _stateGuid;
+        private Teleporter _teleporter;
+        private int _tickNumber;
 
         /// <summary>
         ///  Creates a new world state with the given number of grid cells.
@@ -49,37 +51,10 @@ namespace Terrarium.Game
         /// <param name="gridHeight">The height of the world state in grid cells.</param>
         public WorldState(int gridWidth, int gridHeight)
         {
-            this.gridWidth = gridWidth;
-            this.gridHeight = gridHeight;
+            _gridWidth = gridWidth;
+            _gridHeight = gridHeight;
 
-            CellOrganisms = new OrganismState[gridWidth, gridHeight];
-        }
-
-        /// <summary>
-        ///  Copies the object, but not the isImmutable bit.  Makes a newly
-        ///  immutable copy.
-        /// </summary>
-        /// <returns>A new WorldState object that is newly mutable.</returns>
-        public object DuplicateMutable() 
-        {
-            WorldState newState = new WorldState(gridWidth, gridHeight);
-
-            foreach (OrganismState state in Organisms) 
-            {
-                OrganismState newOrganismState = state.CloneMutable();
-                Debug.Assert(newOrganismState != null, "Organism State is null in WorldState.DuplicateMutable()");
-                Debug.Assert(newOrganismState.ID != null, "Organism State ID is null in WorldState.DuplicateMutable()");
-                newState.organisms.Add(newOrganismState.ID, newOrganismState);
-            }
-
-            newState.tickNumber = tickNumber;
-            newState.stateGuid = stateGuid;
-            if (teleporter != null)
-            {
-                newState.teleporter = teleporter.Clone();
-            }
-
-            return newState;
+            _cellOrganisms = new OrganismState[gridWidth,gridHeight];
         }
 
         /// <summary>
@@ -87,10 +62,129 @@ namespace Terrarium.Game
         /// </summary>
         public bool IndexBuilt
         {
+            get { return _indexBuilt; }
+        }
+
+        /// <summary>
+        ///  Returns the collection of organisms.
+        /// </summary>
+        public ICollection Organisms
+        {
+            get { return _organisms.Values; }
+        }
+
+        /// <summary>
+        ///  Returns the collection or organisms ZOrdered using
+        ///  their Y value.
+        /// </summary>
+        public ICollection ZOrderedOrganisms
+        {
             get
             {
-                return indexBuilt;
+                if (_orgs == null)
+                {
+                    _orgs = new ArrayList(_organisms.Values);
+                    _orgs.Sort();
+                }
+                return _orgs;
             }
+        }
+
+        /// <summary>
+        ///  Returns the GUID for the world state.
+        /// </summary>
+        public Guid StateGuid
+        {
+            get { return _stateGuid; }
+
+            set
+            {
+                if (IsImmutable)
+                {
+                    throw new ApplicationException("WorldState is immutable.");
+                }
+
+                _stateGuid = value;
+            }
+        }
+
+        /// <summary>
+        ///  Returns the tick number of the current world state.
+        /// </summary>
+        public int TickNumber
+        {
+            get { return _tickNumber; }
+
+            set
+            {
+                if (IsImmutable)
+                {
+                    throw new ApplicationException("WorldState is immutable.");
+                }
+
+                _tickNumber = value;
+            }
+        }
+
+        /// <summary>
+        ///  Provides access to the teleporters.
+        /// </summary>
+        public Teleporter Teleporter
+        {
+            get { return _teleporter; }
+
+            set
+            {
+                if (IsImmutable)
+                {
+                    throw new ApplicationException("WorldState is immutable.");
+                }
+
+                _teleporter = value;
+            }
+        }
+
+        /// <summary>
+        ///  Provides the collection of organism IDs
+        /// </summary>
+        public ICollection OrganismIDs
+        {
+            get { return _organisms.Keys; }
+        }
+
+        /// <summary>
+        ///  Determines if the current state is immutable.
+        /// </summary>
+        public Boolean IsImmutable
+        {
+            get { return _isImmutable; }
+        }
+
+        /// <summary>
+        ///  Copies the object, but not the isImmutable bit.  Makes a newly
+        ///  immutable copy.
+        /// </summary>
+        /// <returns>A new WorldState object that is newly mutable.</returns>
+        public object DuplicateMutable()
+        {
+            WorldState newState = new WorldState(_gridWidth, _gridHeight);
+
+            foreach (OrganismState state in Organisms)
+            {
+                OrganismState newOrganismState = state.CloneMutable();
+                Debug.Assert(newOrganismState != null, "Organism State is null in WorldState.DuplicateMutable()");
+                Debug.Assert(newOrganismState.ID != null, "Organism State ID is null in WorldState.DuplicateMutable()");
+                newState._organisms.Add(newOrganismState.ID, newOrganismState);
+            }
+
+            newState._tickNumber = _tickNumber;
+            newState._stateGuid = _stateGuid;
+            if (_teleporter != null)
+            {
+                newState._teleporter = _teleporter.Clone();
+            }
+
+            return newState;
         }
 
         /// <summary>
@@ -98,20 +192,20 @@ namespace Terrarium.Game
         /// </summary>
         public void ClearIndex()
         {
-            if (isImmutable)
+            if (_isImmutable)
             {
                 throw new ApplicationException("WorldState must be mutable to re-add organisms.");
             }
 
-            for (int x = 0; x < gridWidth; x++)
+            for (int x = 0; x < _gridWidth; x++)
             {
-                for (int y = 0; y < gridHeight; y++)
+                for (int y = 0; y < _gridHeight; y++)
                 {
-                    CellOrganisms[x,y] = null;
+                    _cellOrganisms[x, y] = null;
                 }
             }
 
-            indexBuilt = false;
+            _indexBuilt = false;
         }
 
         /// <summary>
@@ -119,27 +213,27 @@ namespace Terrarium.Game
         /// </summary>
         public void BuildIndex()
         {
-            BuildIndexInternal(false);
+            buildIndexInternal(false);
         }
 
         /// <summary>
         ///  Builds the cell index.
         /// </summary>
         /// <param name="isDeserializing">Determines if the engine is in the state of deserializing.</param>
-        void BuildIndexInternal(bool isDeserializing)
+        private void buildIndexInternal(bool isDeserializing)
         {
-            if (!isDeserializing && isImmutable)
+            if (!isDeserializing && _isImmutable)
             {
                 throw new ApplicationException("WorldState must be mutable to rebuild index.");
             }
 
-            if (Organisms.Count > 0 )
+            if (Organisms.Count > 0)
             {
-                foreach (OrganismState state in Organisms) 
+                foreach (OrganismState state in Organisms)
                 {
-                    Debug.Assert(state.GridX >= 0 && state.GridX < gridWidth && 
-                        state.GridY >= 0 && state.GridY < gridHeight);
-                    Debug.Assert(CellOrganisms[state.GridX, state.GridY] == null);
+                    Debug.Assert(state.GridX >= 0 && state.GridX < _gridWidth &&
+                                 state.GridY >= 0 && state.GridY < _gridHeight);
+                    Debug.Assert(_cellOrganisms[state.GridX, state.GridY] == null);
 
                     FillCells(state, state.GridX, state.GridY, state.CellRadius, false);
 
@@ -151,7 +245,7 @@ namespace Terrarium.Game
                 }
             }
 
-            indexBuilt = true;
+            _indexBuilt = true;
         }
 
         /// <summary>
@@ -174,22 +268,21 @@ namespace Terrarium.Game
                     {
                         // Make sure we are only clearing ourselves, the value may be null because clearindex
                         // may have been called
-                        if (!(CellOrganisms[x,y] == null || CellOrganisms[x,y].ID == state.ID))
+                        if (!(_cellOrganisms[x, y] == null || _cellOrganisms[x, y].ID == state.ID))
                         {
-                            Debug.Assert(CellOrganisms[x,y] == null || CellOrganisms[x,y].ID == state.ID);
+                            Debug.Assert(_cellOrganisms[x, y] == null || _cellOrganisms[x, y].ID == state.ID);
                         }
-                        CellOrganisms[x,y] = null;
+                        _cellOrganisms[x, y] = null;
                     }
                     else
                     {
                         // Make sure there was no one else here
-                        if (!(CellOrganisms[x,y] == null))
+                        if (!(_cellOrganisms[x, y] == null))
                         {
-                            Debug.Assert(CellOrganisms[x,y] == null);
+                            Debug.Assert(_cellOrganisms[x, y] == null);
                         }
-                        CellOrganisms[x,y] = state;
+                        _cellOrganisms[x, y] = state;
                     }
-
                 }
             }
         }
@@ -198,27 +291,27 @@ namespace Terrarium.Game
         ///  Should only be called by the GameEngine.
         /// </summary>
         /// <param name="state">The state of the organism to add.</param>
-        public void AddOrganism(OrganismState state) 
+        public void AddOrganism(OrganismState state)
         {
             if (IsImmutable)
             {
                 throw new ApplicationException("WorldState must be mutable to add organisms.");
             }
-        
-            Debug.Assert(state.GridX >= 0 && state.GridX < gridWidth && state.GridY >= 0 && state.GridY < gridHeight);
-            Debug.Assert(CellOrganisms[state.GridX, state.GridY] == null);
 
-            if (organisms.ContainsKey(state.ID))
+            Debug.Assert(state.GridX >= 0 && state.GridX < _gridWidth && state.GridY >= 0 && state.GridY < _gridHeight);
+            Debug.Assert(_cellOrganisms[state.GridX, state.GridY] == null);
+
+            if (_organisms.ContainsKey(state.ID))
             {
                 throw new OrganismAlreadyExistsException();
             }
 
             FillCells(state, state.GridX, state.GridY, state.CellRadius, false);
-        
+
             // Lock the size and position since we've added it to the index and these shouldn't be changed now
             state.LockSizeAndPosition();
 
-            organisms.Add(state.ID, state);
+            _organisms.Add(state.ID, state);
         }
 
         /// <summary>
@@ -226,7 +319,7 @@ namespace Terrarium.Game
         ///  of the organism changes.
         /// </summary>
         /// <param name="state">The state of the organism to refresh.</param>
-        public void RefreshOrganism(OrganismState state) 
+        public void RefreshOrganism(OrganismState state)
         {
             if (IsImmutable)
             {
@@ -242,7 +335,7 @@ namespace Terrarium.Game
                 FillCells(oldState, oldState.GridX, oldState.GridY, oldState.CellRadius, true);
             }
 
-            organisms.Remove(organismID);
+            _organisms.Remove(organismID);
             AddOrganism(state);
         }
 
@@ -250,7 +343,7 @@ namespace Terrarium.Game
         ///  Should only be called by the game engine.  Removes an organism from the world state.
         /// </summary>
         /// <param name="organismID">The ID of the organism that needs to be removed.</param>
-        public void RemoveOrganism(string organismID) 
+        public void RemoveOrganism(string organismID)
         {
             if (IsImmutable)
             {
@@ -264,7 +357,7 @@ namespace Terrarium.Game
                 FillCells(state, state.GridX, state.GridY, state.CellRadius, true);
             }
 
-            organisms.Remove(organismID);
+            _organisms.Remove(organismID);
         }
 
         /// <summary>
@@ -274,114 +367,12 @@ namespace Terrarium.Game
         /// <returns>The state of the organism with the given ID.</returns>
         public OrganismState GetOrganismState(string organismID)
         {
-            if (organisms != null)
+            if (_organisms != null)
             {
-                return (OrganismState) organisms[organismID];
+                return (OrganismState) _organisms[organismID];
             }
 
             return null;
-        }
-
-        /// <summary>
-        ///  Returns the collection of organisms.
-        /// </summary>
-        public ICollection Organisms 
-        {
-            get 
-            {
-                return (ICollection) organisms.Values;
-            }
-        }
-
-        /// <summary>
-        ///  Returns the collection or organisms ZOrdered using
-        ///  their Y value.
-        /// </summary>
-        public ICollection ZOrderedOrganisms
-        {
-            get
-            {
-                if (orgs == null)
-                {
-                    orgs = new ArrayList(organisms.Values);
-                    orgs.Sort();
-                }
-                return (ICollection) orgs;
-            }
-        }
-
-        /// <summary>
-        ///  Returns the GUID for the world state.
-        /// </summary>
-        public Guid StateGuid 
-        {
-            get 
-            {
-                return stateGuid; 
-            }
-        
-            set
-            {
-                if (IsImmutable)
-                {
-                    throw new ApplicationException("WorldState is immutable.");
-                }
-
-                stateGuid = value;
-            }
-        }
-
-        /// <summary>
-        ///  Returns the tick number of the current world state.
-        /// </summary>
-        public int TickNumber
-        {
-            get 
-            {
-                return tickNumber;
-            }
-        
-            set
-            {
-                if (IsImmutable)
-                {
-                    throw new ApplicationException("WorldState is immutable.");
-                }
-
-                tickNumber = value;
-            }
-        }
-
-        /// <summary>
-        ///  Provides access to the teleporters.
-        /// </summary>
-        public Teleporter Teleporter
-        {
-            get 
-            {
-                return teleporter;
-            }
-        
-            set
-            {
-                if (IsImmutable)
-                {
-                    throw new ApplicationException("WorldState is immutable.");
-                }
-
-                teleporter = value;
-            }
-        }
-
-        /// <summary>
-        ///  Provides the collection of organism IDs
-        /// </summary>
-        public ICollection OrganismIDs 
-        {
-            get 
-            {
-                return (ICollection) organisms.Keys; 
-            }
         }
 
         /// <summary>
@@ -395,7 +386,7 @@ namespace Terrarium.Game
                 state.MakeImmutable();
             }
 
-            isImmutable = true;
+            _isImmutable = true;
         }
 
         /// <summary>
@@ -406,7 +397,7 @@ namespace Terrarium.Game
         /// <param name="y1">Part of the location rectangle.</param>
         /// <param name="y2">Part of the location rectangle.</param>
         /// <returns>A list of organisms in the given rectangular area.</returns>
-        public ArrayList FindOrganisms(int x1, int x2, int y1, int y2) 
+        public ArrayList FindOrganisms(int x1, int x2, int y1, int y2)
         {
             int minX, maxX, minY, maxY;
             if (x1 < x2)
@@ -449,41 +440,30 @@ namespace Terrarium.Game
             }
 
             minX >>= EngineSettings.GridWidthPowerOfTwo;
-            if (minX > gridWidth - 1)
+            if (minX > _gridWidth - 1)
             {
-                minX = gridWidth - 1;
+                minX = _gridWidth - 1;
             }
 
             maxX >>= EngineSettings.GridWidthPowerOfTwo;
-            if (maxX > gridWidth - 1)
+            if (maxX > _gridWidth - 1)
             {
-                maxX = gridWidth - 1;
+                maxX = _gridWidth - 1;
             }
 
             minY >>= EngineSettings.GridHeightPowerOfTwo;
-            if (minY > gridHeight - 1)
+            if (minY > _gridHeight - 1)
             {
-                minY = gridHeight - 1;
+                minY = _gridHeight - 1;
             }
 
             maxY >>= EngineSettings.GridHeightPowerOfTwo;
-            if (maxY > gridHeight - 1)
+            if (maxY > _gridHeight - 1)
             {
-                maxY = gridHeight - 1;
+                maxY = _gridHeight - 1;
             }
 
             return FindOrganismsInCells(minX, maxX, minY, maxY);
-        }
-
-        /// <summary>
-        ///  Determines if the current state is immutable.
-        /// </summary>
-        public Boolean IsImmutable 
-        {
-            get 
-            {
-                return isImmutable; 
-            }
         }
 
         /// <summary>
@@ -501,12 +481,13 @@ namespace Terrarium.Game
         public int GetAvailableLight(PlantState plant)
         {
             int maxX = plant.GridX + plant.CellRadius + 25;
-            if (maxX > gridWidth - 1)
+            if (maxX > _gridWidth - 1)
             {
-                maxX = gridWidth - 1;
+                maxX = _gridWidth - 1;
             }
             ArrayList overlappingPlantsEast = FindOrganismsInCells(plant.GridX + plant.CellRadius,
-                maxX, plant.GridY - plant.CellRadius, plant.GridY + plant.CellRadius);
+                                                                   maxX, plant.GridY - plant.CellRadius,
+                                                                   plant.GridY + plant.CellRadius);
 
             int minX = plant.GridX - plant.CellRadius - 25;
             if (minX < 0)
@@ -514,35 +495,34 @@ namespace Terrarium.Game
                 minX = 0;
             }
             ArrayList overlappingPlantsWest = FindOrganismsInCells(minX, plant.GridX - plant.CellRadius,
-                plant.GridY - plant.CellRadius, plant.GridY + plant.CellRadius);
+                                                                   plant.GridY - plant.CellRadius,
+                                                                   plant.GridY + plant.CellRadius);
 
             double maxAngleEast = 0;
             foreach (OrganismState targetPlant in overlappingPlantsEast)
             {
-                if (targetPlant is PlantState)
+                if (!(targetPlant is PlantState)) continue;
+                double currentAngle = Math.Atan2(((PlantState) targetPlant).Height,
+                                                 targetPlant.Position.X - plant.Position.X);
+                if (currentAngle > maxAngleEast)
                 {
-                    double currentAngle = Math.Atan2(((PlantState)targetPlant).Height, targetPlant.Position.X - plant.Position.X);
-                    if (currentAngle > maxAngleEast)
-                    {
-                        maxAngleEast = currentAngle;
-                    }
+                    maxAngleEast = currentAngle;
                 }
             }
 
             double maxAngleWest = 0;
             foreach (OrganismState targetPlant in overlappingPlantsWest)
             {
-                if (targetPlant is PlantState)
+                if (!(targetPlant is PlantState)) continue;
+                double currentAngle = Math.Atan2(((PlantState) targetPlant).Height,
+                                                 plant.Position.X - targetPlant.Position.X);
+                if (currentAngle > maxAngleWest)
                 {
-                    double currentAngle = Math.Atan2(((PlantState) targetPlant).Height, plant.Position.X - targetPlant.Position.X);
-                    if (currentAngle > maxAngleWest)
-                    {
-                        maxAngleWest = currentAngle;
-                    }
+                    maxAngleWest = currentAngle;
                 }
             }
 
-            return (int) (((Math.PI - maxAngleEast + maxAngleWest) / Math.PI) * 100);
+            return (int) (((Math.PI - maxAngleEast + maxAngleWest)/Math.PI)*100);
         }
 
         /// <summary>
@@ -550,9 +530,9 @@ namespace Terrarium.Game
         /// </summary>
         /// <param name="state">The state of the organism to check.</param>
         /// <returns>True if the creature is safe, false otherwise.</returns>
-        public Boolean OnlyOverlapsSelf(OrganismState state) 
+        public Boolean OnlyOverlapsSelf(OrganismState state)
         {
-            Debug.Assert(this.IndexBuilt);
+            Debug.Assert(IndexBuilt);
 
             int minGridX = state.GridX - state.CellRadius;
             int maxGridX = state.GridX + state.CellRadius;
@@ -560,8 +540,8 @@ namespace Terrarium.Game
             int maxGridY = state.GridY + state.CellRadius;
 
             // If it would be out of bounds, return false.
-            if (minGridX < 0 || maxGridX > gridWidth - 1 ||
-                minGridY < 0 || maxGridY > gridHeight - 1)
+            if (minGridX < 0 || maxGridX > _gridWidth - 1 ||
+                minGridY < 0 || maxGridY > _gridHeight - 1)
             {
                 return false;
             }
@@ -570,12 +550,10 @@ namespace Terrarium.Game
             {
                 for (int y = minGridY; y <= maxGridY; y++)
                 {
-                    if (CellOrganisms[x,y] != null)
+                    if (_cellOrganisms[x, y] == null) continue;
+                    if (_cellOrganisms[x, y].ID != state.ID)
                     {
-                        if (CellOrganisms[x,y].ID != state.ID)
-                        {
-                            return false;
-                        }
+                        return false;
                     }
                 }
             }
@@ -591,15 +569,14 @@ namespace Terrarium.Game
         /// <param name="minGridY">Topmost grid cell</param>
         /// <param name="maxGridY">Bottommost grid cell</param>
         /// <returns>A list of organisms within the cell range.</returns>
-        public ArrayList FindOrganismsInCells(int minGridX, int maxGridX, int minGridY, int maxGridY) 
+        public ArrayList FindOrganismsInCells(int minGridX, int maxGridX, int minGridY, int maxGridY)
         {
-            Debug.Assert(this.IndexBuilt);
+            Debug.Assert(IndexBuilt);
 
             Debug.Assert(minGridX <= maxGridX && minGridY <= maxGridY);
-            Debug.Assert(minGridX >= 0 && maxGridX < gridWidth && minGridY >= 0 && maxGridY < gridHeight);
+            Debug.Assert(minGridX >= 0 && maxGridX < _gridWidth && minGridY >= 0 && maxGridY < _gridHeight);
 
             OrganismState lastFound = null;
-            OrganismState current = null;
 
             // Since organisms are represented at multiple places in the grid, make
             // sure we only get one instance
@@ -609,23 +586,20 @@ namespace Terrarium.Game
             {
                 for (int y = minGridY; y <= maxGridY; y++)
                 {
-                    current = CellOrganisms[x,y];
-                    if (current != null)
-                    {
-                        // If it's the same as the last one, skip the hashable lookup
-                        // since it's expensive and we'll often find the same organism over and over
-                        // in a row
-                        if (lastFound == null || lastFound != current)
-                        {
-                            if (foundHash[current] == null)
-                            {
-                                foundHash[current] = current;
-                                foundOrganisms.Add(current);
-                            }
+                    OrganismState current = _cellOrganisms[x, y];
+                    if (current == null) continue;
 
-                            lastFound = current;
-                        }
+                    // If it's the same as the last one, skip the hashable lookup
+                    // since it's expensive and we'll often find the same organism over and over
+                    // in a row
+                    if (lastFound != null && lastFound == current) continue;
+                    if (foundHash[current] == null)
+                    {
+                        foundHash[current] = current;
+                        foundOrganisms.Add(current);
                     }
+
+                    lastFound = current;
                 }
             }
 
@@ -638,12 +612,12 @@ namespace Terrarium.Game
         /// <param name="state">The state of the organism to check.</param>
         /// <param name="radius">The radius of vision.</param>
         /// <returns>A list of found organisms.</returns>
-        public ArrayList FindOrganismsInView(OrganismState state, int radius) 
+        public ArrayList FindOrganismsInView(OrganismState state, int radius)
         {
-            Debug.Assert(this.IndexBuilt);
+            Debug.Assert(IndexBuilt);
 
             // Make sure we have enough space in our visibility matrix
-            Debug.Assert((state.CellRadius + radius) * 2 + 1 <= invisible.GetLength(0));
+            Debug.Assert((state.CellRadius + radius)*2 + 1 <= _invisible.GetLength(0));
 
             ArrayList foundOrganisms = new ArrayList();
             Hashtable foundHash = new Hashtable();
@@ -663,7 +637,7 @@ namespace Terrarium.Game
             currentY = originY - currentRadius;
             for (int side = 0; side < 4; side++)
             {
-                switch (side) 
+                switch (side)
                 {
                     case 0:
                         xIncrement = 1;
@@ -683,11 +657,11 @@ namespace Terrarium.Game
                         break;
                 }
 
-                for (int count=0; count < currentRadius << 1; count++)
+                for (int count = 0; count < currentRadius << 1; count++)
                 {
-                    if (currentX >= 0 && currentY >= 0 && currentX < gridWidth && currentY < gridHeight)
+                    if (currentX >= 0 && currentY >= 0 && currentX < _gridWidth && currentY < _gridHeight)
                     {
-                        OrganismState currentOrganism = CellOrganisms[currentX, currentY];
+                        OrganismState currentOrganism = _cellOrganisms[currentX, currentY];
                         if (currentOrganism != null)
                         {
                             if (foundHash[currentOrganism] == null)
@@ -697,7 +671,7 @@ namespace Terrarium.Game
                             }
                         }
 
-                        invisible[currentX + middleX, currentY + middleY] = 0;
+                        _invisible[currentX + middleX, currentY + middleY] = 0;
                     }
 
                     currentX += xIncrement;
@@ -739,9 +713,9 @@ namespace Terrarium.Game
                             break;
                     }
 
-                    for (int count=0; count < currentRadius << 1; count++)
+                    for (int count = 0; count < currentRadius << 1; count++)
                     {
-                        if (currentX >= 0 && currentY >= 0 && currentX < gridWidth && currentY < gridHeight)
+                        if (currentX >= 0 && currentY >= 0 && currentX < _gridWidth && currentY < _gridHeight)
                         {
                             i = currentX - originX;
                             j = currentY - originY;
@@ -782,7 +756,6 @@ namespace Terrarium.Game
                                 absI = i;
                             }
 
-
                             if (j < 0)
                             {
                                 absJ = -j;
@@ -799,7 +772,7 @@ namespace Terrarium.Game
                                 p1X = currentX;
                                 p1Y = signJ + currentY;
                             }
-                            else 
+                            else
                             {
                                 p1X = signI + currentX;
                                 p1Y = signJ + currentY;
@@ -819,20 +792,20 @@ namespace Terrarium.Game
                             }
 
                             // if p1 or p2 was invisible or they were something that blocks visibility
-                            if (invisible[p1X + middleX, p1Y + middleY] == 1 ||
-                                invisible[p2X + middleX, p2Y + middleY] == 1 )
+                            if (_invisible[p1X + middleX, p1Y + middleY] == 1 ||
+                                _invisible[p2X + middleX, p2Y + middleY] == 1)
                             {
-                                invisible[currentX + middleX, currentY + middleY] = 1;
+                                _invisible[currentX + middleX, currentY + middleY] = 1;
                             }
                             else
                             {
-                                OrganismState currentOrganism = CellOrganisms[currentX, currentY];
+                                OrganismState currentOrganism = _cellOrganisms[currentX, currentY];
                                 if (currentOrganism != null)
                                 {
                                     // if there is an organism here, mark this spot as invisible
                                     // (even though it really isn't)
                                     // so the outer cells will be invisible too
-                                    invisible[currentX + middleX, currentY + middleY] = 1;
+                                    _invisible[currentX + middleX, currentY + middleY] = 1;
 
                                     if (foundHash[currentOrganism] == null)
                                     {
@@ -842,7 +815,7 @@ namespace Terrarium.Game
                                 }
                                 else
                                 {
-                                    invisible[currentX + middleX, currentY + middleY] = 0;
+                                    _invisible[currentX + middleX, currentY + middleY] = 0;
                                 }
                             }
                         }
@@ -855,7 +828,7 @@ namespace Terrarium.Game
 
             return foundOrganisms;
         }
- 
+
         /// <summary>
         ///  Used to determine if a grid cell is occupied.
         /// </summary>
@@ -864,9 +837,9 @@ namespace Terrarium.Game
         /// <returns>True if the cell is occupied, false otherwise.</returns>
         public Boolean IsGridCellOccupied(int cellX, int cellY)
         {
-            Debug.Assert(this.IndexBuilt);
-            Debug.Assert(cellX < gridWidth && cellY < gridHeight && cellX >= 0 && cellY >= 0);
-            return CellOrganisms[cellX, cellY] != null;
+            Debug.Assert(IndexBuilt);
+            Debug.Assert(cellX < _gridWidth && cellY < _gridHeight && cellX >= 0 && cellY >= 0);
+            return _cellOrganisms[cellX, cellY] != null;
         }
     }
 }

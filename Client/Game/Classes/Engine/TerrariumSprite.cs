@@ -2,72 +2,34 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                             
 //------------------------------------------------------------------------------
 
-using System;
 using OrganismBase;
 
-namespace Terrarium.Renderer 
+namespace Terrarium.Renderer
 {
     /// <summary>
     ///  An object used by the Graphics Engine to render a creature.
     /// </summary>
     public class TerrariumSprite
     {
-        // Animation information
-        private float curFrame = 0;
-        private float curFrameDelta = 0;
-        private string spriteKey;
-        private string skinFamily;
-
-        // Movement information
-        private float xPos = 0;
-        private float yPos = 0;
-        private float xDelta = 0;
-        private float yDelta = 0;
-
-        // Selection information
-        private bool selected = false;
-
-        // Reset information
-        private DisplayAction prevAction;
-        private bool isPlant;
-
-        /// <summary>
-        ///  Creates a new TerrariumSprite object.
-        /// </summary>
-        public TerrariumSprite()
-        {
-        }
+        private float _curFrame;
+        private float _curFrameDelta;
+        private bool _isPlant;
+        private DisplayAction _prevAction;
+        private bool _selected;
+        private string _skinFamily;
+        private string _spriteKey;
+        private float _xDelta;
+        private float _xPos;
+        private float _yDelta;
+        private float _yPos;
 
         /// <summary>
         ///  Controls if the rendered object is a plant or animal.
         /// </summary>
         public bool IsPlant
         {
-            get
-            {
-                return isPlant;
-            }
-            set
-            {
-                isPlant = value;
-            }
-        }
-    
-        /// <summary>
-        ///  Controls movement and frame advancement for the sprite.
-        /// </summary>
-        public void AdvanceFrame()
-        {
-            if (curFrame == 0)
-            {
-                // First run so we are in the right spot
-            }
-            else
-            {
-                xPos += xDelta;
-                yPos += yDelta;
-            }
-            curFrame = (curFrame + curFrameDelta) % 10;
+            get { return _isPlant; }
+            set { _isPlant = value; }
         }
 
         /// <summary>
@@ -76,10 +38,7 @@ namespace Terrarium.Renderer
         /// </summary>
         public int FrameHeight
         {
-            get
-            {
-                return 48;
-            }
+            get { return 48; }
         }
 
         /// <summary>
@@ -88,10 +47,7 @@ namespace Terrarium.Renderer
         /// </summary>
         public int FrameWidth
         {
-            get
-            {
-                return 48;
-            }
+            get { return 48; }
         }
 
         /// <summary>
@@ -100,14 +56,8 @@ namespace Terrarium.Renderer
         /// </summary>
         public string SkinFamily
         {
-            get
-            {
-                return skinFamily;
-            }
-            set
-            {
-                skinFamily = value;
-            }
+            get { return _skinFamily; }
+            set { _skinFamily = value; }
         }
 
         /// <summary>
@@ -116,14 +66,8 @@ namespace Terrarium.Renderer
         /// </summary>
         public float CurFrame
         {
-            get
-            {
-                return curFrame;
-            }
-            set
-            {
-                curFrame = value;
-            }
+            get { return _curFrame; }
+            set { _curFrame = value; }
         }
 
         /// <summary>
@@ -133,14 +77,8 @@ namespace Terrarium.Renderer
         /// </summary>
         public float CurFrameDelta
         {
-            get
-            {
-                return curFrameDelta;
-            }
-            set
-            {
-                curFrameDelta = value;
-            }
+            get { return _curFrameDelta; }
+            set { _curFrameDelta = value; }
         }
 
         /// <summary>
@@ -148,14 +86,8 @@ namespace Terrarium.Renderer
         /// </summary>
         public float XPosition
         {
-            get
-            {
-                return xPos;
-            }
-            set
-            {
-                xPos = value;
-            }
+            get { return _xPos; }
+            set { _xPos = value; }
         }
 
         /// <summary>
@@ -163,14 +95,8 @@ namespace Terrarium.Renderer
         /// </summary>
         public float YPosition
         {
-            get
-            {
-                return yPos;
-            }
-            set
-            {
-                yPos = value;
-            }
+            get { return _yPos; }
+            set { _yPos = value; }
         }
 
         /// <summary>
@@ -179,14 +105,8 @@ namespace Terrarium.Renderer
         /// </summary>
         public float XDelta
         {
-            get
-            {
-                return xDelta;
-            }
-            set
-            {
-                xDelta = value;
-            }
+            get { return _xDelta; }
+            set { _xDelta = value; }
         }
 
         /// <summary>
@@ -195,14 +115,8 @@ namespace Terrarium.Renderer
         /// </summary>
         public float YDelta
         {
-            get
-            {
-                return yDelta;
-            }
-            set
-            {
-                yDelta = value;
-            }
+            get { return _yDelta; }
+            set { _yDelta = value; }
         }
 
         /// <summary>
@@ -210,29 +124,17 @@ namespace Terrarium.Renderer
         /// </summary>
         public bool Selected
         {
-            get
-            {
-                return selected;
-            }
-            set
-            {
-                selected = value;
-            }
+            get { return _selected; }
+            set { _selected = value; }
         }
-    
+
         /// <summary>
         ///  The current frame type to display.
         /// </summary>
         public DisplayAction PreviousAction
         {
-            get
-            {
-                return prevAction;
-            }
-            set
-            {
-                prevAction = value;
-            }
+            get { return _prevAction; }
+            set { _prevAction = value; }
         }
 
         /// <summary>
@@ -240,14 +142,25 @@ namespace Terrarium.Renderer
         /// </summary>
         public string SpriteKey
         {
-            get
+            get { return _spriteKey; }
+            set { _spriteKey = value; }
+        }
+
+        /// <summary>
+        ///  Controls movement and frame advancement for the sprite.
+        /// </summary>
+        public void AdvanceFrame()
+        {
+            if (_curFrame == 0)
             {
-                return spriteKey;
+                // First run so we are in the right spot
             }
-            set
+            else
             {
-                spriteKey = value;
+                _xPos += _xDelta;
+                _yPos += _yDelta;
             }
+            _curFrame = (_curFrame + _curFrameDelta)%10;
         }
     }
 }

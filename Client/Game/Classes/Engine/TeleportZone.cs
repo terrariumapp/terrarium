@@ -4,10 +4,9 @@
 
 using System;
 using System.Drawing;
-
 using OrganismBase;
 
-namespace Terrarium.Game 
+namespace Terrarium.Game
 {
     /// <summary>
     ///  Creatures a new TeleportZone object.
@@ -15,20 +14,9 @@ namespace Terrarium.Game
     [Serializable]
     public class TeleportZone
     {
-        /// <summary>
-        ///  The location and size of the rectangle.
-        /// </summary>
-        Rectangle rectangle;
-
-        /// <summary>
-        ///  The vector of movement for this zone.
-        /// </summary>
-        MovementVector vector;
-
-        /// <summary>
-        ///  The ID of this teleporter.
-        /// </summary>
-        int teleportID;
+        private readonly int _teleportID;
+        private Rectangle _rectangle;
+        private MovementVector _vector;
 
         /// <summary>
         ///  Creates a new teleportzone with all fields initialized.
@@ -38,19 +26,9 @@ namespace Terrarium.Game
         /// <param name="ID">The ID for this zone.</param>
         public TeleportZone(Rectangle rectangle, MovementVector vector, int ID)
         {
-            this.rectangle = rectangle;
-            this.vector = vector;
-            this.teleportID = ID;
-        }
-    
-        /// <summary>
-        ///  Clones a TeleportZone object.
-        /// </summary>
-        /// <returns>A copy of the TeleportZone</returns>
-        public TeleportZone Clone() 
-        {
-            TeleportZone zone = new TeleportZone(rectangle, vector, ID);
-            return zone;
+            _rectangle = rectangle;
+            _vector = vector;
+            _teleportID = ID;
         }
 
         /// <summary>
@@ -59,12 +37,35 @@ namespace Terrarium.Game
         /// <returns>A new rectangle containing the size and location of the zone.</returns>
         public Rectangle Rectangle
         {
-            get
-            {
-                return new Rectangle(rectangle.Left, rectangle.Top, rectangle.Width, rectangle.Height);
-            }
+            get { return new Rectangle(_rectangle.Left, _rectangle.Top, _rectangle.Width, _rectangle.Height); }
         }
-    
+
+        /// <summary>
+        ///  The ID for this teleporter zone.
+        /// </summary>
+        public int ID
+        {
+            get { return _teleportID; }
+        }
+
+        /// <summary>
+        ///  The current movement vector for this zone.
+        /// </summary>
+        public MovementVector Vector
+        {
+            get { return _vector; }
+        }
+
+        /// <summary>
+        ///  Clones a TeleportZone object.
+        /// </summary>
+        /// <returns>A copy of the TeleportZone</returns>
+        public TeleportZone Clone()
+        {
+            TeleportZone zone = new TeleportZone(_rectangle, _vector, ID);
+            return zone;
+        }
+
         /// <summary>
         ///  Sets the size and location of the teleport zone.
         /// </summary>
@@ -73,19 +74,8 @@ namespace Terrarium.Game
         public TeleportZone SetRectangle(Rectangle rectangle)
         {
             TeleportZone zone = Clone();
-            zone.rectangle = rectangle;
+            zone._rectangle = rectangle;
             return zone;
-        }
-
-        /// <summary>
-        ///  The ID for this teleporter zone.
-        /// </summary>
-        public int ID 
-        {
-            get 
-            {
-                return teleportID;
-            }
         }
 
         /// <summary>
@@ -95,11 +85,11 @@ namespace Terrarium.Game
         /// <returns>True if the state is in the zone, false otherwise.</returns>
         public Boolean Contains(OrganismState state)
         {
-            int difference = rectangle.Left - (state.Position.X - state.Radius);
-            if (difference < 0) 
+            int difference = _rectangle.Left - (state.Position.X - state.Radius);
+            if (difference < 0)
             {
                 // Negative means rectangle boundary < state boundary
-                if (-difference > rectangle.Width + 1)
+                if (-difference > _rectangle.Width + 1)
                 {
                     // X isn't overlapping or adjacent
                     return false;
@@ -108,18 +98,18 @@ namespace Terrarium.Game
             else
             {
                 // state boundary <=  rectangle boundary
-                if (difference > (state.Radius * 2) + 1)
+                if (difference > (state.Radius*2) + 1)
                 {
                     // X isn't overlapping or adjacent
                     return false;
                 }
             }
 
-            difference = rectangle.Top - (state.Position.Y - state.Radius);
+            difference = _rectangle.Top - (state.Position.Y - state.Radius);
             if (difference < 0)
             {
                 // Negative means rectangle boundary < state boundary
-                if (-difference > rectangle.Height + 1)
+                if (-difference > _rectangle.Height + 1)
                 {
                     // Y isn't overlapping or adjacent
                     return false;
@@ -128,7 +118,7 @@ namespace Terrarium.Game
             else
             {
                 // state boundary <=  rectangle boundary
-                if (difference > (state.Radius * 2) + 1)
+                if (difference > (state.Radius*2) + 1)
                 {
                     // Y isn't overlapping or adjacent
                     return false;
@@ -136,17 +126,6 @@ namespace Terrarium.Game
             }
 
             return true;
-        }
-
-        /// <summary>
-        ///  The current movement vector for this zone.
-        /// </summary>
-        public MovementVector Vector 
-        {
-            get
-            {
-                return vector;
-            }
         }
 
         /// <summary>
@@ -158,7 +137,7 @@ namespace Terrarium.Game
         public TeleportZone SetVector(MovementVector vector)
         {
             TeleportZone zone = Clone();
-            zone.vector = vector;
+            zone._vector = vector;
             return zone;
         }
     }
