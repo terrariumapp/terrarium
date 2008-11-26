@@ -21,12 +21,10 @@ namespace Terrarium.Game
         ///  Generates a default ShutdownFailureException
         /// </summary>
         public ShutdownFailureException()
-            :
-                base(
-                string.Format(
-                    "Terrarium Version Problem\n\nThere is a problem with your version of Terrarium.  Please see the 'Notes to Users of Old Versions' on {0} for more information on what to do to fix your version [{1}].",
-                    GameConfig.WebRoot,
-                    Assembly.GetExecutingAssembly().GetName().Version))
+            : base(string.Format(
+                       "Terrarium Version Problem\n\nThere is a problem with your version of Terrarium.  Please see the 'Notes to Users of Old Versions' on {0} for more information on what to do to fix your version [{1}].",
+                       GameConfig.WebRoot,
+                       Assembly.GetExecutingAssembly().GetName().Version))
         {
         }
     }

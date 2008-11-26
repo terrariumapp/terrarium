@@ -22,33 +22,9 @@ namespace Terrarium.Game
     public abstract class Species : ISpecies
     {
         /// <summary>
-        ///  The marking color of the creature.  This will be used in
-        ///  the minimap display to quickly locate species of a certain
-        ///  type.
-        /// </summary>
-        private readonly KnownColor _animalMarkingColor = KnownColor.Black;
-
-        /// <summary>
         ///  The full assembly name of the containing assembly for the typeName
         /// </summary>
         private readonly string _assemblyFullName;
-
-        /// <summary>
-        ///  A string representing the author of this creature as pulled out of
-        ///  the various assembly attributes.
-        /// </summary>
-        private readonly string _author;
-
-        /// <summary>
-        ///  A string representing the author's email for the creature as pulled
-        ///  out of the various assembly attributes.
-        /// </summary>
-        private readonly string _email;
-
-        /// <summary>
-        ///  The final mature radius for this creature.
-        /// </summary>
-        private readonly int _matureRadius;
 
         /// <summary>
         ///  The maximum amount of energey this species can attain.
@@ -56,19 +32,9 @@ namespace Terrarium.Game
         private readonly int _maximumEnergyPerUnitRadius;
 
         /// <summary>
-        ///  The friendly name of this species.
-        /// </summary>
-        private readonly string _name;
-
-        /// <summary>
         ///  The name of the CLR Type that represents this creature.
         /// </summary>
         private readonly string _typeName;
-
-        /// <summary>
-        ///  The skin used to display the creature in the graphics engine.
-        /// </summary>
-        protected string _animalSkin;
 
         /// <summary>
         ///  Cached Type object used to quickly compare species together.
@@ -85,11 +51,12 @@ namespace Terrarium.Game
         /// <param name="clrType">The CLR Type to initialize this species.</param>
         protected Species(Type clrType)
         {
+            MarkingColor = KnownColor.Black;
             _typeName = clrType.AssemblyQualifiedName;
             _assemblyFullName = clrType.Assembly.FullName;
 
             // Cache attributes because it is expensive to load them
-            MaximumEnergyPointsAttribute energyAttribute =
+            var energyAttribute =
                 (MaximumEnergyPointsAttribute)
                 Attribute.GetCustomAttribute(clrType, typeof (MaximumEnergyPointsAttribute));
             if (energyAttribute == null)
@@ -98,22 +65,22 @@ namespace Terrarium.Game
             }
             _maximumEnergyPerUnitRadius = energyAttribute.MaximumEnergyPerUnitRadius;
 
-            MatureSizeAttribute matureSizeAttribute =
+            var matureSizeAttribute =
                 (MatureSizeAttribute) Attribute.GetCustomAttribute(clrType, typeof (MatureSizeAttribute));
             if (matureSizeAttribute == null)
             {
                 throw new AttributeRequiredException("MatureSizeAttribute");
             }
-            _matureRadius = matureSizeAttribute.MatureRadius;
+            MatureRadius = matureSizeAttribute.MatureRadius;
 
-            MarkingColorAttribute markingColorAttribute =
+            var markingColorAttribute =
                 (MarkingColorAttribute) Attribute.GetCustomAttribute(clrType, typeof (MarkingColorAttribute));
             if (markingColorAttribute != null)
             {
-                _animalMarkingColor = markingColorAttribute.MarkingColor;
+                MarkingColor = markingColorAttribute.MarkingColor;
             }
 
-            AuthorInformationAttribute authInfo =
+            var authInfo =
                 (AuthorInformationAttribute)
                 Attribute.GetCustomAttribute(clrType.Assembly, typeof (AuthorInformationAttribute));
             if (authInfo == null || authInfo.AuthorName.Length == 0)
@@ -121,11 +88,11 @@ namespace Terrarium.Game
                 throw new AttributeRequiredException("AuthorInformationAttribute");
             }
 
-            _author = authInfo.AuthorName;
-            _email = authInfo.AuthorEmail;
+            AuthorName = authInfo.AuthorName;
+            AuthorEmail = authInfo.AuthorEmail;
 
             // The assembly name is the name of the organism
-            _name = PrivateAssemblyCache.GetAssemblyShortName(clrType.Assembly.FullName);
+            Name = PrivateAssemblyCache.GetAssemblyShortName(clrType.Assembly.FullName);
         }
 
         /// <summary>
@@ -141,7 +108,7 @@ namespace Terrarium.Game
                 {
                     return _speciesType;
                 }
-                
+
                 // Since typeName is assembly qualified, we will get a chance to load it from
                 // the PAC if the CLR doesn't find it
                 try
@@ -163,26 +130,17 @@ namespace Terrarium.Game
         /// <summary>
         /// Returns the author's name
         /// </summary>
-        public string AuthorName
-        {
-            get { return _author; }
-        }
+        public string AuthorName { get; private set; }
 
         /// <summary>
         /// Returns the author's email
         /// </summary>
-        public string AuthorEmail
-        {
-            get { return _email; }
-        }
+        public string AuthorEmail { get; private set; }
 
         /// <summary>
         /// The custom coloring for the organism
         /// </summary>
-        public KnownColor MarkingColor
-        {
-            get { return _animalMarkingColor; }
-        }
+        public KnownColor MarkingColor { get; private set; }
 
         /// <summary>
         /// The initial Radius of the organism.
@@ -199,10 +157,7 @@ namespace Terrarium.Game
         /// <summary>
         /// The name of the organism.
         /// </summary>
-        public string Name
-        {
-            get { return _name; }
-        }
+        public string Name { get; private set; }
 
         /// <summary>
         ///  Retrieves assembly information about the current organism.
@@ -216,21 +171,17 @@ namespace Terrarium.Game
             }
         }
 
+        #region ISpecies Members
+
         /// <summary>
         ///  The size of the organism when mature.
         /// </summary>
-        public int MatureRadius
-        {
-            get { return _matureRadius; }
-        }
+        public int MatureRadius { get; private set; }
 
         /// <summary>
         /// The custom skin name for the organism.
         /// </summary>
-        public string Skin
-        {
-            get { return _animalSkin; }
-        }
+        public string Skin { get; protected set; }
 
         /// <summary>
         /// How long the organism must wait between reproduction.
@@ -273,6 +224,8 @@ namespace Terrarium.Game
             return ((Species) species).Type == Type;
         }
 
+        #endregion
+
         /// <summary>
         ///  Gets attribute warnings for specific attributes when points are being wasted
         ///  or points are out of bounds.
@@ -280,11 +233,11 @@ namespace Terrarium.Game
         /// <returns>A message containing attribute warnings, or an empty string.</returns>
         public virtual string GetAttributeWarnings()
         {
-            StringBuilder warnings = new StringBuilder();
+            var warnings = new StringBuilder();
 
-            MaximumEnergyPointsAttribute energyAttribute =
+            var energyAttribute =
                 (MaximumEnergyPointsAttribute) Attribute.GetCustomAttribute(Type, typeof (MaximumEnergyPointsAttribute));
-            string newWarning = energyAttribute.GetWarnings();
+            var newWarning = energyAttribute.GetWarnings();
             if (newWarning.Length != 0)
             {
                 warnings.Append(newWarning);
@@ -311,22 +264,22 @@ namespace Terrarium.Game
         /// <returns>A new species object generated from the assembly.</returns>
         public static Species GetSpeciesFromAssembly(Assembly organismAssembly)
         {
-            bool hasOrganismClassAttribute = false;
+            var hasOrganismClassAttribute = false;
 
-            Attribute[] attributes = Attribute.GetCustomAttributes(organismAssembly);
+            var attributes = Attribute.GetCustomAttributes(organismAssembly);
             if (attributes.Length == 0)
             {
                 throw new AttributeRequiredException("OrganismClassAttribute");
             }
 
-            foreach (Attribute attribute in attributes)
+            foreach (var attribute in attributes)
             {
                 if (attribute.GetType().Name != "OrganismClassAttribute") continue;
                 hasOrganismClassAttribute = true;
                 break;
             }
 
-            OrganismClassAttribute classAttribute =
+            var classAttribute =
                 (OrganismClassAttribute) Attribute.GetCustomAttribute(organismAssembly, typeof (OrganismClassAttribute));
             if (classAttribute == null)
             {
@@ -337,20 +290,21 @@ namespace Terrarium.Game
                     throw new GameEngineException(
                         "Your organism is built against a different version of Terrarium than you are running.  Try rebuilding it.");
                 }
-                else
-                {
-                    throw new AttributeRequiredException("OrganismClassAttribute");
-                }
+                throw new AttributeRequiredException("OrganismClassAttribute");
             }
 
-            Type clrType = null;
+            Type clrType;
+
             try
             {
                 clrType = organismAssembly.GetType(classAttribute.ClassName, true);
             }
             catch (TypeLoadException)
             {
-                throw new GameEngineException(string.Format("Your organism {0} could not be found in the assembly.  Please make sure this class exists.", classAttribute.ClassName));
+                throw new GameEngineException(
+                    string.Format(
+                        "Your organism {0} could not be found in the assembly.  Please make sure this class exists.",
+                        classAttribute.ClassName));
             }
 
             if (typeof (Plant).IsAssignableFrom(clrType))
@@ -362,7 +316,9 @@ namespace Terrarium.Game
                 return new AnimalSpecies(clrType);
             }
 
-            throw new GameEngineException(string.Format("Class specified in OrganismClassAttribute ({0}) doesn't derive from Animal or Plant", classAttribute.ClassName));
+            throw new GameEngineException(
+                string.Format("Class specified in OrganismClassAttribute ({0}) doesn't derive from Animal or Plant",
+                              classAttribute.ClassName));
         }
     }
 }

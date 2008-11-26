@@ -18,10 +18,6 @@ namespace Terrarium.Hosting
     {
         private readonly Organism _org;
         private bool _active = true;
-        private Int64 _lastTime;
-        private Int64 _overage;
-        private Int64 _totalActivations;
-        private Int64 _totalTime;
 
         public OrganismWrapper(Organism org)
         {
@@ -37,7 +33,7 @@ namespace Terrarium.Hosting
         {
             try
             {
-                Type t = Type.GetType((string) info.GetValue("OrganismType", typeof (string)));
+                var t = Type.GetType((string) info.GetValue("OrganismType", typeof (string)));
                 _org = (Organism) Activator.CreateInstance(t);
             }
             catch (Exception e)
@@ -76,36 +72,16 @@ namespace Terrarium.Hosting
         /// <summary>
         /// ticks: 100 nanosec intervals
         /// </summary>
-        public Int64 Overage
-        {
-            get { return _overage; }
-
-            set { _overage = value; }
-        }
+        public Int64 Overage { get; set; }
 
         /// <summary>
         /// ticks: 100 nanosec intervals
         /// </summary>
-        public Int64 TotalTime
-        {
-            get { return _totalTime; }
+        public Int64 TotalTime { get; set; }
 
-            set { _totalTime = value; }
-        }
+        public Int64 LastTime { get; set; }
 
-        public Int64 LastTime
-        {
-            get { return _lastTime; }
-
-            set { _lastTime = value; }
-        }
-
-        public Int64 TotalActivations
-        {
-            get { return _totalActivations; }
-
-            set { _totalActivations = value; }
-        }
+        public Int64 TotalActivations { get; set; }
 
         public bool Active
         {
@@ -114,12 +90,14 @@ namespace Terrarium.Hosting
             set { _active = value; }
         }
 
+        #region ISerializable Members
+
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
             if (_org == null) return;
             info.AddValue("OrganismType", _org.GetType().AssemblyQualifiedName);
 
-            MemoryStream m = new MemoryStream();
+            var m = new MemoryStream();
             (_org).InternalOrganismSerialize(m);
             info.AddValue("OrganismInfo", m.ToArray());
 
@@ -182,5 +160,7 @@ namespace Terrarium.Hosting
                 info.AddValue("UserInfo", m.ToArray());
             }
         }
+
+        #endregion
     }
 }

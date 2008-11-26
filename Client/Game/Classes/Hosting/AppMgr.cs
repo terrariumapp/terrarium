@@ -7,7 +7,6 @@ using Terrarium.Game;
 
 namespace Terrarium.Hosting
 {
-
     /// <summary>
     /// AppMgr is a set of static routines used to set up the Game Scheduler
     /// that does time slices for creatures as well as the security environment they
@@ -15,18 +14,12 @@ namespace Terrarium.Hosting
     /// </summary>
     internal class AppMgr
     {
-        private static IGameScheduler _theLocalScheduler;
         private static IGameScheduler _theScheduler;
 
         /// <summary>
         /// only call this from the organism app domain
         /// </summary>
-        internal static IGameScheduler CurrentScheduler
-        {
-            get { return _theLocalScheduler; }
-
-            set { _theLocalScheduler = value; }
-        }
+        internal static IGameScheduler CurrentScheduler { get; set; }
 
         /// <summary>
         /// Creates the scheduler in the same appdomain as the rest of the game

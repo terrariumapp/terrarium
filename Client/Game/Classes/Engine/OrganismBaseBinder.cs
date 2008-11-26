@@ -35,13 +35,8 @@ namespace Terrarium.Game
         {
             try
             {
-                string[] parts1 = asm1.Split(',');
-                string[] parts2 = asm2.Split(',');
-                string[] ver1 = parts1[1].Split('=');
-                string[] ver2 = parts2[1].Split('=');
-                Version v1 = new Version(ver1[1]);
-                Version v2 = new Version(ver2[1]);
-
+                var parts1 = asm1.Split(',');
+                var parts2 = asm2.Split(',');
                 return (parts1[0] == parts2[0] && parts1[2] == parts2[2]) && parts1[3] == parts2[3];
             }
             catch

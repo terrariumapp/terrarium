@@ -17,13 +17,6 @@ namespace Terrarium.Game
     public sealed class AnimalSpecies : Species, IAnimalSpecies
     {
         private readonly int _eatingSpeedPerUnitRadius;
-        private readonly int _eyesightRadius;
-        private readonly int _invisibleOdds;
-        private readonly Boolean _isCarnivore;
-        private readonly int maximumAttackDamagePerUnitRadius;
-        private readonly int maximumDefendDamagePerUnitRadius;
-        private readonly int maximumSpeed;
-        private readonly AnimalSkinFamily skinFamily = AnimalSkinFamily.Spider;
 
         /// <summary>
         ///  Creates a new Animal species from a CLR Type object.  Initializes
@@ -32,27 +25,28 @@ namespace Terrarium.Game
         /// <param name="clrType">The type for the organism class.</param>
         public AnimalSpecies(Type clrType) : base(clrType)
         {
-            int totalPoints = 0;
+            SkinFamily = AnimalSkinFamily.Spider;
+            var totalPoints = 0;
             Debug.Assert(clrType != null, "Null type passed to AnimalSpecies");
             Debug.Assert(typeof (Animal).IsAssignableFrom(clrType));
 
-            AnimalSkinAttribute skinAttribute =
+            var skinAttribute =
                 (AnimalSkinAttribute) Attribute.GetCustomAttribute(clrType, typeof (AnimalSkinAttribute));
             if (skinAttribute != null)
             {
-                skinFamily = skinAttribute.SkinFamily;
-                _animalSkin = skinAttribute.Skin;
+                SkinFamily = skinAttribute.SkinFamily;
+                Skin = skinAttribute.Skin;
             }
 
-            CarnivoreAttribute carnivoreAttribute =
+            var carnivoreAttribute =
                 (CarnivoreAttribute) Attribute.GetCustomAttribute(clrType, typeof (CarnivoreAttribute));
             if (carnivoreAttribute == null)
             {
                 throw new AttributeRequiredException("CarnivoreAttribute");
             }
-            _isCarnivore = carnivoreAttribute.IsCarnivore;
+            IsCarnivore = carnivoreAttribute.IsCarnivore;
 
-            EatingSpeedPointsAttribute eatingSpeedAttribute =
+            var eatingSpeedAttribute =
                 (EatingSpeedPointsAttribute) Attribute.GetCustomAttribute(clrType, typeof (EatingSpeedPointsAttribute));
             if (eatingSpeedAttribute == null)
             {
@@ -61,7 +55,7 @@ namespace Terrarium.Game
             _eatingSpeedPerUnitRadius = eatingSpeedAttribute.EatingSpeedPerUnitRadius;
             totalPoints += eatingSpeedAttribute.Points;
 
-            AttackDamagePointsAttribute attackDamageAttribute =
+            var attackDamageAttribute =
                 (AttackDamagePointsAttribute)
                 Attribute.GetCustomAttribute(clrType, typeof (AttackDamagePointsAttribute));
             if (attackDamageAttribute == null)
@@ -70,18 +64,18 @@ namespace Terrarium.Game
             }
             if (IsCarnivore)
             {
-                maximumAttackDamagePerUnitRadius =
+                MaximumAttackDamagePerUnitRadius =
                     (int)
                     (attackDamageAttribute.MaximumAttackDamagePerUnitRadius*
                      EngineSettings.CarnivoreAttackDefendMultiplier);
             }
             else
             {
-                maximumAttackDamagePerUnitRadius = attackDamageAttribute.MaximumAttackDamagePerUnitRadius;
+                MaximumAttackDamagePerUnitRadius = attackDamageAttribute.MaximumAttackDamagePerUnitRadius;
             }
             totalPoints += attackDamageAttribute.Points;
 
-            DefendDamagePointsAttribute defendDamageAttribute =
+            var defendDamageAttribute =
                 (DefendDamagePointsAttribute)
                 Attribute.GetCustomAttribute(clrType, typeof (DefendDamagePointsAttribute));
             if (defendDamageAttribute == null)
@@ -90,18 +84,18 @@ namespace Terrarium.Game
             }
             if (IsCarnivore)
             {
-                maximumDefendDamagePerUnitRadius =
+                MaximumDefendDamagePerUnitRadius =
                     (int)
                     (defendDamageAttribute.MaximumDefendDamagePerUnitRadius*
                      EngineSettings.CarnivoreAttackDefendMultiplier);
             }
             else
             {
-                maximumDefendDamagePerUnitRadius = defendDamageAttribute.MaximumDefendDamagePerUnitRadius;
+                MaximumDefendDamagePerUnitRadius = defendDamageAttribute.MaximumDefendDamagePerUnitRadius;
             }
             totalPoints += defendDamageAttribute.Points;
 
-            MaximumEnergyPointsAttribute energyAttribute =
+            var energyAttribute =
                 (MaximumEnergyPointsAttribute)
                 Attribute.GetCustomAttribute(clrType, typeof (MaximumEnergyPointsAttribute));
             if (energyAttribute == null)
@@ -110,7 +104,7 @@ namespace Terrarium.Game
             }
             totalPoints += energyAttribute.Points;
 
-            MaximumSpeedPointsAttribute speedAttribute =
+            var speedAttribute =
                 (MaximumSpeedPointsAttribute)
                 Attribute.GetCustomAttribute(clrType, typeof (MaximumSpeedPointsAttribute));
             if (speedAttribute == null)
@@ -118,31 +112,33 @@ namespace Terrarium.Game
                 throw new AttributeRequiredException("MaximumSpeedPointsAttribute");
             }
             totalPoints += speedAttribute.Points;
-            maximumSpeed = speedAttribute.MaximumSpeed;
+            MaximumSpeed = speedAttribute.MaximumSpeed;
 
-            CamouflagePointsAttribute camouflageAttribute =
+            var camouflageAttribute =
                 (CamouflagePointsAttribute) Attribute.GetCustomAttribute(clrType, typeof (CamouflagePointsAttribute));
             if (camouflageAttribute == null)
             {
                 throw new AttributeRequiredException("CamouflagePointsAttribute");
             }
             totalPoints += camouflageAttribute.Points;
-            _invisibleOdds = camouflageAttribute.InvisibleOdds;
+            InvisibleOdds = camouflageAttribute.InvisibleOdds;
 
-            EyesightPointsAttribute eyesightAttribute =
+            var eyesightAttribute =
                 (EyesightPointsAttribute) Attribute.GetCustomAttribute(clrType, typeof (EyesightPointsAttribute));
             if (eyesightAttribute == null)
             {
                 throw new AttributeRequiredException("EyesightPointsAttribute");
             }
             totalPoints += eyesightAttribute.Points;
-            _eyesightRadius = eyesightAttribute.EyesightRadius;
+            EyesightRadius = eyesightAttribute.EyesightRadius;
 
             if (totalPoints > EngineSettings.MaxAvailableCharacteristicPoints)
             {
                 throw new TooManyPointsException();
             }
         }
+
+        #region IAnimalSpecies Members
 
         /// <summary>
         ///  The amount of time the creature must wait before they
@@ -173,10 +169,7 @@ namespace Terrarium.Game
         /// <returns>
         ///  True if the animal is a carnivore, otherwise false.
         /// </returns>
-        public Boolean IsCarnivore
-        {
-            get { return _isCarnivore; }
-        }
+        public bool IsCarnivore { get; private set; }
 
         /// <returns>
         ///  The speed that the animal can eat.  This is multiplied by the
@@ -190,50 +183,34 @@ namespace Terrarium.Game
         /// <returns>
         ///  The skin family for the organism.
         /// </returns>
-        public AnimalSkinFamily SkinFamily
-        {
-            get { return skinFamily; }
-        }
+        public AnimalSkinFamily SkinFamily { get; private set; }
 
         /// <returns>
         ///  The maximum damage the species can inflict per unit of its radius.
         /// </returns>
-        public int MaximumAttackDamagePerUnitRadius
-        {
-            get { return maximumAttackDamagePerUnitRadius; }
-        }
+        public int MaximumAttackDamagePerUnitRadius { get; private set; }
 
         /// <returns>
         ///  The maximum damage the species can defend against per unit of its radius.
         /// </returns>
-        public int MaximumDefendDamagePerUnitRadius
-        {
-            get { return maximumDefendDamagePerUnitRadius; }
-        }
+        public int MaximumDefendDamagePerUnitRadius { get; private set; }
 
         /// <returns>
         ///  The maximum speed the species can attain.
         /// </returns>
-        public int MaximumSpeed
-        {
-            get { return maximumSpeed; }
-        }
+        public int MaximumSpeed { get; private set; }
 
         /// <returns>
         /// The odds that the species is invisible to a call to Animal.Scan() by another species.
         /// </returns>
-        public int InvisibleOdds
-        {
-            get { return _invisibleOdds; }
-        }
+        public int InvisibleOdds { get; private set; }
 
         /// <returns>
         /// The distance animal can see.
         /// </returns>
-        public int EyesightRadius
-        {
-            get { return _eyesightRadius; }
-        }
+        public int EyesightRadius { get; private set; }
+
+        #endregion
 
         /// <summary>
         ///  Generates warnings for attributes that have wasted points.
@@ -241,19 +218,19 @@ namespace Terrarium.Game
         /// <returns>Message about wasted points, or empty if there aren't any messages.</returns>
         public override string GetAttributeWarnings()
         {
-            StringBuilder warnings = new StringBuilder();
+            var warnings = new StringBuilder();
             warnings.Append(base.GetAttributeWarnings());
 
-            EatingSpeedPointsAttribute eatingSpeedAttribute =
+            var eatingSpeedAttribute =
                 (EatingSpeedPointsAttribute) Attribute.GetCustomAttribute(Type, typeof (EatingSpeedPointsAttribute));
-            string newWarning = eatingSpeedAttribute.GetWarnings();
+            var newWarning = eatingSpeedAttribute.GetWarnings();
             if (newWarning.Length != 0)
             {
                 warnings.Append(newWarning);
                 warnings.Append(Environment.NewLine);
             }
 
-            AttackDamagePointsAttribute attackDamageAttribute =
+            var attackDamageAttribute =
                 (AttackDamagePointsAttribute) Attribute.GetCustomAttribute(Type, typeof (AttackDamagePointsAttribute));
             newWarning = attackDamageAttribute.GetWarnings();
             if (newWarning.Length != 0)
@@ -262,7 +239,7 @@ namespace Terrarium.Game
                 warnings.Append(Environment.NewLine);
             }
 
-            DefendDamagePointsAttribute defendDamageAttribute =
+            var defendDamageAttribute =
                 (DefendDamagePointsAttribute) Attribute.GetCustomAttribute(Type, typeof (DefendDamagePointsAttribute));
             newWarning = defendDamageAttribute.GetWarnings();
             if (newWarning.Length != 0)
@@ -271,7 +248,7 @@ namespace Terrarium.Game
                 warnings.Append(Environment.NewLine);
             }
 
-            MaximumEnergyPointsAttribute energyAttribute =
+            var energyAttribute =
                 (MaximumEnergyPointsAttribute) Attribute.GetCustomAttribute(Type, typeof (MaximumEnergyPointsAttribute));
             newWarning = energyAttribute.GetWarnings();
             if (newWarning.Length != 0)
@@ -280,7 +257,7 @@ namespace Terrarium.Game
                 warnings.Append(Environment.NewLine);
             }
 
-            MaximumSpeedPointsAttribute speedAttribute =
+            var speedAttribute =
                 (MaximumSpeedPointsAttribute) Attribute.GetCustomAttribute(Type, typeof (MaximumSpeedPointsAttribute));
             newWarning = speedAttribute.GetWarnings();
             if (newWarning.Length != 0)
@@ -289,7 +266,7 @@ namespace Terrarium.Game
                 warnings.Append(Environment.NewLine);
             }
 
-            CamouflagePointsAttribute camouflageAttribute =
+            var camouflageAttribute =
                 (CamouflagePointsAttribute) Attribute.GetCustomAttribute(Type, typeof (CamouflagePointsAttribute));
             newWarning = camouflageAttribute.GetWarnings();
             if (newWarning.Length != 0)
@@ -298,7 +275,7 @@ namespace Terrarium.Game
                 warnings.Append(Environment.NewLine);
             }
 
-            EyesightPointsAttribute eyesightAttribute =
+            var eyesightAttribute =
                 (EyesightPointsAttribute) Attribute.GetCustomAttribute(Type, typeof (EyesightPointsAttribute));
             newWarning = eyesightAttribute.GetWarnings();
             if (newWarning.Length != 0)
@@ -320,8 +297,7 @@ namespace Terrarium.Game
         /// <returns>A new state to represent the creature.</returns>
         public override OrganismState InitializeNewState(Point position, int generation)
         {
-            AnimalState newState = new AnimalState(Guid.NewGuid().ToString(), this, generation);
-            newState.Position = position;
+            var newState = new AnimalState(Guid.NewGuid().ToString(), this, generation) {Position = position};
             newState.IncreaseRadiusTo(InitialRadius);
 
             // Need to start out hungry so they can't reproduce immediately and just populate the world

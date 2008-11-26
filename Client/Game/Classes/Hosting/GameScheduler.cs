@@ -83,14 +83,13 @@ namespace Terrarium.Hosting
             _processHandle = GetCurrentProcess();
 
             // Create a thread other than the UI thread to run the animals on
-            _activationThread = new Thread(ActivateBug);
-            _activationThread.Priority = ThreadPriority.AboveNormal;
+            _activationThread = new Thread(ActivateBug) {Priority = ThreadPriority.AboveNormal};
             _activationThread.Start();
 
             // Wait for the ActivateBug routine to get far enough to 
             // retreive its threadhandle which is needed to get accurate
             // timings on how much time the animal actually used on its thread.
-            bool success = _handleRetrieved.WaitOne();
+            var success = _handleRetrieved.WaitOne();
             Debug.Assert(success);
         }
 
@@ -126,6 +125,8 @@ namespace Terrarium.Hosting
             }
         }
 
+        #region IGameScheduler Members
+
         public void Close()
         {
             if (_threadHandleValid)
@@ -144,7 +145,7 @@ namespace Terrarium.Hosting
         // to execute their logic.  This is what sets everything in this class in motion.
         public void Tick()
         {
-            int activated = 0;
+            var activated = 0;
 
             // See comment on ticksToSuspendBlacklisting for why this is useful.
             if (_ticksToSuspendBlacklisting > 0)
@@ -290,7 +291,7 @@ namespace Terrarium.Hosting
         {
             get
             {
-                ArrayList l = new ArrayList();
+                var l = new ArrayList();
                 foreach (OrganismWrapper w in _organisms)
                 {
                     l.Add(w.Organism);
@@ -303,7 +304,7 @@ namespace Terrarium.Hosting
         {
             try
             {
-                BinaryFormatter b = new BinaryFormatter();
+                var b = new BinaryFormatter();
                 b.Serialize(stream, _organisms);
             }
             catch (Exception e)
@@ -314,7 +315,7 @@ namespace Terrarium.Hosting
 
         public void DeserializeOrganisms(Stream stream)
         {
-            BinaryFormatter b = new BinaryFormatter();
+            var b = new BinaryFormatter();
             try
             {
                 _organisms = (GameObjectCollection) b.Deserialize(stream);
@@ -351,7 +352,7 @@ namespace Terrarium.Hosting
 
         public void Create(Type species, string id)
         {
-            Organism newOrganism = (Organism) Activator.CreateInstance(species);
+            var newOrganism = (Organism) Activator.CreateInstance(species);
             if (null == newOrganism)
             {
                 throw new Exception("Failed to create instance of: " + species);
@@ -362,7 +363,7 @@ namespace Terrarium.Hosting
 
         public TickActions GatherTickActions()
         {
-            TickActions act = new TickActions();
+            var act = new TickActions();
             act.GatherActionsFromOrganisms(this);
             return act;
         }
@@ -392,12 +393,12 @@ namespace Terrarium.Hosting
 
         public string GetOrganismTimingReport(string organismID)
         {
-            OrganismWrapper w = _organisms.GetWrapperForOrganism(organismID);
+            var w = _organisms.GetWrapperForOrganism(organismID);
             if (w == null)
             {
                 return "[organism doesn't exist]";
             }
-            
+
             // Only report timings if we are penalizing for slow times because this means
             // we've shut off all elements that slow down the animals like tracing
             if (!PenalizeForTime)
@@ -405,22 +406,30 @@ namespace Terrarium.Hosting
                 return "Inaccurate time due to debugging :" + w.LastTime + " microseconds";
             }
 
-            return w.LastTime > _quantum ? 
-                string.Format("Warning: Time to execute last turn: {0} microseconds is over maxiumum allowed time of {1} microseconds.  Animal may be penalized by skipping a turn.", w.LastTime, _quantum) : 
-                string.Format("Time to execute last turn: {0} microseconds.  [less than maximum allowed time of {1} microseconds.]", w.LastTime, _quantum);
+            return w.LastTime > _quantum
+                       ?
+                           string.Format(
+                               "Warning: Time to execute last turn: {0} microseconds is over maxiumum allowed time of {1} microseconds.  Animal may be penalized by skipping a turn.",
+                               w.LastTime, _quantum)
+                       :
+                           string.Format(
+                               "Time to execute last turn: {0} microseconds.  [less than maximum allowed time of {1} microseconds.]",
+                               w.LastTime, _quantum);
         }
+
+        #endregion
 
         private void RunAnimalWithDeadlockDetection(OrganismWrapper currentAnimal)
         {
             Int64 kernelStart;
             Int64 userStart;
-            int tries = 0;
-            bool blacklist = false;
-            bool shutdownWithoutBlacklist = false;
+            var tries = 0;
+            var blacklist = false;
+            var shutdownWithoutBlacklist = false;
 
             // Hand the activationThread an animal and kick off processing
             _bug = currentAnimal;
-            bool validTime = getAnimalThreadTime(out kernelStart, out userStart);
+            var validTime = getAnimalThreadTime(out kernelStart, out userStart);
             _animalDone.Reset();
             _animalReady.Set();
 
@@ -429,7 +438,7 @@ namespace Terrarium.Hosting
             {
                 // If the animal returns, _animalDone will get set on the activation thread and we'll continue.
                 // if not, this will timeout.
-                bool executionDone = _animalDone.WaitOne(AnimalDeadlockCheckMSec, false);
+                var executionDone = _animalDone.WaitOne(AnimalDeadlockCheckMSec, false);
 
                 if (!executionDone)
                 {
@@ -453,7 +462,7 @@ namespace Terrarium.Hosting
                                 validTime = getAnimalThreadTime(out kernelStop, out userStop);
                                 if (validTime)
                                 {
-                                    Int64 totalTime = (kernelStop - kernelStart) + (userStop - userStart);
+                                    var totalTime = (kernelStop - kernelStart) + (userStop - userStart);
 
                                     // Give the animal a bunch of time since lots of things can happen on their thread
                                     // that is actually reflected as time their thread actually got in the kernel like
@@ -524,7 +533,8 @@ namespace Terrarium.Hosting
         {
             if (DetectDeadlock && blacklist)
             {
-                Debug.WriteLine(string.Format("Permanently blacklisting: {0}", ((Species) currentAnimal.Organism.State.Species).AssemblyInfo.FullName));
+                Debug.WriteLine(string.Format("Permanently blacklisting: {0}",
+                                              ((Species) currentAnimal.Organism.State.Species).AssemblyInfo.FullName));
 
                 // Mark the animal in a magic file on disk so when we restart we will blacklist them.  We can't do it now
                 // because the assembly is locked.
@@ -554,7 +564,7 @@ namespace Terrarium.Hosting
             // First retreive the thread handle for this thread so we can get accurate reads on how 
             // much actual time an animal spent executing.  
             // This is a pseudo handle that can't be used on other threads until it is duplicated
-            IntPtr pseudoThreadHandle = GetCurrentThread();
+            var pseudoThreadHandle = GetCurrentThread();
             _threadHandleValid = DuplicateHandle(
                 _processHandle, // handle to source process
                 pseudoThreadHandle, // handle to duplicate
@@ -566,7 +576,7 @@ namespace Terrarium.Hosting
                 );
 
             // Notify the constructor of this class that we have retreived the handle.
-            bool setSuccess = _handleRetrieved.Set();
+            var setSuccess = _handleRetrieved.Set();
             Debug.Assert(setSuccess);
 
             // If we get an exception that somehow happens outside the try blocks below, it will end this thread,
@@ -581,16 +591,16 @@ namespace Terrarium.Hosting
                     return;
                 }
 
-                bool success = false;
+                var success = false;
                 Int64 duration = 0;
-                PopulationChangeReason deathReason = PopulationChangeReason.NotDead;
-                string exceptionInfo = "";
-                bool skippedTurn = false;
+                var deathReason = PopulationChangeReason.NotDead;
+                var exceptionInfo = "";
+                var skippedTurn = false;
 
                 // short circut inactive bugs
                 if (_bug.Active)
                 {
-                    OrganismState state = _currentState.GetOrganismState(_bug.Organism.ID);
+                    var state = _currentState.GetOrganismState(_bug.Organism.ID);
                     if (!state.IsAlive)
                     {
                         _bug.Active = false;
@@ -655,7 +665,7 @@ namespace Terrarium.Hosting
                                     {
                                         if (GameConfig.LoggingMode != "Full")
                                         {
-                                            Object renderInfo = _bug.Organism.State.RenderInfo;
+                                            var renderInfo = _bug.Organism.State.RenderInfo;
                                             if (renderInfo != null && ((TerrariumSprite) renderInfo).Selected)
                                             {
                                                 _bug.Organism.Trace += traceEventHandler;
@@ -868,12 +878,12 @@ namespace Terrarium.Hosting
         {
             if (_threadHandleValid)
             {
-                FILETIME c = new FILETIME();
-                FILETIME e = new FILETIME();
-                FILETIME kernelFileTime = new FILETIME();
-                FILETIME userFileTime = new FILETIME();
+                var c = new FILETIME();
+                var e = new FILETIME();
+                var kernelFileTime = new FILETIME();
+                var userFileTime = new FILETIME();
 
-                bool success = (GetThreadTimes(_threadHandle, ref c, ref e, ref kernelFileTime, ref userFileTime) > 0);
+                var success = (GetThreadTimes(_threadHandle, ref c, ref e, ref kernelFileTime, ref userFileTime) > 0);
                 if (success)
                 {
                     kernel = (((Int64) kernelFileTime.dwHighDateTime) << 32) + kernelFileTime.dwLowDateTime;
@@ -893,14 +903,14 @@ namespace Terrarium.Hosting
         {
             if (items.Length == 1)
             {
-                string item = items[0].ToString();
+                var item = items[0].ToString();
                 if (item.StartsWith("#"))
                 {
                     return;
                 }
             }
 
-            for (int i = 0; i < items.Length; i++)
+            for (var i = 0; i < items.Length; i++)
             {
                 Trace.WriteLine(items[i]);
             }

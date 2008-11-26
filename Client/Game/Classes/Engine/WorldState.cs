@@ -167,11 +167,11 @@ namespace Terrarium.Game
         /// <returns>A new WorldState object that is newly mutable.</returns>
         public object DuplicateMutable()
         {
-            WorldState newState = new WorldState(_gridWidth, _gridHeight);
+            var newState = new WorldState(_gridWidth, _gridHeight);
 
             foreach (OrganismState state in Organisms)
             {
-                OrganismState newOrganismState = state.CloneMutable();
+                var newOrganismState = state.CloneMutable();
                 Debug.Assert(newOrganismState != null, "Organism State is null in WorldState.DuplicateMutable()");
                 Debug.Assert(newOrganismState.ID != null, "Organism State ID is null in WorldState.DuplicateMutable()");
                 newState._organisms.Add(newOrganismState.ID, newOrganismState);
@@ -197,9 +197,9 @@ namespace Terrarium.Game
                 throw new ApplicationException("WorldState must be mutable to re-add organisms.");
             }
 
-            for (int x = 0; x < _gridWidth; x++)
+            for (var x = 0; x < _gridWidth; x++)
             {
-                for (int y = 0; y < _gridHeight; y++)
+                for (var y = 0; y < _gridHeight; y++)
                 {
                     _cellOrganisms[x, y] = null;
                 }
@@ -260,9 +260,9 @@ namespace Terrarium.Game
         {
             Debug.Assert(cellX - cellRadius >= 0 && cellY - cellRadius + 1 >= 0);
 
-            for (int x = cellX - cellRadius; x <= cellX + cellRadius; x++)
+            for (var x = cellX - cellRadius; x <= cellX + cellRadius; x++)
             {
-                for (int y = cellY - cellRadius; y <= cellY + cellRadius; y++)
+                for (var y = cellY - cellRadius; y <= cellY + cellRadius; y++)
                 {
                     if (clear)
                     {
@@ -326,12 +326,12 @@ namespace Terrarium.Game
                 throw new ApplicationException("WorldState must be mutable to change.");
             }
 
-            string organismID = state.ID;
+            var organismID = state.ID;
 
             // Clear the index if it's built
             if (IndexBuilt)
             {
-                OrganismState oldState = GetOrganismState(organismID);
+                var oldState = GetOrganismState(organismID);
                 FillCells(oldState, oldState.GridX, oldState.GridY, oldState.CellRadius, true);
             }
 
@@ -353,7 +353,7 @@ namespace Terrarium.Game
             // Clear the index if it's built
             if (IndexBuilt)
             {
-                OrganismState state = GetOrganismState(organismID);
+                var state = GetOrganismState(organismID);
                 FillCells(state, state.GridX, state.GridY, state.CellRadius, true);
             }
 
@@ -480,30 +480,30 @@ namespace Terrarium.Game
         /// <returns>The amount of available light for the plant.</returns>
         public int GetAvailableLight(PlantState plant)
         {
-            int maxX = plant.GridX + plant.CellRadius + 25;
+            var maxX = plant.GridX + plant.CellRadius + 25;
             if (maxX > _gridWidth - 1)
             {
                 maxX = _gridWidth - 1;
             }
-            ArrayList overlappingPlantsEast = FindOrganismsInCells(plant.GridX + plant.CellRadius,
-                                                                   maxX, plant.GridY - plant.CellRadius,
-                                                                   plant.GridY + plant.CellRadius);
+            var overlappingPlantsEast = FindOrganismsInCells(plant.GridX + plant.CellRadius,
+                                                             maxX, plant.GridY - plant.CellRadius,
+                                                             plant.GridY + plant.CellRadius);
 
-            int minX = plant.GridX - plant.CellRadius - 25;
+            var minX = plant.GridX - plant.CellRadius - 25;
             if (minX < 0)
             {
                 minX = 0;
             }
-            ArrayList overlappingPlantsWest = FindOrganismsInCells(minX, plant.GridX - plant.CellRadius,
-                                                                   plant.GridY - plant.CellRadius,
-                                                                   plant.GridY + plant.CellRadius);
+            var overlappingPlantsWest = FindOrganismsInCells(minX, plant.GridX - plant.CellRadius,
+                                                             plant.GridY - plant.CellRadius,
+                                                             plant.GridY + plant.CellRadius);
 
             double maxAngleEast = 0;
             foreach (OrganismState targetPlant in overlappingPlantsEast)
             {
                 if (!(targetPlant is PlantState)) continue;
-                double currentAngle = Math.Atan2(((PlantState) targetPlant).Height,
-                                                 targetPlant.Position.X - plant.Position.X);
+                var currentAngle = Math.Atan2(((PlantState) targetPlant).Height,
+                                              targetPlant.Position.X - plant.Position.X);
                 if (currentAngle > maxAngleEast)
                 {
                     maxAngleEast = currentAngle;
@@ -514,8 +514,8 @@ namespace Terrarium.Game
             foreach (OrganismState targetPlant in overlappingPlantsWest)
             {
                 if (!(targetPlant is PlantState)) continue;
-                double currentAngle = Math.Atan2(((PlantState) targetPlant).Height,
-                                                 plant.Position.X - targetPlant.Position.X);
+                var currentAngle = Math.Atan2(((PlantState) targetPlant).Height,
+                                              plant.Position.X - targetPlant.Position.X);
                 if (currentAngle > maxAngleWest)
                 {
                     maxAngleWest = currentAngle;
@@ -534,10 +534,10 @@ namespace Terrarium.Game
         {
             Debug.Assert(IndexBuilt);
 
-            int minGridX = state.GridX - state.CellRadius;
-            int maxGridX = state.GridX + state.CellRadius;
-            int minGridY = state.GridY - state.CellRadius;
-            int maxGridY = state.GridY + state.CellRadius;
+            var minGridX = state.GridX - state.CellRadius;
+            var maxGridX = state.GridX + state.CellRadius;
+            var minGridY = state.GridY - state.CellRadius;
+            var maxGridY = state.GridY + state.CellRadius;
 
             // If it would be out of bounds, return false.
             if (minGridX < 0 || maxGridX > _gridWidth - 1 ||
@@ -546,9 +546,9 @@ namespace Terrarium.Game
                 return false;
             }
 
-            for (int x = minGridX; x <= maxGridX; x++)
+            for (var x = minGridX; x <= maxGridX; x++)
             {
-                for (int y = minGridY; y <= maxGridY; y++)
+                for (var y = minGridY; y <= maxGridY; y++)
                 {
                     if (_cellOrganisms[x, y] == null) continue;
                     if (_cellOrganisms[x, y].ID != state.ID)
@@ -580,13 +580,13 @@ namespace Terrarium.Game
 
             // Since organisms are represented at multiple places in the grid, make
             // sure we only get one instance
-            Hashtable foundHash = new Hashtable();
-            ArrayList foundOrganisms = new ArrayList();
-            for (int x = minGridX; x <= maxGridX; x++)
+            var foundHash = new Hashtable();
+            var foundOrganisms = new ArrayList();
+            for (var x = minGridX; x <= maxGridX; x++)
             {
-                for (int y = minGridY; y <= maxGridY; y++)
+                for (var y = minGridY; y <= maxGridY; y++)
                 {
-                    OrganismState current = _cellOrganisms[x, y];
+                    var current = _cellOrganisms[x, y];
                     if (current == null) continue;
 
                     // If it's the same as the last one, skip the hashable lookup
@@ -619,23 +619,19 @@ namespace Terrarium.Game
             // Make sure we have enough space in our visibility matrix
             Debug.Assert((state.CellRadius + radius)*2 + 1 <= _invisible.GetLength(0));
 
-            ArrayList foundOrganisms = new ArrayList();
-            Hashtable foundHash = new Hashtable();
-            int originX = state.GridX;
-            int originY = state.GridY;
-            int middleX = -originX + state.CellRadius + radius;
-            int middleY = -originY + state.CellRadius + radius;
-            int currentX, currentY;
+            var foundOrganisms = new ArrayList();
+            var foundHash = new Hashtable();
+            var originX = state.GridX;
+            var originY = state.GridY;
+            var middleX = -originX + state.CellRadius + radius;
+            var middleY = -originY + state.CellRadius + radius;
             int xIncrement = 0, yIncrement = 0;
-            int i, j;
-            int signI, signJ;
-            int absI, absJ;
 
             // The first ring is all visible
-            int currentRadius = state.CellRadius + 1;
-            currentX = originX - currentRadius;
-            currentY = originY - currentRadius;
-            for (int side = 0; side < 4; side++)
+            var currentRadius = state.CellRadius + 1;
+            var currentX = originX - currentRadius;
+            var currentY = originY - currentRadius;
+            for (var side = 0; side < 4; side++)
             {
                 switch (side)
                 {
@@ -657,11 +653,11 @@ namespace Terrarium.Game
                         break;
                 }
 
-                for (int count = 0; count < currentRadius << 1; count++)
+                for (var count = 0; count < currentRadius << 1; count++)
                 {
                     if (currentX >= 0 && currentY >= 0 && currentX < _gridWidth && currentY < _gridHeight)
                     {
-                        OrganismState currentOrganism = _cellOrganisms[currentX, currentY];
+                        var currentOrganism = _cellOrganisms[currentX, currentY];
                         if (currentOrganism != null)
                         {
                             if (foundHash[currentOrganism] == null)
@@ -688,10 +684,9 @@ namespace Terrarium.Game
                 // p1 is in the diagonal direction from [x,y] to [originX,originY] and
                 // p2 is in the horizontal/vertical direction from [x,y] to [originX, originY].
                 // p2 collapses to point_1 if j = 0 or i = 0
-                int p1X, p1Y, p2X, p2Y;
                 currentX = originX - currentRadius;
                 currentY = originY - currentRadius;
-                for (int side = 0; side < 4; side++)
+                for (var side = 0; side < 4; side++)
                 {
                     switch (side)
                     {
@@ -713,14 +708,15 @@ namespace Terrarium.Game
                             break;
                     }
 
-                    for (int count = 0; count < currentRadius << 1; count++)
+                    for (var count = 0; count < currentRadius << 1; count++)
                     {
                         if (currentX >= 0 && currentY >= 0 && currentX < _gridWidth && currentY < _gridHeight)
                         {
-                            i = currentX - originX;
-                            j = currentY - originY;
+                            var i = currentX - originX;
+                            var j = currentY - originY;
 
                             // These actually calculate -1 * sign not just the sign function
+                            int signI;
                             if (i < 0)
                             {
                                 signI = 1;
@@ -734,6 +730,7 @@ namespace Terrarium.Game
                                 signI = 0;
                             }
 
+                            int signJ;
                             if (j < 0)
                             {
                                 signJ = 1;
@@ -747,6 +744,7 @@ namespace Terrarium.Game
                                 signJ = 0;
                             }
 
+                            int absI;
                             if (i < 0)
                             {
                                 absI = -i;
@@ -756,6 +754,7 @@ namespace Terrarium.Game
                                 absI = i;
                             }
 
+                            int absJ;
                             if (j < 0)
                             {
                                 absJ = -j;
@@ -766,6 +765,8 @@ namespace Terrarium.Game
                             }
 
                             // Check first point which is the diagonal direction from [x,y] to [originX,originY]
+                            int p1X;
+                            int p1Y;
                             if (absJ > absI)
                             {
                                 // We are in the  90 < theta < 45 degrees region of every quadrant
@@ -780,6 +781,8 @@ namespace Terrarium.Game
 
                             // Check second point
                             // if Abs(j) == Abs(i) then we are on a diagonal, so secondpoint is the same as first point
+                            int p2X;
+                            int p2Y;
                             if (absJ != absI)
                             {
                                 p2X = signI + currentX;
@@ -799,7 +802,7 @@ namespace Terrarium.Game
                             }
                             else
                             {
-                                OrganismState currentOrganism = _cellOrganisms[currentX, currentY];
+                                var currentOrganism = _cellOrganisms[currentX, currentY];
                                 if (currentOrganism != null)
                                 {
                                     // if there is an organism here, mark this spot as invisible

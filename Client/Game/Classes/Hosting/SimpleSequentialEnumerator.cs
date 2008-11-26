@@ -20,10 +20,16 @@ namespace Terrarium.Hosting
             _index = -1;
         }
 
+        #region ICloneable Members
+
         public Object Clone()
         {
             return MemberwiseClone();
         }
+
+        #endregion
+
+        #region IEnumerator Members
 
         public virtual bool MoveNext()
         {
@@ -33,10 +39,8 @@ namespace Terrarium.Hosting
                 _currentElement = _list[_index];
                 return true;
             }
-            else
-            {
-                _index = _list.Count;
-            }
+
+            _index = _list.Count;
 
             return false;
         }
@@ -64,5 +68,7 @@ namespace Terrarium.Hosting
             _currentElement = null;
             _index = -1;
         }
+
+        #endregion
     }
 }

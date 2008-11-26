@@ -30,6 +30,8 @@ namespace Terrarium.PeerToPeer
             _engine = engine;
         }
 
+        #region IHttpNamespaceHandler Members
+
         /// <summary>
         ///  Processes the HTTP Request.  This handler is capable of
         ///  processing several different messages and a series of
@@ -42,15 +44,15 @@ namespace Terrarium.PeerToPeer
             // Initiailize any locals.  This sets up a basic successful
             // response and cahces the requested namespace for the conditional
             // logic.
-            string requestedNamespace = webapp.HttpRequest.RequestUri.AbsolutePath;
+            var requestedNamespace = webapp.HttpRequest.RequestUri.AbsolutePath;
             webapp.HttpResponse.Server = "Microsoft .Net Terrarium";
             webapp.HttpResponse.Date = DateTime.Now;
             webapp.HttpResponse.ContentType = "text/xml";
             webapp.HttpResponse.StatusCode = HttpStatusCode.OK;
             webapp.HttpResponse.StatusDescription = "OK";
             webapp.HttpResponse.KeepAlive = false;
-            string failureReason = "none";
-            string body = "";
+            var failureReason = "none";
+            string body;
 
             if (webapp.HttpRequest.Method == "GET")
             {
@@ -83,7 +85,7 @@ namespace Terrarium.PeerToPeer
 
                 // Prepares a binary formatter to serialize/deserialize
                 // state information.
-                BinaryFormatter channel = new BinaryFormatter();
+                var channel = new BinaryFormatter();
 
                 // Add a special binder to the BinaryFormatter to ensure that
                 // the stream hasn't been hacked to try to get us to instantiate an
@@ -100,8 +102,8 @@ namespace Terrarium.PeerToPeer
                     // a state object that will be placed into the game
                     // engine (Step 4 of the conversation).
 
-                    bool exceptionOccurred = false;
-                    string ipAddress = webapp.HttpRequest.RemoteEndPoint.Address.ToString();
+                    var exceptionOccurred = false;
+                    var ipAddress = webapp.HttpRequest.RemoteEndPoint.Address.ToString();
 
                     // If they aren't on the same channel, set the exception bit
                     // this will cause the teleportation to fail
@@ -183,7 +185,7 @@ namespace Terrarium.PeerToPeer
                     // Someone is sending us an assembly to save
                     try
                     {
-                        string ipAddress = webapp.HttpRequest.RemoteEndPoint.Address.ToString();
+                        var ipAddress = webapp.HttpRequest.RemoteEndPoint.Address.ToString();
                         if (_engine.PeerManager.BadPeer(ipAddress) || !_engine.PeerManager.ShouldReceive(ipAddress))
                         {
                             _engine.WriteProtocolInfo(
@@ -196,15 +198,15 @@ namespace Terrarium.PeerToPeer
                             // a location that is known or predictable in any way.  This prevents an attack
                             // where an assembly is sent to this machine with malicious code in it and saved
                             // in a known location that can be used at a later time.
-                            string tempFile = PrivateAssemblyCache.GetSafeTempFileName();
+                            var tempFile = PrivateAssemblyCache.GetSafeTempFileName();
                             using (Stream fileStream = File.OpenWrite(tempFile))
                             {
-                                Byte[] bufferBytes = webapp.Buffer.GetBuffer();
+                                var bufferBytes = webapp.Buffer.GetBuffer();
                                 fileStream.Write(bufferBytes, 0, bufferBytes.Length);
                             }
 
                             // Now save the assembly in the Private Assembly Cache
-                            string assemblyFullName = webapp.HttpRequest.Headers["Assembly"];
+                            var assemblyFullName = webapp.HttpRequest.Headers["Assembly"];
                             try
                             {
                                 GameEngine.Current.Pac.SaveOrganismAssembly(tempFile, assemblyFullName);
@@ -236,8 +238,8 @@ namespace Terrarium.PeerToPeer
                     _engine.WriteProtocolInfo("/organisms/assemblycheck: Checking to see if we have an assembly.");
 
                     // Check to see if the assembly is installed locally
-                    StreamReader reader = new StreamReader(webapp.Buffer, Encoding.ASCII);
-                    string assemblyName = reader.ReadToEnd();
+                    var reader = new StreamReader(webapp.Buffer, Encoding.ASCII);
+                    var assemblyName = reader.ReadToEnd();
 
                     Debug.Assert(GameEngine.Current != null);
                     if (GameEngine.Current.Pac.Exists(assemblyName))
@@ -275,9 +277,11 @@ namespace Terrarium.PeerToPeer
             }
 
             // Encode the body response and output the response.
-            byte[] bodyBytes = Encoding.ASCII.GetBytes(body);
+            var bodyBytes = Encoding.ASCII.GetBytes(body);
             webapp.HttpResponse.ContentLength = bodyBytes.Length;
             webapp.HttpResponse.Close(bodyBytes);
         }
+
+        #endregion
     }
 }

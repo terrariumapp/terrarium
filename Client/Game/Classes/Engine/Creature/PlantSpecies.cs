@@ -16,9 +16,6 @@ namespace Terrarium.Game
     [Serializable]
     public sealed class PlantSpecies : Species, IPlantSpecies
     {
-        private readonly int _seedSpreadDistance;
-        private readonly PlantSkinFamily _skinFamily = PlantSkinFamily.Plant;
-
         /// <summary>
         ///  Creates a new species object from a CLR Type by
         ///  pulling information off of the type's attributes.
@@ -26,18 +23,19 @@ namespace Terrarium.Game
         /// <param name="clrType">The Type representing the Plant class.</param>
         public PlantSpecies(Type clrType) : base(clrType)
         {
+            SkinFamily = PlantSkinFamily.Plant;
             Debug.Assert(clrType != null, "Null type passed to PlantSpecies");
             Debug.Assert(typeof (Plant).IsAssignableFrom(clrType));
 
-            PlantSkinAttribute skinAttribute =
+            var skinAttribute =
                 (PlantSkinAttribute) Attribute.GetCustomAttribute(clrType, typeof (PlantSkinAttribute));
             if (skinAttribute != null)
             {
-                _skinFamily = skinAttribute.SkinFamily;
-                _animalSkin = skinAttribute.Skin;
+                SkinFamily = skinAttribute.SkinFamily;
+                Skin = skinAttribute.Skin;
             }
 
-            SeedSpreadDistanceAttribute seedSpreadAttribute =
+            var seedSpreadAttribute =
                 (SeedSpreadDistanceAttribute)
                 Attribute.GetCustomAttribute(clrType, typeof (SeedSpreadDistanceAttribute));
             if (seedSpreadAttribute == null)
@@ -45,24 +43,20 @@ namespace Terrarium.Game
                 throw new AttributeRequiredException("SeedSpreadDistanceAttribute");
             }
 
-            _seedSpreadDistance = seedSpreadAttribute.SeedSpreadDistance;
+            SeedSpreadDistance = seedSpreadAttribute.SeedSpreadDistance;
         }
 
         /// <summary>
         /// The maximum distance that seeds can go from the parent plant when reproducing.
         /// </summary>
-        public int SeedSpreadDistance
-        {
-            get { return _seedSpreadDistance; }
-        }
+        public int SeedSpreadDistance { get; private set; }
+
+        #region IPlantSpecies Members
 
         /// <summary>
         /// The skin family for the organism.
         /// </summary>
-        public PlantSkinFamily SkinFamily
-        {
-            get { return _skinFamily; }
-        }
+        public PlantSkinFamily SkinFamily { get; private set; }
 
         /// <summary>
         /// See Species.LifeSpan for information about this member.
@@ -80,6 +74,8 @@ namespace Terrarium.Game
             get { return MatureRadius*EngineSettings.PlantReproductionWaitPerUnitRadius; }
         }
 
+        #endregion
+
         /// <summary>
         ///  Retrieves attribute warnings.  The Plant class implements no warnings
         ///  and so delegates to the base class for warnings.
@@ -87,7 +83,7 @@ namespace Terrarium.Game
         /// <returns>A message with available attribute warnings.</returns>
         public override string GetAttributeWarnings()
         {
-            StringBuilder warnings = new StringBuilder();
+            var warnings = new StringBuilder();
             warnings.Append(base.GetAttributeWarnings());
             return warnings.ToString();
         }
@@ -100,8 +96,7 @@ namespace Terrarium.Game
         /// <returns>A state object initialized to the given position and generation.</returns>
         public override OrganismState InitializeNewState(Point position, int generation)
         {
-            PlantState newState = new PlantState(Guid.NewGuid().ToString(), this, generation);
-            newState.Position = position;
+            var newState = new PlantState(Guid.NewGuid().ToString(), this, generation) {Position = position};
             newState.IncreaseRadiusTo(InitialRadius);
 
             // Need to start out hungry so they can't reproduce immediately and just populate the world

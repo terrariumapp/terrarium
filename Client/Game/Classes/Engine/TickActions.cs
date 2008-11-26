@@ -89,7 +89,7 @@ namespace Terrarium.Game
         {
             foreach (Organism organism in scheduler.Organisms)
             {
-                PendingActions pendingActions = organism.GetThenErasePendingActions();
+                var pendingActions = organism.GetThenErasePendingActions();
                 if (pendingActions.MoveToAction != null)
                 {
                     _moveToActions[organism.ID] = pendingActions.MoveToAction;

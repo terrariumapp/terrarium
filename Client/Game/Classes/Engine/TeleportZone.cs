@@ -62,7 +62,7 @@ namespace Terrarium.Game
         /// <returns>A copy of the TeleportZone</returns>
         public TeleportZone Clone()
         {
-            TeleportZone zone = new TeleportZone(_rectangle, _vector, ID);
+            var zone = new TeleportZone(_rectangle, _vector, ID);
             return zone;
         }
 
@@ -73,7 +73,7 @@ namespace Terrarium.Game
         /// <returns>A cloned teleport zone.</returns>
         public TeleportZone SetRectangle(Rectangle rectangle)
         {
-            TeleportZone zone = Clone();
+            var zone = Clone();
             zone._rectangle = rectangle;
             return zone;
         }
@@ -85,7 +85,7 @@ namespace Terrarium.Game
         /// <returns>True if the state is in the zone, false otherwise.</returns>
         public Boolean Contains(OrganismState state)
         {
-            int difference = _rectangle.Left - (state.Position.X - state.Radius);
+            var difference = _rectangle.Left - (state.Position.X - state.Radius);
             if (difference < 0)
             {
                 // Negative means rectangle boundary < state boundary
@@ -136,7 +136,7 @@ namespace Terrarium.Game
         /// <returns>The update teleport zone.</returns>
         public TeleportZone SetVector(MovementVector vector)
         {
-            TeleportZone zone = Clone();
+            var zone = Clone();
             zone._vector = vector;
             return zone;
         }

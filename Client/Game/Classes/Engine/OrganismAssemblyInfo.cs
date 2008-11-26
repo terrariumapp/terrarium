@@ -11,16 +11,6 @@ namespace Terrarium.Game
     public class OrganismAssemblyInfo
     {
         /// <summary>
-        ///  The full name of the assembly used for loading the assembly.
-        /// </summary>
-        private readonly string _assemblyFullName;
-
-        /// <summary>
-        ///  The short name of the assembly used for identification purposes.
-        /// </summary>
-        private readonly string _assemblyShortName;
-
-        /// <summary>
         ///  Creates a new info object using the full name of the assembly
         ///  and the short name.
         /// </summary>
@@ -28,25 +18,19 @@ namespace Terrarium.Game
         /// <param name="assemblyShortName">The assembly short name.</param>
         public OrganismAssemblyInfo(string assemblyFullName, string assemblyShortName)
         {
-            _assemblyFullName = assemblyFullName;
-            _assemblyShortName = assemblyShortName;
+            FullName = assemblyFullName;
+            ShortName = assemblyShortName;
         }
 
         /// <summary>
         ///  Returns the assembly full name that was saved on this info object.
         /// </summary>
-        public string FullName
-        {
-            get { return _assemblyFullName; }
-        }
+        public string FullName { get; private set; }
 
         /// <summary>
         ///  Returns the assembly short name that was saved on this info object.
         /// </summary>
-        public string ShortName
-        {
-            get { return _assemblyShortName; }
-        }
+        public string ShortName { get; private set; }
 
         /// <summary>
         ///  Returns a string representation of this organism info object.  This
@@ -55,7 +39,7 @@ namespace Terrarium.Game
         /// <returns>The assembly short name.</returns>
         public override string ToString()
         {
-            return _assemblyShortName;
+            return ShortName;
         }
     }
 }

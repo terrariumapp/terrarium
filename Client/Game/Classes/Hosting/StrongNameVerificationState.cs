@@ -39,13 +39,13 @@ namespace Terrarium.Hosting
         {
             get
             {
-                bool result = false;
+                var result = false;
                 if (_skipEntries != null)
                 {
-                    string token = GetTerrariumPubKeyToken();
+                    var token = GetTerrariumPubKeyToken();
                     string key;
 
-                    foreach (string s in _skipEntries)
+                    foreach (var s in _skipEntries)
                     {
                         // e.g. , this looks like terrarium,0271xxxxxxx
                         // or just 0271974B642E7A95 if using anything with the terrarium 
@@ -67,14 +67,14 @@ namespace Terrarium.Hosting
 
         private void AcquireState()
         {
-            RegistryKey snKey = _key.OpenSubKey(StrongNameKey, false);
+            var snKey = _key.OpenSubKey(StrongNameKey, false);
             if (null == snKey) return;
             _skipEntries.AddRange(snKey.GetSubKeyNames());
         }
 
         internal static string BytesToHexString(byte[] input)
         {
-            StringBuilder sb = new StringBuilder(64);
+            var sb = new StringBuilder(64);
             if (input != null)
             {
                 int i;
@@ -88,7 +88,7 @@ namespace Terrarium.Hosting
 
         internal static string GetTerrariumPubKeyToken()
         {
-            byte[] key = Assembly.GetExecutingAssembly().GetName().GetPublicKeyToken();
+            var key = Assembly.GetExecutingAssembly().GetName().GetPublicKeyToken();
             return BytesToHexString(key);
         }
     }

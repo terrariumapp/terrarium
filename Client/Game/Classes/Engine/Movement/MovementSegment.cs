@@ -14,17 +14,7 @@ namespace Terrarium.Game
     internal class MovementSegment
     {
         private Boolean _active;
-        private OrganismState _blockedByState;
         private int _cellsLeftToResolve;
-        private Point _endingPoint;
-        private int _entryTime;
-        private int _exitTime;
-        private int _gridX;
-        private int _gridY;
-        private MovementSegment _nextMovementSegment;
-        private OrganismState _organismState;
-        private MovementSegment _previousMovementSegment;
-        private Point _startingPoint;
 
         internal MovementSegment(MovementSegment previous, OrganismState state, Point startingPoint, int entryTime,
                                  int gridX, int gridY)
@@ -91,75 +81,25 @@ namespace Terrarium.Game
             }
         }
 
-        public Point StartingPoint
-        {
-            get { return _startingPoint; }
+        public Point StartingPoint { get; set; }
 
-            set { _startingPoint = value; }
-        }
+        public Point EndingPoint { get; set; }
 
-        public Point EndingPoint
-        {
-            get { return _endingPoint; }
+        public int GridX { get; set; }
 
-            set { _endingPoint = value; }
-        }
+        public int GridY { get; set; }
 
-        public int GridX
-        {
-            get { return _gridX; }
+        public int EntryTime { get; set; }
 
-            set { _gridX = value; }
-        }
+        public int ExitTime { get; set; }
 
-        public int GridY
-        {
-            get { return _gridY; }
+        public OrganismState State { get; set; }
 
-            set { _gridY = value; }
-        }
+        public MovementSegment Previous { get; set; }
 
-        public int EntryTime
-        {
-            get { return _entryTime; }
+        public MovementSegment Next { get; set; }
 
-            set { _entryTime = value; }
-        }
-
-        public int ExitTime
-        {
-            get { return _exitTime; }
-
-            set { _exitTime = value; }
-        }
-
-        public OrganismState State
-        {
-            get { return _organismState; }
-
-            set { _organismState = value; }
-        }
-
-        public MovementSegment Previous
-        {
-            get { return _previousMovementSegment; }
-
-            set { _previousMovementSegment = value; }
-        }
-
-        public MovementSegment Next
-        {
-            get { return _nextMovementSegment; }
-
-            set { _nextMovementSegment = value; }
-        }
-
-        public OrganismState BlockedByState
-        {
-            get { return _blockedByState; }
-
-            set { _blockedByState = value; }
-        }
+        public OrganismState BlockedByState { get; set; }
 
         internal Boolean Active
         {
@@ -198,13 +138,12 @@ namespace Terrarium.Game
 
         public override string ToString()
         {
-            return GridX + ", " + GridY + "EntryTime=" + EntryTime + "ExitTime=" + ExitTime +
-                   "StartingPoint=" + StartingPoint + "EndingPoint=" + EndingPoint;
+            return string.Format("{0}, {1}EntryTime={2}ExitTime={3}StartingPoint={4}EndingPoint={5}", GridX, GridY, EntryTime, ExitTime, StartingPoint, EndingPoint);
         }
 
         public void ClipSegment(OrganismState blocker)
         {
-            MovementSegment segment = this;
+            var segment = this;
             Debug.Assert(segment.Previous != null);
             segment.Previous.BlockedByState = blocker;
 
