@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Terrarium.Glass.Properties {
+namespace Terrarium.Client.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace Terrarium.Glass.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Terrarium.Glass.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Terrarium.Client.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -57,6 +57,13 @@ namespace Terrarium.Glass.Properties {
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        internal static System.Drawing.Bitmap screensaver {
+            get {
+                object obj = ResourceManager.GetObject("screensaver", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }
