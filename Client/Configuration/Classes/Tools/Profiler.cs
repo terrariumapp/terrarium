@@ -43,10 +43,10 @@ namespace Terrarium.Tools
         {
             get
             {
-                int offset = 0;
-                ProfilerNode[] nodeArray = new ProfilerNode[_profileKeys.Count];
+                var offset = 0;
+                var nodeArray = new ProfilerNode[_profileKeys.Count];
 
-                foreach (object node in _profileKeys.Values)
+                foreach (var node in _profileKeys.Values)
                 {
                     nodeArray[offset] = (ProfilerNode) node;
                     offset++;
@@ -72,12 +72,12 @@ namespace Terrarium.Tools
         {
             if (_profileKeys.ContainsKey(functionName))
             {
-                ProfilerNode node = (ProfilerNode) _profileKeys[functionName];
+                var node = (ProfilerNode) _profileKeys[functionName];
                 node.Start();
             }
             else
             {
-                ProfilerNode node = new ProfilerNode(functionName);
+                var node = new ProfilerNode(functionName);
                 _profileKeys.Add(functionName, node);
                 node.Start();
             }
@@ -90,7 +90,7 @@ namespace Terrarium.Tools
         public void End(string functionName)
         {
             if (!_profileKeys.ContainsKey(functionName)) return;
-            ProfilerNode node = (ProfilerNode) _profileKeys[functionName];
+            var node = (ProfilerNode) _profileKeys[functionName];
             node.End();
         }
     }

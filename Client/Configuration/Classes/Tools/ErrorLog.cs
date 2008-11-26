@@ -130,23 +130,22 @@ namespace Terrarium.Tools
         /// <returns>A Watson Service DataSet that can be used in a web service call.</returns>
         public static DataSet CreateErrorLogDataSet(string logType, string errorLog)
         {
-            DataSet data = new DataSet();
-            data.Locale = CultureInfo.InvariantCulture;
+            var data = new DataSet {Locale = CultureInfo.InvariantCulture};
 
-            DataTable watsonTable = data.Tables.Add("Watson");
+            var watsonTable = data.Tables.Add("Watson");
             watsonTable.Columns.Add("LogType", typeof (String));
             watsonTable.Columns.Add("OSVersion", typeof (String));
             watsonTable.Columns.Add("GameVersion", typeof (String));
             watsonTable.Columns.Add("CLRVersion", typeof (String));
             watsonTable.Columns.Add("UserEmail", typeof (String));
-            DataColumn dcComment = new DataColumn("UserComment", typeof (String));
-            dcComment.MaxLength = Int32.MaxValue;
+            
+            var dcComment = new DataColumn("UserComment", typeof (String)) {MaxLength = Int32.MaxValue};
             watsonTable.Columns.Add(dcComment);
-            DataColumn dcErrorLog = new DataColumn("ErrorLog", typeof (String));
-            dcErrorLog.MaxLength = Int32.MaxValue;
+            
+            var dcErrorLog = new DataColumn("ErrorLog", typeof (String)) {MaxLength = Int32.MaxValue};
             watsonTable.Columns.Add(dcErrorLog);
 
-            DataRow row = watsonTable.NewRow();
+            var row = watsonTable.NewRow();
             row["LogType"] = logType;
             row["ErrorLog"] = errorLog;
             row["OSVersion"] = Environment.OSVersion;

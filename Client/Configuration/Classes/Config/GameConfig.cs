@@ -765,8 +765,8 @@ namespace Terrarium.Configuration
             try
             {
                 // Make sure the directory exists
-                FileInfo configFileInfo = new FileInfo(configFile);
-                DirectoryInfo configDirectory = configFileInfo.Directory;
+                var configFileInfo = new FileInfo(configFile);
+                var configDirectory = configFileInfo.Directory;
 
                 if (configDirectory != null && !configDirectory.Exists)
                 {
@@ -775,12 +775,12 @@ namespace Terrarium.Configuration
 
                 // Using hard-coded name here.  We aren't enumerating since that might be dangerous
                 // and we wouldn't want to load the wrong default configuration.
-                Assembly executingAssembly = Assembly.GetExecutingAssembly();
+                var executingAssembly = Assembly.GetExecutingAssembly();
                 if (executingAssembly != null)
                 {
-                    using (StreamReader sr = new StreamReader(executingAssembly.GetManifestResourceStream("Terrarium.Configuration.userconfig.xml")))
+                    using (var sr = new StreamReader(executingAssembly.GetManifestResourceStream("Terrarium.Configuration.userconfig.xml")))
                     {
-                        using (StreamWriter sw = new StreamWriter(configFile))
+                        using (var sw = new StreamWriter(configFile))
                         {
                             sw.Write(sr.ReadToEnd());
                         }
@@ -809,8 +809,10 @@ namespace Terrarium.Configuration
             try
             {
                 // Load the XML from file
-                reader = new XmlTextReader(UserSettingsLocation);
-                reader.WhitespaceHandling = WhitespaceHandling.None;
+                reader = new XmlTextReader(UserSettingsLocation)
+                             {
+                                 WhitespaceHandling = WhitespaceHandling.None
+                             };
 
                 // Create an XmlDocument from the XmlTextReader
                 myXmlDocument = new XmlDocument();

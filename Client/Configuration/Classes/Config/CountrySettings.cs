@@ -14,7 +14,7 @@ namespace Terrarium.Configuration
         /// <summary>
         ///  Provides direct access to the country/region array listing
         /// </summary>
-        public static string[] Countries = new string[] {
+        public static string[] Countries = new[] {
 			"Afghanistan",          "Albania",          "Algeria",          "Andorra",
 			"Angola",               "Antigua & Barbuda","Argentina",        "Armenia",
 			"Australia",            "Austria",          "Azerbaijan",       "Bahamas, The",
@@ -75,7 +75,7 @@ namespace Terrarium.Configuration
         /// <returns>True if the string matches one of the countries/regions in the list, false otherwise.</returns>
         public static bool Validate(string country)
         {
-            foreach (string availableCountry in Countries)
+            foreach (var availableCountry in Countries)
             {
                 if (!Equals(availableCountry, country)) continue;
                 return true;

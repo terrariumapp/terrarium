@@ -13,7 +13,7 @@ namespace Terrarium.Configuration
         /// <summary>
         ///  Provides direct access to the state array listing
         /// </summary>
-        public static string[] States = new string[] {
+        public static string[] States = new[] {
                                                            "Alabama",              "Alaska",           "Arizona",          "Arkansas",
                                                            "California",           "Colorado",         "Connecticut",      "Delaware",
                                                            "District of Columbia", "Florida",          "Georgia",          "Hawaii",
