@@ -31,6 +31,8 @@ namespace Terrarium.Game
         {
         }
 
+        #region IAnimalWorldBoundary Members
+
         /// <summary>
         ///  While immutable animal properties are stored directly on the creature
         ///  class, any game engine properties are stored on the state objects.
@@ -63,25 +65,25 @@ namespace Terrarium.Game
         public ArrayList Scan()
         {
             // grab the state now so that it doesn't change over the course of the function
-            WorldState worldState = AppMgr.CurrentScheduler.CurrentState;
-            OrganismState thisState = worldState.GetOrganismState(ID);
+            var worldState = AppMgr.CurrentScheduler.CurrentState;
+            var thisState = worldState.GetOrganismState(ID);
 
             // Look around
-            ArrayList foundList = worldState.FindOrganismsInView(CurrentAnimalState,
-                                                                 ((AnimalSpecies) thisState.Species).EyesightRadius);
+            var foundList = worldState.FindOrganismsInView(CurrentAnimalState,
+                                                           ((AnimalSpecies) thisState.Species).EyesightRadius);
 
             // Remove the organism that is scanning
             foundList.Remove(thisState);
 
             // Remove any camouflaged animals
-            for (int index = 0; index < foundList.Count;)
+            for (var index = 0; index < foundList.Count;)
             {
-                OrganismState state = (OrganismState) foundList[index];
+                var state = (OrganismState) foundList[index];
 
                 // Dead animals aren't hidden
                 if (state is AnimalState && state.IsAlive)
                 {
-                    int invisible = Organism.OrganismRandom.Next(1, 100);
+                    var invisible = Organism.OrganismRandom.Next(1, 100);
                     if (invisible <= ((AnimalSpecies) state.Species).InvisibleOdds)
                     {
                         foundList.Remove(state);
@@ -111,14 +113,14 @@ namespace Terrarium.Game
                 throw new ArgumentNullException("organismState", "The argument organismState cannot be null");
             }
 
-            OrganismState targetOrganism = LookForNoCamouflage(organismState);
+            var targetOrganism = LookForNoCamouflage(organismState);
 
             if (targetOrganism != null)
             {
                 if (targetOrganism is AnimalState)
                 {
                     // See if the camouflage hides it
-                    int invisible = Organism.OrganismRandom.Next(1, 100);
+                    var invisible = Organism.OrganismRandom.Next(1, 100);
                     if (invisible <= ((AnimalSpecies) targetOrganism.Species).InvisibleOdds)
                     {
                         Organism.WriteTrace("#Camouflage hid animal from organism");
@@ -142,7 +144,7 @@ namespace Terrarium.Game
         {
             if (organismState != null)
             {
-                WorldState worldState = AppMgr.CurrentScheduler.CurrentState;
+                var worldState = AppMgr.CurrentScheduler.CurrentState;
 
                 organismState = worldState.GetOrganismState(organismState.ID);
                 OrganismState thisOrganism = CurrentAnimalState;
@@ -171,7 +173,7 @@ namespace Terrarium.Game
                 throw new ArgumentNullException("organismID", "The argument organismID cannot be null");
             }
 
-            OrganismState org = AppMgr.CurrentScheduler.CurrentState.GetOrganismState(organismID);
+            var org = AppMgr.CurrentScheduler.CurrentState.GetOrganismState(organismID);
             if (org != null)
             {
                 org = LookFor(org);
@@ -179,5 +181,7 @@ namespace Terrarium.Game
 
             return org;
         }
+
+        #endregion
     }
 }

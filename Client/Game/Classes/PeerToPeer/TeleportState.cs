@@ -16,44 +16,33 @@ namespace Terrarium.PeerToPeer
     [Serializable]
     internal class TeleportState
     {
-        private string _countryInfo;
-        [NonSerialized] private Organism _org;
         private OrganismState _organismState;
-        private Guid _originator;
 
         // We can't hold on to the actual organism object here, because
         // when it gets deserialized on the other peer, it would look for the
         // assembly which may not be there.  Instead we serialize it into a 
         // byte array.
         private byte[] _serializedWrapper;
-        private string _stateInfo;
-        private bool _teleportedToSelf;
 
-        internal Organism Organism
-        {
-            get { return _org; }
-            set { _org = value; }
-        }
+        internal Organism Organism { get; set; }
 
         internal OrganismWrapper OrganismWrapper
         {
             // Deserialize the organism from the byte stream.
             get
             {
-                BinaryFormatter b = new BinaryFormatter();
-
                 // Use a binder to ensure that only a certain set of objects
                 // can be deserialized that we know to be safe from a
                 // Code Access Security perspective.
-                b.Binder = new OrganismWrapperBinder();
-                MemoryStream stream = new MemoryStream(_serializedWrapper);
-                return (OrganismWrapper) b.Deserialize(stream);
+                var binder = new BinaryFormatter { Binder = new OrganismWrapperBinder() };
+                var stream = new MemoryStream(_serializedWrapper);
+                return (OrganismWrapper) binder.Deserialize(stream);
             }
             // Serialize the organism into a byte stream;
             set
             {
-                BinaryFormatter b = new BinaryFormatter();
-                MemoryStream stream = new MemoryStream();
+                var b = new BinaryFormatter();
+                var stream = new MemoryStream();
                 b.Serialize(stream, value);
                 _serializedWrapper = stream.GetBuffer();
             }
@@ -70,28 +59,12 @@ namespace Terrarium.PeerToPeer
             }
         }
 
-        internal Guid Originator
-        {
-            get { return _originator; }
-            set { _originator = value; }
-        }
+        internal Guid Originator { get; set; }
 
-        internal bool TeleportedToSelf
-        {
-            get { return _teleportedToSelf; }
-            set { _teleportedToSelf = value; }
-        }
+        internal bool TeleportedToSelf { get; set; }
 
-        internal string Country
-        {
-            get { return _countryInfo; }
-            set { _countryInfo = value; }
-        }
+        internal string Country { get; set; }
 
-        internal string State
-        {
-            get { return _stateInfo; }
-            set { _stateInfo = value; }
-        }
+        internal string State { get; set; }
     }
 }

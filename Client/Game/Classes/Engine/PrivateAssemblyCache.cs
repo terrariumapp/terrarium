@@ -39,7 +39,7 @@ namespace Terrarium.Game
         /// </summary>
         static PrivateAssemblyCache()
         {
-            Version version = Assembly.GetExecutingAssembly().GetName().Version;
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
             _versionDirectoryPreamble = version.Major + "." + version.Minor + "." + version.Build;
         }
 
@@ -76,9 +76,9 @@ namespace Terrarium.Game
         {
             get
             {
-                using (FileStream lastRunFile = File.Open(AssemblyDirectory + "\\data.dat", FileMode.OpenOrCreate))
+                using (var lastRunFile = File.Open(AssemblyDirectory + "\\data.dat", FileMode.OpenOrCreate))
                 {
-                    using (BinaryReader lastRunReader = new BinaryReader(lastRunFile))
+                    using (var lastRunReader = new BinaryReader(lastRunFile))
                     {
                         return lastRunFile.Length == 0 ? "" : lastRunReader.ReadString();
                     }
@@ -87,9 +87,9 @@ namespace Terrarium.Game
 
             set
             {
-                using (FileStream lastRunFile = File.Open(AssemblyDirectory + "\\data.dat", FileMode.OpenOrCreate))
+                using (var lastRunFile = File.Open(AssemblyDirectory + "\\data.dat", FileMode.OpenOrCreate))
                 {
-                    using (BinaryWriter lastRunWriter = new BinaryWriter(lastRunFile))
+                    using (var lastRunWriter = new BinaryWriter(lastRunFile))
                     {
                         // If we're tracking who is running OR we're not but we're clearing it
                         // go ahead and write. This last case is needed since, even if we aren't
@@ -243,7 +243,7 @@ namespace Terrarium.Game
         /// <threadsafe/>
         public static string GetAssemblyShortName(string fullName)
         {
-            string[] chunks = fullName.Split(new Char[] {','});
+            var chunks = fullName.Split(new[] {','});
             // return tolower so case insensitive stuff works ok
             return chunks[0].ToLower(CultureInfo.InvariantCulture);
         }
@@ -257,9 +257,9 @@ namespace Terrarium.Game
         /// <threadsafe/>
         public static string GetAssemblyVersion(string fullName)
         {
-            string[] chunks = fullName.Split(new Char[] {','});
-            string versionChunk = chunks[1];
-            string[] versionPieces = versionChunk.Split(new Char[] {'='});
+            var chunks = fullName.Split(new[] {','});
+            var versionChunk = chunks[1];
+            var versionPieces = versionChunk.Split(new[] {'='});
             return versionPieces[1];
         }
 
@@ -272,7 +272,7 @@ namespace Terrarium.Game
         /// <threadsafe/>
         public static string GetBaseAssemblyDirectory(string dataPath, string dataFile)
         {
-            string dataFilePart = dataFile.Substring(0, dataFile.LastIndexOf("."));
+            var dataFilePart = dataFile.Substring(0, dataFile.LastIndexOf("."));
             return Path.Combine(dataPath, dataFilePart + "_Assemblies");
         }
 
@@ -285,8 +285,8 @@ namespace Terrarium.Game
         public void BlacklistAssemblies(string[] assemblies)
         {
             // Ensure that the caller can't pass us a name that actually makes this file get created somewhere else
-            FileIOPermission permission = new FileIOPermission(FileIOPermissionAccess.AllAccess,
-                                                               new string[] {AssemblyDirectory});
+            var permission = new FileIOPermission(FileIOPermissionAccess.AllAccess,
+                                                  new[] {AssemblyDirectory});
 
             try
             {
@@ -294,13 +294,13 @@ namespace Terrarium.Game
 
                 if (assemblies != null)
                 {
-                    foreach (string assembly in assemblies)
+                    foreach (var assembly in assemblies)
                     {
-                        string fileName = GetFileName(assembly);
+                        var fileName = GetFileName(assembly);
                         try
                         {
                             // Replace this file with a zero length file (or create one), so we won't get it again
-                            using (FileStream stream = File.Create(fileName))
+                            using (var stream = File.Create(fileName))
                             {
                                 stream.Close();
                             }
@@ -335,7 +335,7 @@ namespace Terrarium.Game
 
             // Make sure we can't be hacked to load a bogus assembly by only allowing our code
             // to access files in the assembly directory.
-            Assembly organismAssembly = Assembly.LoadFile(GetFileName(fullName));
+            var organismAssembly = Assembly.LoadFile(GetFileName(fullName));
 
             return organismAssembly;
         }
@@ -349,11 +349,11 @@ namespace Terrarium.Game
         public Boolean Exists(string fullName)
         {
             bool exists;
-            string asmDir = Path.GetFullPath(AssemblyDirectory);
+            var asmDir = Path.GetFullPath(AssemblyDirectory);
 
             // Make sure we can't be hacked to return whether files exist by only allowing our code
             // to access files in the assembly directory.
-            FileIOPermission permission = new FileIOPermission(FileIOPermissionAccess.AllAccess, new string[] {asmDir});
+            var permission = new FileIOPermission(FileIOPermissionAccess.AllAccess, new[] {asmDir});
             try
             {
                 permission.PermitOnly();
@@ -375,13 +375,13 @@ namespace Terrarium.Game
         /// <param name="fullName">The full name of the original assembly.</param>
         public void SaveOrganismBytes(byte[] bytes, string fullName)
         {
-            string directory = AssemblyDirectory;
+            var directory = AssemblyDirectory;
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }
 
-            string fileName = GetFileName(fullName);
+            var fileName = GetFileName(fullName);
 
             if (File.Exists(fileName))
             {
@@ -389,14 +389,14 @@ namespace Terrarium.Game
             }
 
             // Ensure that the caller can't pass us a name that actually makes this file get created somewhere else
-            FileIOPermission permission = new FileIOPermission(FileIOPermissionAccess.AllAccess,
-                                                               new string[] {directory});
+            var permission = new FileIOPermission(FileIOPermissionAccess.AllAccess,
+                                                  new[] {directory});
 
             try
             {
                 permission.PermitOnly();
 
-                FileStream targetStream = File.Create(fileName);
+                var targetStream = File.Create(fileName);
                 try
                 {
                     targetStream.Write(bytes, 0, bytes.Length);
@@ -444,22 +444,22 @@ namespace Terrarium.Game
         /// <param name="fullName">The full name of the assembly.</param>
         public void SaveOrganismAssembly(string assemblyPath, string symbolPath, string fullName)
         {
-            string directory = AssemblyDirectory;
+            var directory = AssemblyDirectory;
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }
 
-            string fileName = GetFileName(fullName);
-            string symName = Path.ChangeExtension(GetFileName(fullName), ".pdb");
+            var fileName = GetFileName(fullName);
+            var symName = Path.ChangeExtension(GetFileName(fullName), ".pdb");
 
             if (File.Exists(fileName))
             {
                 return;
             }
 
-            string reportPath = Path.Combine(GameConfig.ApplicationDirectory, Guid.NewGuid() + ".xml");
-            int validAssembly = checkAssemblyWithReporting(assemblyPath, reportPath);
+            var reportPath = Path.Combine(GameConfig.ApplicationDirectory, Guid.NewGuid() + ".xml");
+            var validAssembly = checkAssemblyWithReporting(assemblyPath, reportPath);
 
             if (validAssembly == 0)
             {
@@ -471,7 +471,7 @@ namespace Terrarium.Game
                 File.Delete(reportPath);
             }
 
-            FileStream sourceStream = File.OpenRead(assemblyPath);
+            var sourceStream = File.OpenRead(assemblyPath);
             FileStream symStream = null;
             try
             {
@@ -486,16 +486,16 @@ namespace Terrarium.Game
             }
 
             // Ensure that the caller can't pass us a name that actually makes this file get created somewhere else
-            FileIOPermission permission = new FileIOPermission(FileIOPermissionAccess.AllAccess,
-                                                               new string[] {directory});
+            var permission = new FileIOPermission(FileIOPermissionAccess.AllAccess,
+                                                  new[] {directory});
             try
             {
                 permission.PermitOnly();
 
-                FileStream targetStream = File.Create(fileName);
+                var targetStream = File.Create(fileName);
                 try
                 {
-                    byte[] bytes = new byte[65536];
+                    var bytes = new byte[65536];
                     int bytesRead;
                     while ((bytesRead = sourceStream.Read(bytes, 0, 65536)) > 0)
                     {
@@ -524,7 +524,7 @@ namespace Terrarium.Game
                         targetStream = File.Create(symName);
                         try
                         {
-                            byte[] bytes = new byte[65536];
+                            var bytes = new byte[65536];
                             int bytesRead;
                             while ((bytesRead = symStream.Read(bytes, 0, 65536)) > 0)
                             {
@@ -568,20 +568,20 @@ namespace Terrarium.Game
         /// <returns>A set of OrganismAssemblyInfo objects for each assembly.</returns>
         public OrganismAssemblyInfo[] GetAssemblies()
         {
-            ArrayList infoList = new ArrayList();
+            var infoList = new ArrayList();
 
             if (!Directory.Exists(AssemblyDirectory))
             {
                 return new OrganismAssemblyInfo[0];
             }
 
-            string[] fileEntries = Directory.GetFiles(AssemblyDirectory);
-            foreach (string fileName in fileEntries)
+            var fileEntries = Directory.GetFiles(AssemblyDirectory);
+            foreach (var fileName in fileEntries)
             {
                 if (Path.GetExtension(fileName).ToLower(CultureInfo.InvariantCulture) != ".dll") continue;
-                FileInfo info = new FileInfo(fileName);
+                var info = new FileInfo(fileName);
                 if (info.Length <= 0) continue;
-                Assembly assembly = Assembly.LoadFrom(fileName);
+                var assembly = Assembly.LoadFrom(fileName);
                 infoList.Add(new OrganismAssemblyInfo(assembly.FullName, GetAssemblyShortName(assembly.FullName)));
             }
 
@@ -595,16 +595,16 @@ namespace Terrarium.Game
         /// <returns>A listing of all 0 byte assemblies in the cache.</returns>
         public string[] GetBlacklistedAssemblies()
         {
-            ArrayList blacklistedAssemblies = new ArrayList();
+            var blacklistedAssemblies = new ArrayList();
 
             if (Directory.Exists(AssemblyDirectory))
             {
-                string[] fileEntries = Directory.GetFiles(AssemblyDirectory);
-                foreach (string fileName in fileEntries)
+                var fileEntries = Directory.GetFiles(AssemblyDirectory);
+                foreach (var fileName in fileEntries)
                 {
                     if (Path.GetExtension(fileName).ToLower(CultureInfo.InvariantCulture) == ".dll")
                     {
-                        FileInfo info = new FileInfo(fileName);
+                        var info = new FileInfo(fileName);
                         if (info.Length == 0)
                         {
                             blacklistedAssemblies.Add(Path.GetFileNameWithoutExtension(fileName));
@@ -625,8 +625,8 @@ namespace Terrarium.Game
         internal Assembly ResolveAssembly(Object sender, ResolveEventArgs args)
         {
             // Test for OrganismBase
-            Assembly matchAssembly = getAssemblyWithTerrariumBindingPolicy(args.Name,
-                                                                           Assembly.GetAssembly(typeof (Animal)));
+            var matchAssembly = getAssemblyWithTerrariumBindingPolicy(args.Name,
+                                                                      Assembly.GetAssembly(typeof (Animal)));
             if (matchAssembly != null)
             {
                 return matchAssembly;
@@ -644,7 +644,7 @@ namespace Terrarium.Game
             // Need to assert permission to open files on disk because we need to load organism assemblies
             // and organism code could be on the stack because it may be loading an assembly that
             // has not been loaded yet.  This would fail without the assertion.
-            FileIOPermission permission = new FileIOPermission(PermissionState.Unrestricted);
+            var permission = new FileIOPermission(PermissionState.Unrestricted);
             permission.Assert();
             return LoadOrganismAssembly(args.Name);
         }
@@ -656,16 +656,17 @@ namespace Terrarium.Game
         /// <param name="testAssemblyName">The name of the test assembly.</param>
         /// <param name="potentialMatchAssembly">A potentially matching assembly.</param>
         /// <returns>The matching assembly if it really matches, else null.</returns>
-        private static Assembly getAssemblyWithTerrariumBindingPolicy(string testAssemblyName, Assembly potentialMatchAssembly)
+        private static Assembly getAssemblyWithTerrariumBindingPolicy(string testAssemblyName,
+                                                                      Assembly potentialMatchAssembly)
         {
             Debug.Assert(potentialMatchAssembly != null);
             try
             {
                 if (GetAssemblyShortName(testAssemblyName) == GetAssemblyShortName(potentialMatchAssembly.FullName))
                 {
-                    Version testAssemblyVersion = new Version(GetAssemblyVersion(testAssemblyName));
+                    var testAssemblyVersion = new Version(GetAssemblyVersion(testAssemblyName));
                     Debug.Assert(testAssemblyVersion != null);
-                    Version potentialAssemblyVersion = potentialMatchAssembly.GetName().Version;
+                    var potentialAssemblyVersion = potentialMatchAssembly.GetName().Version;
 
                     if (testAssemblyVersion.Major == potentialAssemblyVersion.Major &&
                         testAssemblyVersion.Minor == potentialAssemblyVersion.Minor &&

@@ -13,10 +13,6 @@ namespace Terrarium.PeerToPeer
     /// </summary>
     internal class Peer
     {
-        private readonly string _ipAddress;
-        private readonly DateTime _leaseTimeout;
-        private DateTime _lastReceipt;
-
         /// <summary>
         ///  Initialize a new peer using an IP Address and the timeout
         ///  date on the lease.  This peer object is then stored in
@@ -26,8 +22,8 @@ namespace Terrarium.PeerToPeer
         /// <param name="leaseTimeout">The timeout date on the peer's lease.</param>
         internal Peer(string ipAddress, DateTime leaseTimeout)
         {
-            _ipAddress = ipAddress;
-            _leaseTimeout = leaseTimeout;
+            IPAddress = ipAddress;
+            LeaseTimeout = leaseTimeout;
         }
 
         /// <summary>
@@ -35,10 +31,7 @@ namespace Terrarium.PeerToPeer
         ///  dynamically morphing a peer to work on another IP.  Each
         ///  IP is considered a distinct and new peer.
         /// </summary>
-        internal string IPAddress
-        {
-            get { return _ipAddress; }
-        }
+        internal string IPAddress { get; private set; }
 
         /// <summary>
         ///  The timeout on the peer's lease.  This can be used to
@@ -46,10 +39,7 @@ namespace Terrarium.PeerToPeer
         ///  between peer collections, and to determine if the
         ///  peer is valid for a peer connection.
         /// </summary>
-        internal DateTime LeaseTimeout
-        {
-            get { return _leaseTimeout; }
-        }
+        internal DateTime LeaseTimeout { get; private set; }
 
         /// <summary>
         ///  Whenever a conversation completes this property is
@@ -63,10 +53,6 @@ namespace Terrarium.PeerToPeer
         ///  This is used to make sure people don't cheat by 
         ///  spamming peers with a custom Terrarium client
         /// </summary>
-        internal DateTime LastReceipt
-        {
-            get { return _lastReceipt; }
-            set { _lastReceipt = value; }
-        }
+        internal DateTime LastReceipt { get; set; }
     }
 }

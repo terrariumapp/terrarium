@@ -108,7 +108,7 @@ namespace Terrarium.PeerToPeer
 
         internal string HostIP
         {
-            get  { return _hostIP != null ? _hostIP.ToString() : ""; }
+            get { return _hostIP != null ? _hostIP.ToString() : ""; }
         }
 
         /// <summary>
@@ -166,8 +166,7 @@ namespace Terrarium.PeerToPeer
             StartHttpNamespaceManager();
 
             // Start our announcement thread
-            announceThread = new Thread(AnnounceAndRegisterPeer);
-            announceThread.Name = "Peer Discovery Thread"; // Useful for debugging
+            announceThread = new Thread(AnnounceAndRegisterPeer) {Name = "Peer Discovery Thread"};
             announceThread.Start();
         }
 
@@ -198,8 +197,8 @@ namespace Terrarium.PeerToPeer
             _namespaceManager.Start(HostIP, PortNumber);
 
             // Register the namespaces we intend to service
-            VersionNamespaceHandler versionHandler = new VersionNamespaceHandler();
-            OrganismsNamespaceHandler organismsHandler = new OrganismsNamespaceHandler(this);
+            var versionHandler = new VersionNamespaceHandler();
+            var organismsHandler = new OrganismsNamespaceHandler(this);
             _namespaceManager.RegisterNamespace("version", versionHandler);
             _namespaceManager.RegisterNamespace("organisms", organismsHandler);
             _namespaceManager.RegisterNamespace("organisms/", organismsHandler);
@@ -221,9 +220,11 @@ namespace Terrarium.PeerToPeer
         {
             try
             {
-                PeerDiscoveryService peerService = new PeerDiscoveryService();
-                peerService.Url = GameConfig.WebRoot + "/discovery/discoverydb.asmx";
-                peerService.Timeout = NetworkTimeoutMsec;
+                var peerService = new PeerDiscoveryService
+                                      {
+                                          Url = (GameConfig.WebRoot + "/discovery/discoverydb.asmx"),
+                                          Timeout = NetworkTimeoutMsec
+                                      };
 
                 while (true)
                 {
@@ -258,10 +259,10 @@ namespace Terrarium.PeerToPeer
                             }
                             else
                             {
-                                    peerService.RegisterMyPeerGetCountAndPeerList(
-                                        Assembly.GetExecutingAssembly().GetName().Version.ToString(), _peerChannel,
-                                        GameEngine.Current.CurrentVector.State.StateGuid, out data,
-                                        out _totalPeersOnChannel);
+                                peerService.RegisterMyPeerGetCountAndPeerList(
+                                    Assembly.GetExecutingAssembly().GetName().Version.ToString(), _peerChannel,
+                                    GameEngine.Current.CurrentVector.State.StateGuid, out data,
+                                    out _totalPeersOnChannel);
                             }
 
                             if (_discoveryLed != null)
@@ -269,12 +270,12 @@ namespace Terrarium.PeerToPeer
 
                             if (data != null)
                             {
-                                DataTable peerTable = data.Tables["Peers"];
-                                Hashtable newPeersHash = Hashtable.Synchronized(new Hashtable());
+                                var peerTable = data.Tables["Peers"];
+                                var newPeersHash = Hashtable.Synchronized(new Hashtable());
                                 foreach (DataRow row in peerTable.Rows)
                                 {
-                                    string ipAddress = (string) row["IPAddress"];
-                                    DateTime peerLease = (DateTime) row["Lease"];
+                                    var ipAddress = (string) row["IPAddress"];
+                                    var peerLease = (DateTime) row["Lease"];
                                     if (ipAddress == _hostIP.ToString())
                                     {
                                         continue;
@@ -358,8 +359,8 @@ namespace Terrarium.PeerToPeer
 //                return;
             }
 
-            TeleportWorkItem workItem = new TeleportWorkItem(this, sendAddress.ToString(), state, PortNumber,
-                                                             NetworkTimeoutMsec, _peerConnectionLed);
+            var workItem = new TeleportWorkItem(this, sendAddress.ToString(), state, PortNumber,
+                                                NetworkTimeoutMsec, _peerConnectionLed);
 
             // Actually do the teleportation asynchronously so we don't block the UI
             TeleportDelegate teleport = workItem.DoTeleport;
@@ -369,14 +370,14 @@ namespace Terrarium.PeerToPeer
         internal void TeleportCallback(IAsyncResult ar)
         {
             // Extract the delegate from the AsyncResult
-            TeleportDelegate teleportDelegate = (TeleportDelegate) ((AsyncResult) ar).AsyncDelegate;
+            var teleportDelegate = (TeleportDelegate) ((AsyncResult) ar).AsyncDelegate;
 
             // Obtain the result
-            object unteleportedObject = teleportDelegate.EndInvoke(ar);
+            var unteleportedObject = teleportDelegate.EndInvoke(ar);
             if (unteleportedObject != null)
             {
                 // Something failed, so we need to teleport locally
-                GameEngine engine = GameEngine.Current;
+                var engine = GameEngine.Current;
 
                 // The engine may be gone now since we're on a different thread.
                 // If so, the organism is lost
@@ -416,30 +417,29 @@ namespace Terrarium.PeerToPeer
 
         internal static int GetNumPeersFromConfig(string channel)
         {
-            DataSet data = GetAllPeersFromConfig(channel);
+            var data = GetAllPeersFromConfig(channel);
             return data.Tables["Peers"].Rows.Count;
         }
 
         internal static DataSet GetAllPeersFromConfig(string channel)
         {
-            string peerList = GameConfig.PeerList;
+            var peerList = GameConfig.PeerList;
 
-            DataSet data = new DataSet();
-            data.Locale = CultureInfo.InvariantCulture;
+            var data = new DataSet {Locale = CultureInfo.InvariantCulture};
 
-            DataTable peerTable = data.Tables.Add("Peers");
+            var peerTable = data.Tables.Add("Peers");
             peerTable.Columns.Add("IPAddress", typeof (String));
             peerTable.Columns.Add("Lease", typeof (DateTime));
 
             // The string needs to be Channel,IP,Channel,IP, etc.
-            string[] peers = peerList.Split(',');
-            for (int i = 0; i < peers.Length; i += 2)
+            var peers = peerList.Split(',');
+            for (var i = 0; i < peers.Length; i += 2)
             {
                 if (peers[i].Trim().ToLower(CultureInfo.InvariantCulture) ==
                     channel.ToLower(CultureInfo.InvariantCulture) ||
                     peers[i].Trim().ToLower(CultureInfo.InvariantCulture) == "all")
                 {
-                    DataRow row = peerTable.NewRow();
+                    var row = peerTable.NewRow();
 
                     // If we get a bad format in the config file, we should throw an exception so that the 
                     // discovery engine shows red.  having a 0.0.0.0 should count as a problem since it
@@ -462,7 +462,7 @@ namespace Terrarium.PeerToPeer
         // This forms an XML document that reports lots of statistics that are useful for debugging
         internal string GetNetworkStatistics()
         {
-            StringBuilder stats = new StringBuilder();
+            var stats = new StringBuilder();
             stats.Append("<?xml version=\"1.0\"?>");
             stats.Append("<stats>");
             stats.Append("<guid>" + GameEngine.Current.CurrentVector.State.StateGuid + "</guid>");
@@ -506,14 +506,14 @@ namespace Terrarium.PeerToPeer
 //            }
 //            stats.Append("</pendingVersion>");      
 
-            Hashtable animals = new Hashtable();
-            GameEngine engine = GameEngine.Current;
+            var animals = new Hashtable();
+            var engine = GameEngine.Current;
             if (engine != null)
             {
-                WorldVector vector = engine.CurrentVector;
+                var vector = engine.CurrentVector;
                 if (vector != null)
                 {
-                    WorldState state = vector.State;
+                    var state = vector.State;
                     if (state != null)
                     {
                         foreach (OrganismState organism in state.Organisms)
@@ -523,7 +523,7 @@ namespace Terrarium.PeerToPeer
                                 continue;
                             }
 
-                            string speciesName = ((Species) organism.Species).Name;
+                            var speciesName = ((Species) organism.Species).Name;
                             if (animals[speciesName] == null)
                             {
                                 animals[speciesName] = 1;
@@ -548,12 +548,12 @@ namespace Terrarium.PeerToPeer
 
             if (engine != null)
             {
-                PrivateAssemblyCache pac = engine.Pac;
+                var pac = engine.Pac;
                 if (pac != null)
                 {
                     stats.Append("<blacklistedCreatures>");
-                    string[] blacklistedAssemblies = pac.GetBlacklistedAssemblies();
-                    foreach (string creature in blacklistedAssemblies)
+                    var blacklistedAssemblies = pac.GetBlacklistedAssemblies();
+                    foreach (var creature in blacklistedAssemblies)
                     {
                         stats.AppendFormat("<creature name=\"{0}\" />",
                                            creature);
@@ -592,13 +592,15 @@ namespace Terrarium.PeerToPeer
                 return;
             }
 
-            PeerDiscoveryService peerService = new PeerDiscoveryService();
-            peerService.Url = GameConfig.WebRoot + "/discovery/discoverydb.asmx";
-            peerService.Timeout = NetworkTimeoutMsec;
+            var peerService = new PeerDiscoveryService
+                                  {
+                                      Url = (GameConfig.WebRoot + "/discovery/discoverydb.asmx"),
+                                      Timeout = NetworkTimeoutMsec
+                                  };
 
             string address;
-            bool isVisibleNetworkAddress = false;
-            bool contactedDiscoveryServer = false;
+            var isVisibleNetworkAddress = false;
+            var contactedDiscoveryServer = false;
 
             try
             {
@@ -662,8 +664,8 @@ namespace Terrarium.PeerToPeer
                     return true;
                 }
 
-                IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
-                foreach (IPAddress ip in hostEntry.AddressList)
+                var hostEntry = Dns.GetHostEntry(Dns.GetHostName());
+                foreach (var ip in hostEntry.AddressList)
                 {
                     if (ip.ToString() == ipAddress)
                     {
@@ -714,13 +716,13 @@ namespace Terrarium.PeerToPeer
         /// <returns>The value between the start and end tag.</returns>
         public static string GetValueFromContent(string startTag, string endTag, string content)
         {
-            int startIndex = content.IndexOf(startTag);
+            var startIndex = content.IndexOf(startTag);
             string valueFromContent = null;
 
             if (startIndex > -1)
             {
-                int lastIndex = startIndex + startTag.Length;
-                int endIndex = content.IndexOf(endTag, lastIndex, content.Length - lastIndex);
+                var lastIndex = startIndex + startTag.Length;
+                var endIndex = content.IndexOf(endTag, lastIndex, content.Length - lastIndex);
                 if (endIndex > -1)
                 {
                     valueFromContent = content.Substring(lastIndex, endIndex - lastIndex);
@@ -738,13 +740,13 @@ namespace Terrarium.PeerToPeer
         /// <returns>A collection of values parsed from the content.</returns>
         public static ArrayList GetValuesFromContent(string startTag, string endTag, string content)
         {
-            ArrayList items = new ArrayList();
+            var items = new ArrayList();
 
-            int startIndex = content.IndexOf(startTag);
+            var startIndex = content.IndexOf(startTag);
             while (startIndex > -1)
             {
-                int lastIndex = startIndex + startTag.Length;
-                int endIndex = content.IndexOf(endTag, lastIndex, content.Length - lastIndex);
+                var lastIndex = startIndex + startTag.Length;
+                var endIndex = content.IndexOf(endTag, lastIndex, content.Length - lastIndex);
                 if (endIndex > -1)
                 {
                     items.Add(content.Substring(lastIndex, endIndex - lastIndex));

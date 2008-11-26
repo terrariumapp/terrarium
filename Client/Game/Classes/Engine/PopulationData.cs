@@ -70,9 +70,11 @@ namespace Terrarium.Game
         public void InitWebService()
         {
             if (_reportingService != null) return;
-            _reportingService = new ReportingService();
-            _reportingService.Url = GameConfig.WebRoot + "/reporting/reportpopulation.asmx";
-            _reportingService.Timeout = 60000;
+            _reportingService = new ReportingService
+                                    {
+                                        Url = (GameConfig.WebRoot + "/reporting/reportpopulation.asmx"),
+                                        Timeout = 60000
+                                    };
         }
 
         /// <summary>
@@ -92,15 +94,14 @@ namespace Terrarium.Game
         /// </summary>
         private void ResetData()
         {
-            _data = new DataSet();
-            _data.Locale = CultureInfo.InvariantCulture;
+            _data = new DataSet {Locale = CultureInfo.InvariantCulture};
 
             _populationChangeTable = _data.Tables.Add("PopulationChange");
             _populationChangeTable.Columns.Add("TickNumber", typeof (Int32));
             _populationChangeTable.Columns.Add("Species", typeof (String));
             _populationChangeTable.Columns.Add("Delta", typeof (Int32));
             _populationChangeTable.Columns.Add("Reason", typeof (PopulationChangeReason));
-            _populationChangeTable.PrimaryKey = new DataColumn[]
+            _populationChangeTable.PrimaryKey = new[]
                                                     {
                                                         _populationChangeTable.Columns["TickNumber"],
                                                         _populationChangeTable.Columns["Species"],
@@ -118,12 +119,12 @@ namespace Terrarium.Game
                                 _populationChangeTable.Columns["Species"]);
 
             _totalsTable.Columns.Add("Population", typeof (Int32), "Sum(Child(TotalsPopulationChangeRelation).Delta)");
-            DataColumn column = _totalsTable.Columns.Add("MaxPopulation", typeof (Int32));
+            var column = _totalsTable.Columns.Add("MaxPopulation", typeof (Int32));
             column.DefaultValue = 0;
             column = _totalsTable.Columns.Add("MinPopulation", typeof (Int32));
             column.DefaultValue = 0;
 
-            _totalsTable.PrimaryKey = new DataColumn[] {_totalsTable.Columns["Species"]};
+            _totalsTable.PrimaryKey = new[] {_totalsTable.Columns["Species"]};
         }
 
         /// <summary>
@@ -167,7 +168,7 @@ namespace Terrarium.Game
                 throw new OrganismBlacklistException();
             }
 
-            Boolean resetData = false;
+            var resetData = false;
             DataSet reportData;
             DataTable reportTable = null;
 
@@ -197,7 +198,7 @@ namespace Terrarium.Game
                 resetData = true;
             }
 
-            DataRow newRow = _tickTable.NewRow();
+            var newRow = _tickTable.NewRow();
             newRow["Number"] = tickNumber;
             _tickTable.Rows.Add(newRow);
 
@@ -224,14 +225,14 @@ namespace Terrarium.Game
         public DataSet GetCurrentReportingStats(Guid peerGuid, int tick)
         {
             // Get data since last reporting period
-            DataSet newData = CreateReportDataSet();
-            DataTable newTable = newData.Tables["History"];
+            var newData = CreateReportDataSet();
+            var newTable = newData.Tables["History"];
             FillReportTable(newTable, peerGuid, tick);
 
             if (_peerTotalsData != null)
             {
                 // Duplicate the existing reported-to-server data
-                DataSet mergedData = CreateReportDataSet();
+                var mergedData = CreateReportDataSet();
                 mergedData.Merge(_peerTotalsData);
                 AddToTotals(ref mergedData, newData);
 
@@ -258,12 +259,11 @@ namespace Terrarium.Game
             }
 
             if (_pendingAsyncResult != null) return;
-            DataSet allData = new DataSet();
-            allData.Locale = CultureInfo.InvariantCulture;
+            var allData = new DataSet {Locale = CultureInfo.InvariantCulture};
 
             allData.Merge(newData);
 
-            for (int i = (allData.Tables["History"].Rows.Count - 1); i >= 0; i--)
+            for (var i = (allData.Tables["History"].Rows.Count - 1); i >= 0; i--)
             {
                 if (((int) allData.Tables["History"].Rows[i]["OrganismBlacklistedCount"]) > 0)
                 {
@@ -299,7 +299,7 @@ namespace Terrarium.Game
         {
             try
             {
-                int resultCode = _reportingService.EndReportPopulation(asyncResult);
+                var resultCode = _reportingService.EndReportPopulation(asyncResult);
 
                 switch (resultCode)
                 {
@@ -392,10 +392,10 @@ namespace Terrarium.Game
         /// <param name="count">The number to add.</param>
         public void CountOrganism(string speciesName, PopulationChangeReason reason, int count)
         {
-            DataRow row = _populationChangeTable.Rows.Find(new Object[] {_currentTick, speciesName, reason});
+            var row = _populationChangeTable.Rows.Find(new Object[] {_currentTick, speciesName, reason});
             if (row == null)
             {
-                DataRow totalsRow = _totalsTable.Rows.Find(new Object[] {speciesName});
+                var totalsRow = _totalsTable.Rows.Find(new Object[] {speciesName});
                 if (totalsRow == null)
                 {
                     totalsRow = _totalsTable.NewRow();
@@ -434,10 +434,10 @@ namespace Terrarium.Game
         /// <param name="count">The number to remove.</param>
         public void UncountOrganism(string speciesName, PopulationChangeReason reason, int count)
         {
-            DataRow row = _populationChangeTable.Rows.Find(new Object[] {_currentTick, speciesName, reason});
+            var row = _populationChangeTable.Rows.Find(new Object[] {_currentTick, speciesName, reason});
             if (row == null)
             {
-                DataRow totalsRow = _totalsTable.Rows.Find(new Object[] {speciesName});
+                var totalsRow = _totalsTable.Rows.Find(new Object[] {speciesName});
 
                 // There should always be a totals row if we are decrementing population since
                 // it stores the current population
@@ -482,10 +482,9 @@ namespace Terrarium.Game
         /// <returns>A reporting server compatible dataset.</returns>
         public DataSet CreateReportDataSet()
         {
-            DataSet reportDataSet = new DataSet();
-            reportDataSet.Locale = CultureInfo.InvariantCulture;
+            var reportDataSet = new DataSet {Locale = CultureInfo.InvariantCulture};
 
-            DataTable totalsOnlyTable = reportDataSet.Tables.Add("History");
+            var totalsOnlyTable = reportDataSet.Tables.Add("History");
             totalsOnlyTable.Columns.Add("GUID", typeof (Guid));
             totalsOnlyTable.Columns.Add("TickNumber", typeof (Int32));
             totalsOnlyTable.Columns.Add("ContactTime", typeof (DateTime));
@@ -505,7 +504,7 @@ namespace Terrarium.Game
             totalsOnlyTable.Columns.Add("SecurityViolationCount", typeof (Int32));
             totalsOnlyTable.Columns.Add("OrganismBlacklistedCount", typeof (Int32));
 
-            totalsOnlyTable.PrimaryKey = new DataColumn[]
+            totalsOnlyTable.PrimaryKey = new[]
                                              {
                                                  totalsOnlyTable.Columns["GUID"],
                                                  totalsOnlyTable.Columns["TickNumber"],
@@ -525,7 +524,7 @@ namespace Terrarium.Game
         {
             foreach (DataRow row in _totalsTable.Rows)
             {
-                DataRow newRow = totalsOnlyTable.NewRow();
+                var newRow = totalsOnlyTable.NewRow();
                 newRow["GUID"] = peerStateGuid;
                 newRow["TickNumber"] = tickNumber;
                 newRow["ContactTime"] = DateTime.UtcNow;
@@ -615,20 +614,19 @@ namespace Terrarium.Game
         {
             if (totalsData == null)
             {
-                DataSet mergedData = new DataSet();
-                mergedData.Locale = CultureInfo.InvariantCulture;
+                var mergedData = new DataSet {Locale = CultureInfo.InvariantCulture};
                 mergedData.Merge(newData);
                 totalsData = mergedData;
             }
             else
             {
-                DataTable existingTable = totalsData.Tables[0];
-                DataTable newTable = newData.Tables[0];
+                var existingTable = totalsData.Tables[0];
+                var newTable = newData.Tables[0];
                 existingTable.DefaultView.AllowNew = true;
                 existingTable.DefaultView.AllowEdit = true;
                 foreach (DataRow row in newTable.Rows)
                 {
-                    DataRow[] existingRows =
+                    var existingRows =
                         existingTable.Select("SpeciesName='" + ((string) row["SpeciesName"]).Replace("'", "''") + "'");
                     Debug.Assert(existingRows.Length <= 1);
                     if (existingRows.Length == 0)
@@ -637,7 +635,7 @@ namespace Terrarium.Game
                     }
                     else
                     {
-                        DataRow existingRow = existingRows[0];
+                        var existingRow = existingRows[0];
                         existingRow["Population"] = row["Population"];
                         existingRow["BirthCount"] = addValues(existingRow["BirthCount"], row["BirthCount"]);
                         existingRow["TeleportedToCount"] = addValues(existingRow["TeleportedToCount"],

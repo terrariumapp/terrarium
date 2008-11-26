@@ -66,7 +66,7 @@ namespace Terrarium.Hosting
         {
             get
             {
-                StrongNameVerificationState st = new StrongNameVerificationState();
+                var st = new StrongNameVerificationState();
                 return (st.GlobalSkip || st.TerrariumSkip);
             }
         }
@@ -83,8 +83,8 @@ namespace Terrarium.Hosting
         // Execution Permission.
         private static PermissionSet MakeExecutionOnlyPermSet()
         {
-            PermissionSet pSet = new PermissionSet(PermissionState.None);
-            SecurityPermission perm = new SecurityPermission(SecurityPermissionFlag.Execution);
+            var pSet = new PermissionSet(PermissionState.None);
+            var perm = new SecurityPermission(SecurityPermissionFlag.Execution);
             pSet.AddPermission(perm);
             return pSet;
         }
@@ -92,7 +92,7 @@ namespace Terrarium.Hosting
         // Make a permission set that allows unrestricted access
         private static PermissionSet MakeTrustedPermSet()
         {
-            PermissionSet pSet = new PermissionSet(PermissionState.Unrestricted);
+            var pSet = new PermissionSet(PermissionState.Unrestricted);
             return pSet;
         }
 
@@ -100,19 +100,19 @@ namespace Terrarium.Hosting
         // that a type resides in.
         private static StrongNamePublicKeyBlob AssemblyBlobFromType(Type t)
         {
-            Assembly asm = Assembly.GetAssembly(t);
+            var asm = Assembly.GetAssembly(t);
             if (asm == null)
             {
                 throw new Exception("Can't get assembly for " + t);
             }
 
-            AssemblyName asmName = asm.GetName();
+            var asmName = asm.GetName();
             if (asmName == null)
             {
                 throw new Exception("Can't get AssemblyName object");
             }
 
-            byte[] dynablob = asmName.GetPublicKey();
+            var dynablob = asmName.GetPublicKey();
             if (dynablob == null)
             {
                 throw new Exception("Can't retrieve assembly public key--is assembly signed?");
@@ -131,7 +131,7 @@ namespace Terrarium.Hosting
         // (all of the the .Net Framework and CLR assemblies)
         private static UnionCodeGroup MakeMSCodeGroup()
         {
-            UnionCodeGroup ms = new UnionCodeGroup(
+            var ms = new UnionCodeGroup(
                 new StrongNameMembershipCondition(new StrongNamePublicKeyBlob(s_microsoftPublicKey), null, null),
                 new PolicyStatement(new PermissionSet(PermissionState.Unrestricted)));
             return ms;
@@ -141,7 +141,7 @@ namespace Terrarium.Hosting
         // (all of the the .Net Framework and CLR assemblies)
         private static UnionCodeGroup MakeEcmaCodeGroup()
         {
-            UnionCodeGroup ecma = new UnionCodeGroup(
+            var ecma = new UnionCodeGroup(
                 new StrongNameMembershipCondition(new StrongNamePublicKeyBlob(s_ecmaPublicKey), null, null),
                 new PolicyStatement(new PermissionSet(PermissionState.Unrestricted)));
             return ecma;
@@ -164,14 +164,14 @@ namespace Terrarium.Hosting
         // it gets nothing.
         internal static PolicyLevel MakePolicyLevel(string cacheDir)
         {
-            PermissionSet noPerms = new PermissionSet(PermissionState.None);
+            var noPerms = new PermissionSet(PermissionState.None);
 
             // All Code, Nothing
-            FirstMatchCodeGroup allCode = new FirstMatchCodeGroup(new AllMembershipCondition(),
-                                                                  new PolicyStatement(noPerms));
+            var allCode = new FirstMatchCodeGroup(new AllMembershipCondition(),
+                                                  new PolicyStatement(noPerms));
 
             // My Computer, Nothing
-            FirstMatchCodeGroup myComputer =
+            var myComputer =
                 new FirstMatchCodeGroup(new ZoneMembershipCondition(SecurityZone.MyComputer),
                                         new PolicyStatement(noPerms));
 
@@ -179,11 +179,11 @@ namespace Terrarium.Hosting
             UnionCodeGroup cacheDirGroup = null;
             if (cacheDir != null)
             {
-                string cacheDirFull = Path.GetFullPath(cacheDir);
+                var cacheDirFull = Path.GetFullPath(cacheDir);
                 if (Directory.Exists(cacheDirFull))
                 {
-                    string fileCanon = cacheDirFull.Replace("\\", "/");
-                    string fileUrl = String.Format("file://{0}/*", fileCanon);
+                    var fileCanon = cacheDirFull.Replace("\\", "/");
+                    var fileUrl = String.Format("file://{0}/*", fileCanon);
 
                     cacheDirGroup = new UnionCodeGroup(new UrlMembershipCondition(fileUrl),
                                                        new PolicyStatement(MakeExecutionOnlyPermSet()));
@@ -194,18 +194,18 @@ namespace Terrarium.Hosting
             // and it gets the evidence from System.Dll.  Thus, to make sure these assemblies get
             // full trust, we need to make sure that anything that has this same evidence is
             // added to policy
-            string codeBase = typeof (Process).Assembly.CodeBase;
-            UnionCodeGroup systemDll =
+            var codeBase = typeof (Process).Assembly.CodeBase;
+            var systemDll =
                 new UnionCodeGroup(new UrlMembershipCondition(codeBase),
                                    new PolicyStatement(MakeTrustedPermSet()));
 
-            UnionCodeGroup myCodeTrust =
+            var myCodeTrust =
                 new UnionCodeGroup(new StrongNameMembershipCondition(
                                        MakeSelfRelativeBlob(), null, null),
                                    new PolicyStatement(MakeTrustedPermSet()));
 
-            UnionCodeGroup myMSTrust = MakeMSCodeGroup();
-            UnionCodeGroup ecmaTrust = MakeEcmaCodeGroup();
+            var myMSTrust = MakeMSCodeGroup();
+            var ecmaTrust = MakeEcmaCodeGroup();
 
             // Terrarium does a Load(byte []) on assemblies to check them before it copies them to the PAC to 
             // truly load them.  However, since unsigned (by MS or Terrarium) assemblies outside of the PAC
@@ -213,9 +213,9 @@ namespace Terrarium.Hosting
             // will say that the assembly is coming from the same location as Terrarium.Exe, therefore
             // we need to add policy that gives unsigned assemblies in the same location as terrarium.exe
             // Execute permissions.  This is the exact code (and logic) we use for the systemDll code group above.
-            string terrariumCodeBase = typeof (GameEngine).Assembly.CodeBase;
-            UnionCodeGroup checkAssemblyTrust = new UnionCodeGroup(new UrlMembershipCondition(terrariumCodeBase),
-                                                                   new PolicyStatement(MakeExecutionOnlyPermSet()));
+            var terrariumCodeBase = typeof (GameEngine).Assembly.CodeBase;
+            var checkAssemblyTrust = new UnionCodeGroup(new UrlMembershipCondition(terrariumCodeBase),
+                                                        new PolicyStatement(MakeExecutionOnlyPermSet()));
 
             // add children of MyComputer CG
             if (cacheDirGroup != null)
@@ -231,7 +231,7 @@ namespace Terrarium.Hosting
 
             // add MyComputer under All Code
             allCode.AddChild(myComputer);
-            PolicyLevel level = PolicyLevel.CreateAppDomainLevel();
+            var level = PolicyLevel.CreateAppDomainLevel();
             level.RootCodeGroup = allCode;
             return level;
         }
@@ -243,8 +243,8 @@ namespace Terrarium.Hosting
         /// <returns>True if the assembly has the Terrarium key, false otherwise.</returns>
         public static bool AssemblyHasTerrariumKey(AssemblyName asmName)
         {
-            byte[] terrKey = Assembly.GetExecutingAssembly().GetName().GetPublicKeyToken();
-            byte[] checkKey = asmName.GetPublicKeyToken();
+            var terrKey = Assembly.GetExecutingAssembly().GetName().GetPublicKeyToken();
+            var checkKey = asmName.GetPublicKeyToken();
 
             if (terrKey == null)
             {
@@ -259,7 +259,7 @@ namespace Terrarium.Hosting
 
             if (checkKey.Length == terrKey.Length)
             {
-                for (int i = 0; i < terrKey.Length; i++)
+                for (var i = 0; i < terrKey.Length; i++)
                 {
                     if (checkKey[i] != terrKey[i])
                     {

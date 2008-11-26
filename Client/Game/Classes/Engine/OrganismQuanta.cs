@@ -38,12 +38,12 @@ namespace Terrarium.Game
 
         public static void TestAnimal(int iterations)
         {
-            TimeMonitor tm = new TimeMonitor();
+            var tm = new TimeMonitor();
 
             // Run iterations
-            for (int i = 0; i < iterations; i++)
+            for (var i = 0; i < iterations; i++)
             {
-                OrganismEmulator cm = new OrganismEmulator();
+                var cm = new OrganismEmulator();
 
                 tm.Start();
                 cm.EmulateOrganism();
@@ -56,7 +56,7 @@ namespace Terrarium.Game
             allQuanta.Sort();
 
             // Pick the middle 80% of all iterations
-            for (int i = (int) (iterations*0.15); i < (int) (iterations*0.85); i++)
+            for (var i = (int) (iterations*0.15); i < (int) (iterations*0.85); i++)
             {
                 samples++;
                 lastQuanta = (long) allQuanta[i];
@@ -86,6 +86,9 @@ namespace Terrarium.Game
         // This class acts like a fake animal.  It represents how much processing
         // we think an animal should get, and thus we do fake operations we think
         // an animal would actually do to estimate it.
+
+        #region Nested type: OrganismEmulator
+
         internal class OrganismEmulator
         {
             private readonly Random rand = new Random();
@@ -116,11 +119,11 @@ namespace Terrarium.Game
 
             private void DistanceChecks()
             {
-                for (int i = 0; i < 50; i++)
+                for (var i = 0; i < 50; i++)
                 {
-                    Point them = new Point(rand.Next(1, 40), rand.Next(1, 40));
+                    var them = new Point(rand.Next(1, 40), rand.Next(1, 40));
 
-                    int distance = (int) Math.Sqrt((me.Position.X + them.X)*2 + (me.Position.Y + them.Y)*2);
+                    var distance = (int) Math.Sqrt((me.Position.X + them.X)*2 + (me.Position.Y + them.Y)*2);
 
                     if (distance < 10)
                     {
@@ -131,10 +134,10 @@ namespace Terrarium.Game
             private void StoreInformation()
             {
                 // Lets add 50 things
-                for (int i = 0; i < 50; i++)
+                for (var i = 0; i < 50; i++)
                 {
-                    Point them = new Point(rand.Next(1, 40), rand.Next(1, 40));
-                    int option = rand.Next(1, 4); // 1 through 3
+                    var them = new Point(rand.Next(1, 40), rand.Next(1, 40));
+                    var option = rand.Next(1, 4); // 1 through 3
                     switch (option)
                     {
                         case 1:
@@ -150,10 +153,10 @@ namespace Terrarium.Game
                 }
 
                 // Defend
-                int ClosestEnemy = 0;
+                var ClosestEnemy = 0;
                 foreach (QuantaOrganismState enemy in ai.enemies)
                 {
-                    int distance =
+                    var distance =
                         (int) Math.Sqrt((me.Position.X + enemy.Position.X)*2 + (me.Position.Y + enemy.Position.Y)*2);
                     if (ClosestEnemy == 0)
                     {
@@ -169,10 +172,10 @@ namespace Terrarium.Game
                 }
 
                 // Eat
-                int ClosestFood = 0;
+                var ClosestFood = 0;
                 foreach (QuantaOrganismState food in ai.food)
                 {
-                    int distance =
+                    var distance =
                         (int) Math.Sqrt((me.Position.X + food.Position.X)*2 + (me.Position.Y + food.Position.Y)*2);
                     if (ClosestFood == 0)
                     {
@@ -187,6 +190,8 @@ namespace Terrarium.Game
                     }
                 }
             }
+
+            #region Nested type: ArtificialIntelligence
 
             internal class ArtificialIntelligence
             {
@@ -208,9 +213,9 @@ namespace Terrarium.Game
                     enemies.Add(enemy);
                 }
 
-                public void AddFood(QuantaOrganismState food)
+                public void AddFood(QuantaOrganismState newFood)
                 {
-                    this.food.Add(food);
+                    food.Add(newFood);
                 }
 
                 public void AddFriend(QuantaOrganismState friend)
@@ -218,6 +223,10 @@ namespace Terrarium.Game
                     friends.Add(friend);
                 }
             }
+
+            #endregion
+
+            #region Nested type: QuantaOrganismState
 
             internal class QuantaOrganismState
             {
@@ -236,6 +245,10 @@ namespace Terrarium.Game
                     Species = species;
                 }
             }
+
+            #endregion
         }
+
+        #endregion
     }
 }

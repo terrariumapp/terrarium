@@ -57,7 +57,7 @@ namespace Terrarium.PeerToPeer
                 if (_peerConnectionLed != null)
                     _peerConnectionLed.LedState = LedStates.Waiting;
 
-                NameValueCollection peerInfo = getPeerTerrariumInfo(_address);
+                var peerInfo = getPeerTerrariumInfo(_address);
                 remoteVersion = new Version(Convert.ToInt32(peerInfo["major"]), Convert.ToInt32(peerInfo["minor"]),
                                             Convert.ToInt32(peerInfo["build"]));
                 remoteChannel = peerInfo["channel"];
@@ -86,10 +86,10 @@ namespace Terrarium.PeerToPeer
             if (_peerConnectionLed != null)
                 _peerConnectionLed.LedState = LedStates.Idle;
 
-            bool versionsMatch = false;
-                if (remoteVersion.Build == _peerVersion.Build && remoteVersion.Major == _peerVersion.Major &&
-                    remoteVersion.Minor == _peerVersion.Minor)
-                    versionsMatch = true;
+            var versionsMatch = false;
+            if (remoteVersion.Build == _peerVersion.Build && remoteVersion.Major == _peerVersion.Major &&
+                remoteVersion.Minor == _peerVersion.Minor)
+                versionsMatch = true;
 
             if (versionsMatch)
             {
@@ -145,24 +145,24 @@ namespace Terrarium.PeerToPeer
         private void sendAssemblyToPeer(string address, object state)
         {
             const int buffSize = 4096;
-            byte[] uploadBuffer = new byte[buffSize];
-            TeleportState theOrganism = (TeleportState) state;
-            string assemblyName = ((Species) theOrganism.OrganismState.Species).AssemblyInfo.FullName;
+            var uploadBuffer = new byte[buffSize];
+            var theOrganism = (TeleportState) state;
+            var assemblyName = ((Species) theOrganism.OrganismState.Species).AssemblyInfo.FullName;
             byte[] assemblyBuf;
 
-            HttpWebRequest req = checkToSeeIfPeerHasThisAssembly(address, assemblyName, out assemblyBuf);
+            var req = checkToSeeIfPeerHasThisAssembly(address, assemblyName, out assemblyBuf);
             writeAssemblyNameToRequest(req, assemblyBuf);
-            string assemblyVersionResponse = getAssemblyVersionResponse(req);
+            var assemblyVersionResponse = getAssemblyVersionResponse(req);
             sendAssemblyIfNecessary(buffSize, state, address, assemblyVersionResponse, uploadBuffer);
             req = sendObjectState(state, address);
-            string response = sendRequest(req);
+            var response = sendRequest(req);
             _engine.WriteProtocolInfo("sendAssemblyToPeer: Organism state sent.");
 
             // Look for <organismArrived>false</organismArrived>, because that means the organism
             // didn't make it and should be teleported locally
             if (NetworkEngine.GetValueFromContent("<organismArrived>", "</organismArrived>", response) == "false")
             {
-                string errorMessage = "The organism didn't arrive on their side for some reason.";
+                var errorMessage = "The organism didn't arrive on their side for some reason.";
                 if (NetworkEngine.GetValueFromContent("<reason>", "</reason>", response) != null)
                 {
                     errorMessage = "The organism didn't arrive on the remote peer. " +
@@ -180,7 +180,7 @@ namespace Terrarium.PeerToPeer
             string response;
             using (resp = req.GetResponse())
             {
-                using (StreamReader reader = new StreamReader(resp.GetResponseStream(), Encoding.ASCII))
+                using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.ASCII))
                 {
                     response = reader.ReadToEnd();
                     reader.Close();
@@ -192,25 +192,26 @@ namespace Terrarium.PeerToPeer
 
         private HttpWebRequest sendObjectState(object state, string address)
         {
-            string peerAddress = "http://" + address + ":" + _httpPort + "/organisms/state";
-            HttpWebRequest req = (HttpWebRequest) WebRequest.Create(peerAddress);
+            var peerAddress = "http://" + address + ":" + _httpPort + "/organisms/state";
+            var req = (HttpWebRequest) WebRequest.Create(peerAddress);
             req.UserAgent = "Microsoft .NET Terrarium";
             req.Method = "POST";
             req.Timeout = _networkTimeoutMsec;
             req.ContentType = "application/octet-stream";
             req.Headers["peerChannel"] = GameEngine.Current.PeerChannel;
 
-            BinaryFormatter channel = new BinaryFormatter();
-            MemoryStream stateStream = new MemoryStream();
+            var channel = new BinaryFormatter();
+            var stateStream = new MemoryStream();
             channel.Serialize(stateStream, state);
 
             req.ContentLength = stateStream.Length;
-            using (Stream stream = req.GetRequestStream())
+            using (var stream = req.GetRequestStream())
                 stream.Write(stateStream.GetBuffer(), 0, (int) stateStream.Length);
             return req;
         }
 
-        private void sendAssemblyIfNecessary(int buffSize, object state, string address, string assemblyVersionResponse, byte[] uploadBuffer)
+        private void sendAssemblyIfNecessary(int buffSize, object state, string address, string assemblyVersionResponse,
+                                             byte[] uploadBuffer)
         {
             if (assemblyVersionResponse == "<assemblyexists>false</assemblyexists>")
             {
@@ -218,19 +219,19 @@ namespace Terrarium.PeerToPeer
                 // and send it over to the peer
                 _engine.WriteProtocolInfo("sendAssemblyToPeer: They don't have the assembly.");
 
-                string peerAddress = "http://" + address + ":" + _httpPort + "/organisms/assemblies";
-                HttpWebRequest assemblyReq = (HttpWebRequest) WebRequest.Create(peerAddress);
+                var peerAddress = "http://" + address + ":" + _httpPort + "/organisms/assemblies";
+                var assemblyReq = (HttpWebRequest) WebRequest.Create(peerAddress);
                 assemblyReq.UserAgent = "Microsoft .NET Terrarium";
                 assemblyReq.Method = "POST";
                 assemblyReq.Timeout = _networkTimeoutMsec;
                 assemblyReq.ContentType = "application/octet-stream";
 
-                TeleportState teleportOrganism = (TeleportState) state;
-                GameEngine engine = GameEngine.Current;
+                var teleportOrganism = (TeleportState) state;
+                var engine = GameEngine.Current;
                 if (engine == null)
                     throw new GameEngineException("Engine no longer exists");
 
-                string file =
+                var file =
                     engine.Pac.GetFileName(((Species) teleportOrganism.OrganismState.Species).AssemblyInfo.FullName);
                 assemblyReq.Headers["Assembly"] =
                     ((Species) teleportOrganism.OrganismState.Species).AssemblyInfo.FullName;
@@ -238,9 +239,9 @@ namespace Terrarium.PeerToPeer
                 // Write the file to the request stream
                 using (Stream fileStream = File.OpenRead(file))
                 {
-                    MemoryStream originalAssemblyStream = new MemoryStream(buffSize);
+                    var originalAssemblyStream = new MemoryStream(buffSize);
 
-                    int bytesRead = fileStream.Read(uploadBuffer, 0, buffSize);
+                    var bytesRead = fileStream.Read(uploadBuffer, 0, buffSize);
                     while (bytesRead > 0)
                     {
                         originalAssemblyStream.Write(uploadBuffer, 0, bytesRead);
@@ -250,7 +251,7 @@ namespace Terrarium.PeerToPeer
                     originalAssemblyStream.Position = 0;
                     assemblyReq.ContentLength = originalAssemblyStream.Length;
 
-                    using (Stream uploadAssemblyStream = assemblyReq.GetRequestStream())
+                    using (var uploadAssemblyStream = assemblyReq.GetRequestStream())
                     {
                         uploadAssemblyStream.Write(originalAssemblyStream.GetBuffer(), 0,
                                                    (int) originalAssemblyStream.Length);
@@ -258,9 +259,9 @@ namespace Terrarium.PeerToPeer
                 }
 
                 // Send the assembly over and read the response
-                using (WebResponse assemblyResp = assemblyReq.GetResponse())
+                using (var assemblyResp = assemblyReq.GetResponse())
                 {
-                    using (StreamReader assemblyReader = new StreamReader(assemblyResp.GetResponseStream(), Encoding.ASCII))
+                    using (var assemblyReader = new StreamReader(assemblyResp.GetResponseStream(), Encoding.ASCII))
                     {
                         assemblyReader.ReadToEnd();
                         assemblyReader.Close();
@@ -283,7 +284,7 @@ namespace Terrarium.PeerToPeer
             string assemblyVersionResponse;
             using (resp = req.GetResponse())
             {
-                using (StreamReader assemblyVersionReader = new StreamReader(resp.GetResponseStream(), Encoding.ASCII))
+                using (var assemblyVersionReader = new StreamReader(resp.GetResponseStream(), Encoding.ASCII))
                 {
                     assemblyVersionResponse = assemblyVersionReader.ReadToEnd();
                     assemblyVersionReader.Close();
@@ -296,14 +297,15 @@ namespace Terrarium.PeerToPeer
         private static void writeAssemblyNameToRequest(WebRequest req, byte[] assemblyBuf)
         {
             req.ContentLength = assemblyBuf.Length;
-            using (Stream stream = req.GetRequestStream())
+            using (var stream = req.GetRequestStream())
                 stream.Write(assemblyBuf, 0, assemblyBuf.Length);
         }
 
-        private HttpWebRequest checkToSeeIfPeerHasThisAssembly(string address, string assemblyName, out byte[] assemblyBuf)
+        private HttpWebRequest checkToSeeIfPeerHasThisAssembly(string address, string assemblyName,
+                                                               out byte[] assemblyBuf)
         {
-            string peerAddress = "http://" + address + ":" + _httpPort + "/organisms/assemblycheck";
-            HttpWebRequest req = (HttpWebRequest) WebRequest.Create(peerAddress);
+            var peerAddress = "http://" + address + ":" + _httpPort + "/organisms/assemblycheck";
+            var req = (HttpWebRequest) WebRequest.Create(peerAddress);
             req.UserAgent = "Microsoft .NET Terrarium";
             req.Method = "POST";
             req.Timeout = _networkTimeoutMsec;
@@ -316,15 +318,15 @@ namespace Terrarium.PeerToPeer
         {
             address = "http://" + address + ":" + _httpPort + "/version";
             string content;
-            NameValueCollection peerInfo = new NameValueCollection();
+            var peerInfo = new NameValueCollection();
 
-            HttpWebRequest req = (HttpWebRequest) WebRequest.Create(address);
+            var req = (HttpWebRequest) WebRequest.Create(address);
             req.UserAgent = "Microsoft .NET Terrarium";
             req.Timeout = _networkTimeoutMsec;
 
-            using (WebResponse resp = req.GetResponse())
+            using (var resp = req.GetResponse())
             {
-                using (StreamReader reader = new StreamReader(resp.GetResponseStream(), Encoding.ASCII))
+                using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.ASCII))
                 {
                     content = reader.ReadToEnd();
                     reader.Close();
@@ -332,16 +334,16 @@ namespace Terrarium.PeerToPeer
                 resp.Close();
             }
 
-            string tempString = NetworkEngine.GetValueFromContent("<major>", "</major>", content);
-            int major = Convert.ToInt32(tempString);
+            var tempString = NetworkEngine.GetValueFromContent("<major>", "</major>", content);
+            var major = Convert.ToInt32(tempString);
 
             tempString = NetworkEngine.GetValueFromContent("<minor>", "</minor>", content);
-            int minor = Convert.ToInt32(tempString);
+            var minor = Convert.ToInt32(tempString);
 
             tempString = NetworkEngine.GetValueFromContent("<build>", "</build>", content);
-            int build = Convert.ToInt32(tempString);
+            var build = Convert.ToInt32(tempString);
 
-            string currentChannel = NetworkEngine.GetValueFromContent("<channel>", "</channel>", content);
+            var currentChannel = NetworkEngine.GetValueFromContent("<channel>", "</channel>", content);
 
             peerInfo["major"] = major.ToString();
             peerInfo["minor"] = minor.ToString();

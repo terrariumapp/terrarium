@@ -5,19 +5,18 @@
 using System.Drawing;
 using System.IO;
 using OrganismBase;
-
 using Terrarium.Game;
 
-namespace Terrarium.Hosting 
+namespace Terrarium.Hosting
 {
     /// <summary>
     /// Test animal whose sole purpose is to throw an exception.
     /// We use it when we are deserializing organisms and find one that won't load
     /// instead of aborting deserialization, we just use this organism so we can continue.
     /// </summary>
-    [CarnivoreAttribute(true)]
+    [Carnivore(true)]
     [MatureSize(28)]
-    [AnimalSkinAttribute(AnimalSkinFamily.Ant)]
+    [AnimalSkin(AnimalSkinFamily.Ant)]
     [MarkingColor(KnownColor.Teal)]
     [MaximumEnergyPoints(0)]
     [EatingSpeedPoints(0)]
@@ -34,7 +33,7 @@ namespace Terrarium.Hosting
             throw new OrganismBlacklistedException();
         }
 
-        static void LoadEvent(object sender, LoadEventArgs e)
+        private static void LoadEvent(object sender, LoadEventArgs e)
         {
             throw new OrganismBlacklistedException();
         }

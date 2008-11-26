@@ -15,13 +15,6 @@ namespace Terrarium.Game
     /// </summary>
     public class OrganismWorldBoundary : IOrganismWorldBoundary
     {
-        private Organism _organism;
-
-        /// <summary>
-        ///  The Unique ID of the creature in the system.
-        /// </summary>
-        private string _organismID;
-
         /// <summary>
         ///  Initializes a new world boundary given the original organism and their ID.
         /// </summary>
@@ -29,18 +22,16 @@ namespace Terrarium.Game
         /// <param name="ID">The Unique ID of the organism.</param>
         internal OrganismWorldBoundary(Organism organism, string ID)
         {
-            _organism = organism;
-            _organismID = ID;
+            Organism = organism;
+            this.ID = ID;
         }
 
         /// <summary>
         ///  The original organism this world boundary was created for.
         /// </summary>
-        protected Organism Organism
-        {
-            get { return _organism; }
-            set { _organism = value; }
-        }
+        protected Organism Organism { get; set; }
+
+        #region IOrganismWorldBoundary Members
 
         /// <summary>
         ///  Returns an AnimalState that represents your current state in the world.
@@ -53,10 +44,7 @@ namespace Terrarium.Game
         /// <summary>
         ///  Returns the organism's ID.
         /// </summary>
-        public string ID
-        {
-            get { return _organismID; }
-        }
+        public string ID { get; private set; }
 
         /// <summary>
         ///  Returns the width of the world in game units (pixels).
@@ -74,12 +62,14 @@ namespace Terrarium.Game
             get { return GameEngine.Current.WorldHeight; }
         }
 
+        #endregion
+
         /// <summary>
         ///  Sets the Unique ID of the creature in the system.
         /// </summary>
         protected void SetOrganismID(string id)
         {
-            _organismID = id;
+            ID = id;
         }
 
         /// <summary>
@@ -95,7 +85,7 @@ namespace Terrarium.Game
             }
             else
             {
-                organism.SetWorldBoundary(new PlantWorldBoundary((Plant) organism, id));
+                organism.SetWorldBoundary(new PlantWorldBoundary(organism, id));
             }
         }
     }

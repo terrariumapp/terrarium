@@ -51,47 +51,48 @@ namespace Terrarium.Game
                 return new OrganismAssemblyFailedValidationException();
             }
 
-            StringBuilder sb = new StringBuilder();
-            XmlDocument xDoc = new XmlDocument();
+            var sb = new StringBuilder();
+            var xDoc = new XmlDocument();
             xDoc.Load(xmlFile);
 
             sb.Append("Assembly failed validation process.  Please fix the following:\n\n");
 
-            XmlNodeList xNodes = xDoc.SelectNodes("//error"); // Get all Error nodes
-            foreach (XmlNode xNode in xNodes)
+            var xNodes = xDoc.SelectNodes("//error"); // Get all Error nodes
+            if (xNodes != null)
             {
-                switch (xNode.ParentNode.LocalName)
+                foreach (XmlNode xNode in xNodes)
                 {
-                    case "type":
-                        sb.Append(
-                            String.Format(
-                                "{0} in {1}\n",
-                                xNode.Attributes["name"].Value,
-                                xNode.ParentNode.Attributes["name"].Value
-                                )
-                            );
-                        break;
-                    case "member":
-                        sb.Append(
-                            String.Format(
-                                "{0} in {1}.{2}\n",
-                                xNode.Attributes["name"].Value,
-                                xNode.ParentNode.ParentNode.Attributes["name"].Value,
-                                xNode.ParentNode.Attributes["name"].Value
-                                )
-                            );
-                        break;
-                    default:
-                        sb.Append(
-                            String.Format(
-                                "An unformattable error has occurred."
-                                )
-                            );
-                        break;
+                    switch (xNode.ParentNode.LocalName)
+                    {
+                        case "type":
+                            sb.Append(
+                                String.Format(
+                                    "{0} in {1}\n",
+                                    xNode.Attributes["name"].Value,
+                                    xNode.ParentNode.Attributes["name"].Value
+                                    )
+                                );
+                            break;
+                        case "member":
+                            sb.Append(
+                                String.Format(
+                                    "{0} in {1}.{2}\n",
+                                    xNode.Attributes["name"].Value,
+                                    xNode.ParentNode.ParentNode.Attributes["name"].Value,
+                                    xNode.ParentNode.Attributes["name"].Value
+                                    )
+                                );
+                            break;
+                        default:
+                            sb.Append(
+                                String.Format(
+                                    "An unformattable error has occurred."
+                                    )
+                                );
+                            break;
+                    }
                 }
             }
-
-            xDoc = null;
 
             // If we can assert that the xml file being generated will be a unique
             // name then we can delete from here if the validation fails.
@@ -99,6 +100,7 @@ namespace Terrarium.Game
             {
                 File.Delete(xmlFile);
             }
+            
             return new OrganismAssemblyFailedValidationException(sb.ToString());
         }
     }

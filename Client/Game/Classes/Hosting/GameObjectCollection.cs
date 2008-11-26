@@ -26,11 +26,10 @@ namespace Terrarium.Hosting
 
         public object this[string index]
         {
-            get
-            {
-                return _orgMap.Contains(index) ? ((OrganismWrapper) _orgMap[index]).Organism : null;
-            }
+            get { return _orgMap.Contains(index) ? ((OrganismWrapper) _orgMap[index]).Organism : null; }
         }
+
+        #region IList Members
 
         public int Count
         {
@@ -76,7 +75,7 @@ namespace Terrarium.Hosting
 
         public int Add(object value)
         {
-            OrganismWrapper wrap = (OrganismWrapper) value;
+            var wrap = (OrganismWrapper) value;
             _orgMap.Add(wrap.Organism.ID, wrap);
             return _list.Add(value);
         }
@@ -106,15 +105,15 @@ namespace Terrarium.Hosting
         {
             if (value is string)
             {
-                string strVal = value as string;
+                var strVal = value as string;
                 if (_orgMap.Contains(strVal))
                 {
                     _orgMap.Remove(strVal);
                 }
 
-                int ndx = -1;
+                var ndx = -1;
                 OrganismWrapper wrap;
-                for (int i = 0; i < _list.Count; i++)
+                for (var i = 0; i < _list.Count; i++)
                 {
                     wrap = (OrganismWrapper) _list[i];
                     if (wrap.Organism.ID != strVal) continue;
@@ -138,6 +137,8 @@ namespace Terrarium.Hosting
             _list.RemoveAt(index);
         }
 
+        #endregion
+
         public OrganismWrapper GetWrapperForOrganism(string id)
         {
             if (_orgMap.Contains(id))
@@ -159,7 +160,7 @@ namespace Terrarium.Hosting
         {
             foreach (DictionaryEntry e in _orgMap)
             {
-                Organism organism = ((OrganismWrapper) e.Value).Organism;
+                var organism = ((OrganismWrapper) e.Value).Organism;
                 OrganismWorldBoundary.SetWorldBoundary(organism, (string) e.Key);
                 try
                 {

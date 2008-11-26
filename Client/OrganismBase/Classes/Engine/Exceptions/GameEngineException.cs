@@ -11,7 +11,7 @@ namespace OrganismBase
     ///    receive from the game.
     /// </summary>
     [Serializable]
-    public class GameEngineException : ApplicationException
+    public class GameEngineException : Exception
     {
         /// <summary>
         ///    <para>Constructs a new Exception</para>

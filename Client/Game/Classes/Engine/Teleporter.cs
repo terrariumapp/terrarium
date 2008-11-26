@@ -41,7 +41,7 @@ namespace Terrarium.Game
 
             _teleportZones = new TeleportZone[zoneCount];
 
-            for (int i = 0; i < zoneCount; i++)
+            for (var i = 0; i < zoneCount; i++)
             {
                 _teleportZones[i] = new TeleportZone(new Rectangle(225, 225, 48, 48), null, i);
             }
@@ -53,9 +53,9 @@ namespace Terrarium.Game
         /// <returns>A new copy of the Teleporter</returns>
         public Teleporter Clone()
         {
-            Teleporter teleporter = new Teleporter(_teleportZones.Length);
+            var teleporter = new Teleporter(_teleportZones.Length);
 
-            for (int i = 0; i < _teleportZones.Length; i++)
+            for (var i = 0; i < _teleportZones.Length; i++)
             {
                 teleporter._teleportZones[i] = _teleportZones[i];
             }
@@ -68,9 +68,9 @@ namespace Terrarium.Game
         /// </summary>
         public void Move()
         {
-            for (int i = 0; i < _teleportZones.Length; i++)
+            for (var i = 0; i < _teleportZones.Length; i++)
             {
-                TeleportZone teleportZone = _teleportZones[i];
+                var teleportZone = _teleportZones[i];
                 if (teleportZone == null) continue;
                 if (teleportZone.Vector == null ||
                     teleportZone.Rectangle.Contains(teleportZone.Vector.Destination))
@@ -80,14 +80,15 @@ namespace Terrarium.Game
                     {
                         _teleportZones[i] =
                             teleportZone.SetVector(
+
                                 new MovementVector(new Point(_random.Next(0, GameEngine.Current.WorldWidth),
                                                              _random.Next(0, GameEngine.Current.WorldHeight)), 5));
                     }
                 }
                 else
                 {
-                    Rectangle currentRectangle = teleportZone.Rectangle;
-                    Vector vector = Vector.Subtract(currentRectangle.Location, teleportZone.Vector.Destination);
+                    var currentRectangle = teleportZone.Rectangle;
+                    var vector = Vector.Subtract(currentRectangle.Location, teleportZone.Vector.Destination);
                     if (vector.Magnitude <= teleportZone.Vector.Speed)
                     {
                         // We've arrived
@@ -95,8 +96,8 @@ namespace Terrarium.Game
                     }
                     else
                     {
-                        Vector unitVector = vector.GetUnitVector();
-                        Vector speedVector = unitVector.Scale(teleportZone.Vector.Speed);
+                        var unitVector = vector.GetUnitVector();
+                        var speedVector = unitVector.Scale(teleportZone.Vector.Speed);
                         currentRectangle.Location = Vector.Add(currentRectangle.Location, speedVector);
                         _teleportZones[i] = teleportZone.SetRectangle(currentRectangle);
                     }
@@ -112,7 +113,7 @@ namespace Terrarium.Game
         /// <returns>True if the organism is in the teleporter, false otherwise.</returns>
         public Boolean IsInTeleporter(OrganismState state)
         {
-            foreach (TeleportZone teleportZone in _teleportZones)
+            foreach (var teleportZone in _teleportZones)
             {
                 if (teleportZone.Contains(state))
                 {

@@ -18,7 +18,6 @@ namespace Terrarium.Game
     [Serializable]
     public class WorldVector
     {
-        private readonly WorldState _currentState;
         private TickActions _currentActions;
 
         /// <summary>
@@ -32,7 +31,7 @@ namespace Terrarium.Game
                 throw new ApplicationException("WorldState must be immutable to be added to vector.");
             }
 
-            _currentState = state;
+            State = state;
         }
 
         /// <summary>
@@ -56,9 +55,6 @@ namespace Terrarium.Game
         /// <summary>
         ///  Provides access to the current world state.
         /// </summary>
-        public WorldState State
-        {
-            get { return _currentState; }
-        }
+        public WorldState State { get; private set; }
     }
 }

@@ -22,6 +22,8 @@ namespace Terrarium.PeerToPeer
     {
         internal static Version peerVersion = Assembly.GetExecutingAssembly().GetName().Version;
 
+        #region IHttpNamespaceHandler Members
+
         public void ProcessRequest(HttpApplication webapp)
         {
             webapp.HttpResponse.Server = "Microsoft .Net Terrarium";
@@ -49,9 +51,11 @@ namespace Terrarium.PeerToPeer
             }
 
             // Encode the body message and place it on the stream.
-            byte[] bodyBytes = Encoding.ASCII.GetBytes(body);
+            var bodyBytes = Encoding.ASCII.GetBytes(body);
             webapp.HttpResponse.ContentLength = bodyBytes.Length;
             webapp.HttpResponse.Close(bodyBytes);
         }
+
+        #endregion
     }
 }

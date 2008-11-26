@@ -15,21 +15,6 @@ namespace Terrarium.Game
     public class KilledOrganism
     {
         /// <summary>
-        ///  The reason the organism was killed.
-        /// </summary>
-        private readonly PopulationChangeReason _deathReason;
-
-        /// <summary>
-        ///  Extra information about the death of the organism.
-        /// </summary>
-        private readonly string _extraInformation = "";
-
-        /// <summary>
-        ///  The Unique ID of the organism.
-        /// </summary>
-        private readonly string _id;
-
-        /// <summary>
         ///  Creates a new KilledOrganism based on the ID, the reason for death, and
         ///  any extra information that can be used when the organism is removed.
         /// </summary>
@@ -38,9 +23,9 @@ namespace Terrarium.Game
         /// <param name="extraInformation">Extra information about the death.</param>
         public KilledOrganism(string id, PopulationChangeReason reason, string extraInformation)
         {
-            _id = id;
-            _deathReason = reason;
-            _extraInformation = extraInformation;
+            ID = id;
+            DeathReason = reason;
+            ExtraInformation = extraInformation;
         }
 
         /// <summary>
@@ -50,8 +35,9 @@ namespace Terrarium.Game
         /// <param name="reason">The reason the organism was killed.</param>
         public KilledOrganism(string id, PopulationChangeReason reason)
         {
-            _id = id;
-            _deathReason = reason;
+            ExtraInformation = "";
+            ID = id;
+            DeathReason = reason;
         }
 
         /// <summary>
@@ -60,32 +46,24 @@ namespace Terrarium.Game
         /// <param name="state">The state object that ID and death reason will be pulled from.</param>
         public KilledOrganism(OrganismState state)
         {
-            _id = state.ID;
-            _deathReason = state.DeathReason;
+            ExtraInformation = "";
+            ID = state.ID;
+            DeathReason = state.DeathReason;
         }
 
         /// <summary>
         ///  Retrieves the ID of the killed organism.
         /// </summary>
-        public string ID
-        {
-            get { return _id; }
-        }
+        public string ID { get; private set; }
 
         /// <summary>
         ///  Retrieves textual information about the death of the organism.
         /// </summary>
-        public string ExtraInformation
-        {
-            get { return _extraInformation; }
-        }
+        public string ExtraInformation { get; private set; }
 
         /// <summary>
         ///  Retrieves the reason this organism was killed.
         /// </summary>
-        public PopulationChangeReason DeathReason
-        {
-            get { return _deathReason; }
-        }
+        public PopulationChangeReason DeathReason { get; private set; }
     }
 }

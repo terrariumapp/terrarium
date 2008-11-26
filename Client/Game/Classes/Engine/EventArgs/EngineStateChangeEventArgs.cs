@@ -20,30 +20,15 @@ namespace Terrarium.Game
     public sealed class EngineStateChangedEventArgs : EventArgs
     {
         /// <summary>
-        ///  A long description of the event.
-        /// </summary>
-        private readonly string _longDescription;
-
-        /// <summary>
-        ///  The short message for the event.
-        /// </summary>
-        private readonly string _shortDescription;
-
-        /// <summary>
-        ///  The type of engine change.
-        /// </summary>
-        private readonly EngineStateChangeType _stateChange;
-
-        /// <summary>
         ///  Creates a new set of event arguments for a state change with short message.
         /// </summary>
         /// <param name="stateChange">The state change type</param>
         /// <param name="shortDescription">A short description</param>
         public EngineStateChangedEventArgs(EngineStateChangeType stateChange, string shortDescription)
         {
-            _stateChange = stateChange;
-            _shortDescription = shortDescription;
-            _longDescription = shortDescription;
+            StateChange = stateChange;
+            ShortDescription = shortDescription;
+            LongDescription = shortDescription;
         }
 
         /// <summary>
@@ -55,34 +40,25 @@ namespace Terrarium.Game
         public EngineStateChangedEventArgs(EngineStateChangeType stateChange, string shortDescription,
                                            string longDescription)
         {
-            _stateChange = stateChange;
-            _shortDescription = shortDescription;
-            _longDescription = longDescription;
+            StateChange = stateChange;
+            ShortDescription = shortDescription;
+            LongDescription = longDescription;
         }
 
         /// <summary>
         ///  Retrieves the long description from these event arguments.
         /// </summary>
-        public string LongDescription
-        {
-            get { return _longDescription; }
-        }
+        public string LongDescription { get; private set; }
 
         /// <summary>
         ///  Retrieves the short description from these event arguments.
         /// </summary>
-        public string ShortDescription
-        {
-            get { return _shortDescription; }
-        }
+        public string ShortDescription { get; private set; }
 
         /// <summary>
         ///  Retrieves the engine state change type for these event arguments.
         /// </summary>
-        public EngineStateChangeType StateChange
-        {
-            get { return _stateChange; }
-        }
+        public EngineStateChangeType StateChange { get; private set; }
 
         /// <summary>
         ///  Creates a new event relating to a creature arriving.
@@ -92,9 +68,10 @@ namespace Terrarium.Game
         public static EngineStateChangedEventArgs AnimalArrived(OrganismState organismState)
         {
             return new EngineStateChangedEventArgs(
-                EngineStateChangeType.AnimalTeleported, 
-                string.Format("A new {0} arrived at {1}", ((Species) organismState.Species).Name, DateTime.Now.TimeOfDay), 
-                string.Format("A new {0} was teleported into your world at {1}", ((Species) organismState.Species).Name, DateTime.Now)
+                EngineStateChangeType.AnimalTeleported,
+                string.Format("A new {0} arrived at {1}", ((Species) organismState.Species).Name, DateTime.Now.TimeOfDay),
+                string.Format("A new {0} was teleported into your world at {1}", ((Species) organismState.Species).Name,
+                              DateTime.Now)
                 );
         }
 
@@ -107,7 +84,7 @@ namespace Terrarium.Game
         public static EngineStateChangedEventArgs AnimalDestroyed(OrganismState organismState,
                                                                   PopulationChangeReason reason)
         {
-            string reasonDescription = "";
+            var reasonDescription = "";
 
             switch (reason)
             {
@@ -129,9 +106,11 @@ namespace Terrarium.Game
             }
 
             return new EngineStateChangedEventArgs(
-                EngineStateChangeType.Other, 
-                string.Format("A {0} was destroyed because it {1}.", ((Species) organismState.Species).Name, reasonDescription), 
-                string.Format("A {0} was destroyed because it {1}.", ((Species) organismState.Species).Name, reasonDescription)
+                EngineStateChangeType.Other,
+                string.Format("A {0} was destroyed because it {1}.", ((Species) organismState.Species).Name,
+                              reasonDescription),
+                string.Format("A {0} was destroyed because it {1}.", ((Species) organismState.Species).Name,
+                              reasonDescription)
                 );
         }
     }

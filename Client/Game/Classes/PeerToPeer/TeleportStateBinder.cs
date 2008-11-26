@@ -83,7 +83,8 @@ namespace Terrarium.PeerToPeer
 
                 default:
                     Trace.WriteLine(string.Format("Unhandled Type - {0}|{1}", asm, type));
-                    throw new ApplicationException(string.Format("Invalid Type in TeleportStateBinder {0}|{1}", asm, type));
+                    throw new ApplicationException(string.Format("Invalid Type in TeleportStateBinder {0}|{1}", asm,
+                                                                 type));
             }
         }
     }
