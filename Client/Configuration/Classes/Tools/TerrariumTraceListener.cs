@@ -126,11 +126,11 @@ namespace Terrarium.Tools
                 try
                 {
                     using (
-                        FileStream logFileStream = File.Open("logfile.txt", FileMode.OpenOrCreate, FileAccess.Write,
+                        var logFileStream = File.Open("logfile.txt", FileMode.OpenOrCreate, FileAccess.Write,
                                                              FileShare.ReadWrite))
                     {
                         logFileStream.Seek(0, SeekOrigin.End);
-                        StreamWriter logFile = new StreamWriter(logFileStream);
+                        var logFile = new StreamWriter(logFileStream);
                         logFile.WriteLine(message);
                         logFile.Close();
                     }
