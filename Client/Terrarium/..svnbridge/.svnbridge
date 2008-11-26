@@ -2,4 +2,14 @@
 obj
 Terrarium.csproj.user
 Terrarium.xml
+</Value></Property><Property><Name>svn:ignore</Name><Value>bin
+obj
+Terrarium.csproj.user
+Terrarium.xml
+[Bb]in
+[Dd]ebug
+[Rr]elease
+*.user
+*.aps
+*.eto
 </Value></Property></Properties></ItemProperties>
