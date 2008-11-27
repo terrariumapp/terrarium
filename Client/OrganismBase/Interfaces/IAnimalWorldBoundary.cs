@@ -2,7 +2,6 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                             
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections;
 
 namespace OrganismBase
@@ -20,10 +19,8 @@ namespace OrganismBase
         ///  an animal state for the previous tick and not the currently executed
         ///  tick.
         /// </summary>
-        AnimalState CurrentAnimalState
-        {
-            get;
-        }
+        AnimalState CurrentAnimalState { get; }
+
         /// <summary>
         ///  Provides a method for the creature to scan the surrounding area
         ///  and discover both hidden and visible creatures within your site

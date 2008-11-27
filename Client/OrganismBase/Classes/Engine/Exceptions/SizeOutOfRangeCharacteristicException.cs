@@ -2,8 +2,6 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                             
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace OrganismBase
 {
     /// <summary>
@@ -14,8 +12,9 @@ namespace OrganismBase
         /// <summary>
         ///    <para>Size must be within a certain bounds.</para>
         /// </summary>
-        public SizeOutOfRangeCharacteristicException() : base("Size must be <= " + EngineSettings.MaxMatureSize.ToString() + " and >= " + 
-            EngineSettings.MinMatureSize.ToString())
+        public SizeOutOfRangeCharacteristicException()
+            : base("Size must be <= " + EngineSettings.MaxMatureSize + " and >= " +
+                   EngineSettings.MinMatureSize)
         {
         }
     }

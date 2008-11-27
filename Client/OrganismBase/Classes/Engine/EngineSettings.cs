@@ -2,10 +2,9 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                             
 //------------------------------------------------------------------------------
 
-using System;
 using System.Diagnostics;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -19,24 +18,208 @@ namespace OrganismBase
     /// </summary>
     public class EngineSettings
     {
+        /// <internal/>
+        public const double AnimalIncubationEnergyMultiplier = 1.5;
+
         /// <summary>
         ///  <para>
-        ///   Represents the maximum number of characteristic points
-        ///   available for creature developers to assign to characteristic
-        ///   stats.
+        ///   The amount of energy required per tick in order to incubate
+        ///   an offspring.  This is multiplied by the creature's Radius
+        ///   so larger creatures require more energy to incubate than
+        ///   smaller creatures.
         ///  </para>
         /// </summary>
-        public const int MaxAvailableCharacteristicPoints = 100;     
-    
+        public const double AnimalIncubationEnergyPerUnitOfRadius =
+            (AnimalMatureSizeProvidedEnergyPerUnitRadius/TicksToIncubate)*
+            AnimalIncubationEnergyMultiplier;
+
         /// <summary>
         ///  <para>
-        ///   Represents the highest attainable odds of appearing
-        ///   invisible in the Terrarium.  In order to achieve
-        ///   this maximum camouflage MaxAvailableCharacteristicPoints
-        ///   must be applied to the CamouflagePointsAttribute.
+        ///   The amount of time in game ticks that a creature can stay alive.  This
+        ///   number is multiplied by the creature's MatureSize so smaller creatures
+        ///   will not live as long as larger creatures.
         ///  </para>
         /// </summary>
-        public const int InvisibleOddsMaximum = 90;             
+        public const int AnimalLifeSpanPerUnitMaximumRadius = 50;
+
+        /// <internal/>
+        public const double AnimalMatureSizeProvidedEnergyPerUnitRadius =
+            FoodChunksPerUnitOfRadius*EnergyPerAnimalFoodChunk;
+
+        /// <summary>
+        ///  <para>
+        ///   The maximum number of healing points a creature can
+        ///   heal per tick.  This is multiplied by the Radius of the
+        ///   creature and so larger creatures can heal many more points
+        ///   than smaller creatures.
+        ///  </para>
+        /// </summary>
+        public const int AnimalMaxHealingPerTickPerRadius = 2;
+
+        /// <summary>
+        ///  <para>
+        ///   The amount of time in game ticks that a creature must wait before being
+        ///   able to reproduce.  This number is multiplied by the creature's Radius
+        ///   and so larger creatures take longer between reproductions than smaller
+        ///   creatures.
+        ///  </para>
+        /// </summary>
+        public const int AnimalReproductionWaitPerUnitRadius = 8;
+
+        /// <summary>
+        ///  <para>
+        ///   The amount of energy required to heal a creature by a single
+        ///   health unit.
+        ///  </para>
+        /// </summary>
+        public const double AnimalRequiredEnergyPerUnitOfHealing = .1;
+
+        /// <summary>
+        ///  <para>
+        ///   The amount of energy burned by a creature in order to grow a single unit
+        ///   of radius.  For smaller creatures this amount of energy will be quite
+        ///   taxing, but as the creature grows larger the amount of energy taken
+        ///   doesn't affect the creature as much.
+        ///  </para>
+        /// </summary>
+        public const double AnimalRequiredEnergyPerUnitOfRadiusGrowth = MaxEnergyBasePerUnitRadius*(1/(double) 5);
+
+        /// <summary>
+        ///  <para>
+        ///   The amount of energy burned by a creature each tick just for being
+        ///   alive in the game.  This constant is multiplied by the creature's
+        ///   radius so smaller creatures been less energy per tick than larger
+        ///   creatures.
+        ///  </para>
+        /// </summary>
+        public const double BaseAnimalEnergyPerUnitOfRadius = .001; // base energy burnt per turn
+
+        /// <summary>
+        ///  <para>
+        ///   Represents the base amount of damage that can be absorbed by
+        ///   a creature that places 0 points into the DefendDamagePointsAttribute.
+        ///   The amount of damage absorption taken from this constant is multiplied by the current
+        ///   radius of the creature.  This means both MatureSize and the DefendDamagePointsAttribute
+        ///   can increase the amount of damage your creature can take.
+        ///  </para>
+        /// </summary>
+        public const int BaseDefendedDamagePerUnitOfRadius = 50;
+
+        /// <summary>
+        ///  <para>
+        ///   Represents the base food chunks per bite granted to
+        ///   a creature that puts 0 points into the EatingSpeedPointsAttribute.
+        ///   The number of food chunks taken from this constant is multiplied by the current
+        ///   radius of the creature.  This means both MatureSize and the EatingSpeedPointsAttribute
+        ///   can increase the number of food chunks taken per bite.
+        ///  </para>
+        /// </summary>
+        public const int BaseEatingSpeedPerUnitOfRadius = 1;
+
+        /// <summary>
+        ///  <para>
+        ///   Represents the base distance a creature can see if they place
+        ///   0 points into the EyesightPointsAttribute.
+        ///  </para>
+        ///  <para>
+        ///   This distance is in Terrarium Cells, so you have to multiply
+        ///   by 8 to get the actual distance in Terrarium Units (pixels).
+        ///  </para>
+        /// </summary>
+        public const int BaseEyesightRadius = 5;
+
+        /// <summary>
+        ///  <para>
+        ///   Represents the base amount of damage that can be dealt by
+        ///   a creature that places 0 points into the AttackDamagePointsAttribute.
+        ///   The amount of damage taken from this constant is multiplied by the current
+        ///   radius of the creature.  This means both MatureSize and the AttackDamagePointsAttribute
+        ///   can increase the amount of damage your creature can dish out.
+        ///  </para>
+        /// </summary>
+        public const int BaseInflictedDamagePerUnitOfRadius = 50;
+
+        /// <summary>
+        ///  <para>
+        ///   The amount of energy burned by a plant each tick just for being
+        ///   alive in the game.  This constant is multiplied by the plant's
+        ///   radius so smaller plants been less energy per tick than larger
+        ///   plants.
+        ///  </para>
+        /// </summary>
+        public const int BasePlantEnergyPerUnitOfRadius = 1;
+
+        /// <summary>
+        ///  <para>
+        ///   Attack and Defense modifier applied to Carnivores.  This
+        ///   gives Carnivores an advantage in both attacking and defending
+        ///   against Herbivores since they have to attack and expend extra
+        ///   energy to obtain food.
+        ///  </para>
+        /// </summary>
+        public const double CarnivoreAttackDefendMultiplier = 2;
+
+        /// <summary>
+        ///  <para>
+        ///   This multiplier is used to modify the life span for Carnivores.
+        ///   Since Carnivores have double the lifespan of Herbivores they get
+        ///   twice as many opportunities for reproduction
+        ///  </para>
+        /// </summary>
+        public const int CarnivoreLifeSpanMultiplier = 2;
+
+        /// <summary>
+        ///  <para>
+        ///   The amount of damage required to before a creature
+        ///   is killed.  This is multiplied by the Radius of the
+        ///   creature and so larger creatures can take many more
+        ///   hits than smaller creatures.
+        ///  </para>
+        /// </summary>
+        public const int DamageToKillPerUnitOfRadius = 190;
+
+        /// <summary>
+        ///  <para>
+        ///   The amount of energy given to a creature for
+        ///   one food chunk from a corpse.
+        ///  </para>
+        /// </summary>
+        public const int EnergyPerAnimalFoodChunk = 1;
+
+        /// <summary>
+        ///  <para>
+        ///   The amount of energy given to a creature for
+        ///   one food chunk from a plant.
+        ///  </para>
+        /// </summary>
+        public const int EnergyPerPlantFoodChunk = 1;
+
+        private const double EnergyRequiredToMoveMinimumRequirements =
+            MinimumUnitsToMoveAtMinimumEnergy*MinimumSpeedToMoveAtMinimumEnergy*
+            RequiredEnergyPerUnitOfRadiusSpeedDistance +
+            (MinimumUnitsToMoveAtMinimumEnergy/MinimumSpeedToMoveAtMinimumEnergy)*
+            BaseAnimalEnergyPerUnitOfRadius;
+
+        /// <summary>
+        ///  <para>
+        ///   The amount of food chunks a creature amounts to once they
+        ///   become a corpse.  Larger creatures will have a larger amount
+        ///   of food chunks available to predators than smaller creatures.
+        ///  </para>
+        /// </summary>
+        public const int FoodChunksPerUnitOfRadius = 25;
+
+        /// <internal/>
+        public const int GridCellHeight = 1 << GridHeightPowerOfTwo;
+
+        /// <internal/>
+        public const int GridCellWidth = 1 << GridWidthPowerOfTwo;
+
+        /// <internal/>
+        public const int GridHeightPowerOfTwo = 3;
+
+        /// <internal/>
+        public const int GridWidthPowerOfTwo = 3;
 
         /// <summary>
         ///  <para>
@@ -46,26 +229,48 @@ namespace OrganismBase
         ///   to the CamouflagePointsAttribute.
         ///  </para>
         /// </summary>
-        public const int InvisibleOddsBase = 0;             
+        public const int InvisibleOddsBase = 0;
 
-        // MaximumEnergyPointsAttribute
-        // Energy required to move MinimumUnitsToMoveAtMinimumEnergy units, at speed MinimumSpeedToMoveAtMinimumEnergy, 
-        // including the energy burned in the turns it would take. 
-        // Turns = (MinimumUnitsToMoveAtMinimumEnergy / MinimumSpeedToMoveAtMinimumEnergy)
-        // We want to make sure all animals can at least move that much.
-        // Here's how we figure it:
-        // TurnsRequired = UnitsToMove / Speed
-        // BaseEnergyBurned = Radius * TurnsRequired * BaseAnimalEnergyPerUnitOfRadius
-        // MovementEnergyBurned =  Radius * Speed * UnitsToMove  * PlantRequiredEnergyPerUnitOfRadiusGrowth
-        // EnergyRequired = MovementEnergyBurned + BaseEnergyBurned
-        // Since we're assuming Radius = 1, that factor disappears
-        // Radius * Speed * UnitsToMove  * PlantRequiredEnergyPerUnitOfRadiusGrowth + TurnsRequired * BaseAnimalEnergyPerUnitOfRadius
-        const double MinimumUnitsToMoveAtMinimumEnergy = 2000;
-        const double MinimumSpeedToMoveAtMinimumEnergy = 5;
-        const double EnergyRequiredToMoveMinimumRequirements = MinimumUnitsToMoveAtMinimumEnergy * MinimumSpeedToMoveAtMinimumEnergy * 
-            RequiredEnergyPerUnitOfRadiusSpeedDistance + 
-            (MinimumUnitsToMoveAtMinimumEnergy / MinimumSpeedToMoveAtMinimumEnergy) * 
-            (double) BaseAnimalEnergyPerUnitOfRadius;
+        /// <summary>
+        ///  <para>
+        ///   Represents the highest attainable odds of appearing
+        ///   invisible in the Terrarium.  In order to achieve
+        ///   this maximum camouflage MaxAvailableCharacteristicPoints
+        ///   must be applied to the CamouflagePointsAttribute.
+        ///  </para>
+        /// </summary>
+        public const int InvisibleOddsMaximum = 90;
+
+        /// <summary>
+        ///  <para>
+        ///   Represents the maximum number of characteristic points
+        ///   available for creature developers to assign to characteristic
+        ///   stats.
+        ///  </para>
+        /// </summary>
+        public const int MaxAvailableCharacteristicPoints = 100;
+
+        /// <summary>
+        ///  <para>
+        ///   Represents the amount of energy storage per unit radius
+        ///   granted to a creature when 0 points have been placed into
+        ///   the MaximumEnergyPointsAttribute.
+        ///  </para>
+        ///  <para>
+        ///   Even if 0 points are placed into the MaximumEnergyPointsAttribute
+        ///   a creature can still achieve higher energy storage by increasing
+        ///   MatureSize.
+        ///  </para>
+        /// </summary>
+        public const double MaxEnergyBasePerUnitRadius = (int) EnergyRequiredToMoveMinimumRequirements;
+
+        /// <summary>
+        ///  <para>
+        ///   The maximum amount of energy a plant can gain per tick from
+        ///   the natural light of the EcoSystem.
+        ///  </para>
+        /// </summary>
+        public const int MaxEnergyFromLightPerTick = 550;
 
         /// <summary>
         ///  <para>
@@ -82,82 +287,10 @@ namespace OrganismBase
         ///   energy storage.
         ///  </para>
         /// </summary>
-        public const double MaxEnergyMaximumPerUnitRadius = (int) (EnergyRequiredToMoveMinimumRequirements * (double) 20);             
+        public const double MaxEnergyMaximumPerUnitRadius = (int) (EnergyRequiredToMoveMinimumRequirements*20);
 
-        /// <summary>
-        ///  <para>
-        ///   Represents the amount of energy storage per unit radius
-        ///   granted to a creature when 0 points have been placed into
-        ///   the MaximumEnergyPointsAttribute.
-        ///  </para>
-        ///  <para>
-        ///   Even if 0 points are placed into the MaximumEnergyPointsAttribute
-        ///   a creature can still achieve higher energy storage by increasing
-        ///   MatureSize.
-        ///  </para>
-        /// </summary>
-        public const double MaxEnergyBasePerUnitRadius = (int) EnergyRequiredToMoveMinimumRequirements;             
-    
-        /// <summary>
-        ///  <para>
-        ///   Represents the maximum achievable speed granted to a creature
-        ///   that places MaxAvailableCharacteristicPoints into the MaximumSpeedAttribute.
-        ///  </para>
-        /// </summary>
-        public const int SpeedMaximum = 100;
-    
-        /// <summary>
-        ///  <para>
-        ///   Represents the base achievable speed granted to a creature
-        ///   that places 0 points into the MaximumSpeedAttribute.
-        ///  </para>
-        /// </summary>
-        public const int SpeedBase = 5;             
-
-        /// <summary>
-        ///  <para>
-        ///   Represents the maximum number of food chunks per bite that can be taken by a
-        ///   creature that places MaxAvailableCharacteristicPoints into the EatingSpeedPointsAttribute.
-        ///   The number of food chunks taken from this constant is multiplied by the current
-        ///   radius of the creature.  This means both MatureSize and the EatingSpeedPointsAttribute
-        ///   can increase the number of food chunks taken per bite.
-        ///  </para>
-        /// </summary>
-        public const int MaximumEatingSpeedPerUnitOfRadius = 100;
-
-        /// <summary>
-        ///  <para>
-        ///   Represents the base food chunks per bite granted to
-        ///   a creature that puts 0 points into the EatingSpeedPointsAttribute.
-        ///   The number of food chunks taken from this constant is multiplied by the current
-        ///   radius of the creature.  This means both MatureSize and the EatingSpeedPointsAttribute
-        ///   can increase the number of food chunks taken per bite.
-        ///  </para>
-        /// </summary>
-        public const int BaseEatingSpeedPerUnitOfRadius = 1;
-    
-        /// <summary>
-        ///  <para>
-        ///   Represents the maximum amount of damage that can be dealt by
-        ///   a creature that places MaxAvailableCharacteristicPoints into the
-        ///   AttackDamagePointsAttribute.
-        ///   The amount of damage taken from this constant is multiplied by the current
-        ///   radius of the creature.  This means both MatureSize and the AttackDamagePointsAttribute
-        ///   can increase the amount of damage your creature can dish out.
-        ///  </para>
-        /// </summary>
-        public const int MaximumInflictedDamagePerUnitOfRadius = 25;  
-
-        /// <summary>
-        ///  <para>
-        ///   Represents the base amount of damage that can be dealt by
-        ///   a creature that places 0 points into the AttackDamagePointsAttribute.
-        ///   The amount of damage taken from this constant is multiplied by the current
-        ///   radius of the creature.  This means both MatureSize and the AttackDamagePointsAttribute
-        ///   can increase the amount of damage your creature can dish out.
-        ///  </para>
-        /// </summary>
-        public const int BaseInflictedDamagePerUnitOfRadius = 50;
+        /// <internal/>
+        public const int MaxGridRadius = (MaxMatureSize/GridCellWidth/2) + 1;
 
         /// <summary>
         ///  <para>
@@ -173,14 +306,14 @@ namespace OrganismBase
 
         /// <summary>
         ///  <para>
-        ///   Represents the base amount of damage that can be absorbed by
-        ///   a creature that places 0 points into the DefendDamagePointsAttribute.
-        ///   The amount of damage absorption taken from this constant is multiplied by the current
-        ///   radius of the creature.  This means both MatureSize and the DefendDamagePointsAttribute
-        ///   can increase the amount of damage your creature can take.
+        ///   Represents the maximum number of food chunks per bite that can be taken by a
+        ///   creature that places MaxAvailableCharacteristicPoints into the EatingSpeedPointsAttribute.
+        ///   The number of food chunks taken from this constant is multiplied by the current
+        ///   radius of the creature.  This means both MatureSize and the EatingSpeedPointsAttribute
+        ///   can increase the number of food chunks taken per bite.
         ///  </para>
         /// </summary>
-        public const int BaseDefendedDamagePerUnitOfRadius = 50;
+        public const int MaximumEatingSpeedPerUnitOfRadius = 100;
 
         /// <summary>
         ///  <para>
@@ -196,15 +329,15 @@ namespace OrganismBase
 
         /// <summary>
         ///  <para>
-        ///   Represents the base distance a creature can see if they place
-        ///   0 points into the EyesightPointsAttribute.
-        ///  </para>
-        ///  <para>
-        ///   This distance is in Terrarium Cells, so you have to multiply
-        ///   by 8 to get the actual distance in Terrarium Units (pixels).
+        ///   Represents the maximum amount of damage that can be dealt by
+        ///   a creature that places MaxAvailableCharacteristicPoints into the
+        ///   AttackDamagePointsAttribute.
+        ///   The amount of damage taken from this constant is multiplied by the current
+        ///   radius of the creature.  This means both MatureSize and the AttackDamagePointsAttribute
+        ///   can increase the amount of damage your creature can dish out.
         ///  </para>
         /// </summary>
-        public const int BaseEyesightRadius = 5;
+        public const int MaximumInflictedDamagePerUnitOfRadius = 25;
 
         /// <summary>
         ///  <para>
@@ -217,6 +350,16 @@ namespace OrganismBase
 
         /// <summary>
         ///  <para>
+        ///   The maximum distance that a plant can spread its seeds when reproducing.
+        ///  </para>
+        /// </summary>
+        public const int MaxSeedSpreadDistance = 1000;
+
+        private const double MinimumSpeedToMoveAtMinimumEnergy = 5;
+        private const double MinimumUnitsToMoveAtMinimumEnergy = 2000;
+
+        /// <summary>
+        ///  <para>
         ///   Represents the smallest possible value that can be placed
         ///   into the MatureSize attribute.  No creature may grow to
         ///   maturity and still be smaller than this constant.
@@ -225,24 +368,68 @@ namespace OrganismBase
         public const int MinMatureSize = 25;
 
         /// <internal/>
-        public const int MaxGridRadius = (MaxMatureSize / GridCellWidth / 2) + 1;
+        public const int MonitorModeHeight = 600;
+
+        /// <internal/>
+        public const int MonitorModeWidth = 800;
+
+        // We don't want too many teleporters or it really scrambles things up.  We base it on
+        // the size of the world, which is related to the maximum number of animals alive.
+        /// <internal/>
+        public const int NumberOfAnimalsPerTeleporter = 100;
+
+        /// <internal/>
+        public const int OrganismSchedulingBlacklistOvertime = 500000;
+
+        /// <internal/>
+        public const int OrganismSchedulingMaximumOvertime = 50000;
 
         /// <summary>
         ///  <para>
-        ///   The maximum distance that a plant can spread its seeds when reproducing.
+        ///   The amount of food chunks a plant amounts to. Larger plants will
+        ///   have a larger amount of food chunks available to herbivores than
+        ///   smaller plants.
         ///  </para>
         /// </summary>
-        public const int MaxSeedSpreadDistance = 1000;
-    
+        public const int PlantFoodChunksPerUnitOfRadius = 50;
+
+        /// <internal/>
+        public const double PlantIncubationEnergyMultiplier = 1.5;
+
         /// <summary>
         ///  <para>
-        ///   The amount of time in game ticks that a creature must wait before being
-        ///   able to reproduce.  This number is multiplied by the creature's Radius
-        ///   and so larger creatures take longer between reproductions than smaller
-        ///   creatures.
+        ///   The amount of energy required per tick in order to incubate
+        ///   an offspring.  This is multiplied by the plant's Radius
+        ///   so larger plants require more energy to incubate than
+        ///   smaller plants.
         ///  </para>
         /// </summary>
-        public const int AnimalReproductionWaitPerUnitRadius = 8;
+        public const double PlantIncubationEnergyPerUnitOfRadius =
+            (PlantMatureSizeProvidedEnergyPerUnitRadius/TicksToIncubate)*
+            PlantIncubationEnergyMultiplier;
+
+        /// <summary>
+        ///  <para>
+        ///   The amount of time in game ticks that a plant can stay alive.  This
+        ///   number is multiplied by the plant's MatureSize so smaller plants
+        ///   will not live as long as larger plants.
+        ///  </para>
+        /// </summary>
+        public const int PlantLifeSpanPerUnitMaximumRadius = 150;
+
+        /// <internal/>
+        public const double PlantMatureSizeProvidedEnergyPerUnitRadius =
+            PlantFoodChunksPerUnitOfRadius*EnergyPerPlantFoodChunk;
+
+        /// <summary>
+        ///  <para>
+        ///   The maximum number of healing points a plant can
+        ///   heal per tick.  This is multiplied by the Radius of the
+        ///   plant and so larger plants can heal many more points
+        ///   than smaller plants.
+        ///  </para>
+        /// </summary>
+        public const int PlantMaxHealingPerTickPerRadius = 1;
 
         /// <summary>
         ///  <para>
@@ -256,60 +443,21 @@ namespace OrganismBase
 
         /// <summary>
         ///  <para>
-        ///   The amount of time in game ticks that a creature can stay alive.  This
-        ///   number is multiplied by the creature's MatureSize so smaller creatures
-        ///   will not live as long as larger creatures.
+        ///   The amount of energy required to heal a plant by a single
+        ///   health unit.
         ///  </para>
         /// </summary>
-        public const int AnimalLifeSpanPerUnitMaximumRadius = 50;
+        public const int PlantRequiredEnergyPerUnitOfHealing = 100;
 
         /// <summary>
         ///  <para>
-        ///   This multiplier is used to modify the life span for Carnivores.
-        ///   Since Carnivores have double the lifespan of Herbivores they get
-        ///   twice as many opportunities for reproduction
+        ///   The amount of energy burned by a plant in order to grow a single unit
+        ///   of radius.  For smaller plants this amount of energy will be quite
+        ///   taxing, but as the plant grows larger the amount of energy taken
+        ///   doesn't affect the plant as much.
         ///  </para>
         /// </summary>
-        public const int CarnivoreLifeSpanMultiplier = 2;
-
-        /// <summary>
-        ///  <para>
-        ///   The amount of time in game ticks that a plant can stay alive.  This
-        ///   number is multiplied by the plant's MatureSize so smaller plants
-        ///   will not live as long as larger plants.
-        ///  </para>
-        /// </summary>
-        public const int PlantLifeSpanPerUnitMaximumRadius = 150;
-    
-        /// <summary>
-        ///  <para>
-        ///   The amount of time in game ticks that a creature's corpse stays
-        ///   in the EcoSystem before it rots away and is removed.  Carnivores
-        ///   should make sure to quickly pounce on dead corpses as a food source
-        ///   before they rot.
-        ///  </para>
-        /// </summary>
-        public const int TimeToRot = 60;
-
-        /// <summary>
-        ///  <para>
-        ///   The amount of energy burned by a creature each tick just for being
-        ///   alive in the game.  This constant is multiplied by the creature's
-        ///   radius so smaller creatures been less energy per tick than larger
-        ///   creatures.
-        ///  </para>
-        /// </summary>
-        public const double BaseAnimalEnergyPerUnitOfRadius = .001;  // base energy burnt per turn
-
-        /// <summary>
-        ///  <para>
-        ///   The amount of energy burned by a creature in order to grow a single unit
-        ///   of radius.  For smaller creatures this amount of energy will be quite
-        ///   taxing, but as the creature grows larger the amount of energy taken
-        ///   doesn't affect the creature as much.
-        ///  </para>
-        /// </summary>
-        public const double AnimalRequiredEnergyPerUnitOfRadiusGrowth = MaxEnergyBasePerUnitRadius * ((double) 1 / (double) 5);
+        public const double PlantRequiredEnergyPerUnitOfRadiusGrowth = MaxEnergyBasePerUnitRadius*(1/(double) 5);
 
         /// <summary>
         ///  <para>
@@ -325,158 +473,24 @@ namespace OrganismBase
         ///   move as fast as necessary to conserve energy.
         ///  </para>
         /// </summary>
-        public const double RequiredEnergyPerUnitOfRadiusSpeedDistance = (double) .005; // RadiusSpeedDistance = Radius * Speed * Distance
+        public const double RequiredEnergyPerUnitOfRadiusSpeedDistance = .005;
+                            // RadiusSpeedDistance = Radius * Speed * Distance
 
         /// <summary>
         ///  <para>
-        ///   The amount of energy required to heal a creature by a single
-        ///   health unit.
+        ///   Represents the base achievable speed granted to a creature
+        ///   that places 0 points into the MaximumSpeedAttribute.
         ///  </para>
         /// </summary>
-        public const double AnimalRequiredEnergyPerUnitOfHealing = .1;
+        public const int SpeedBase = 5;
 
         /// <summary>
         ///  <para>
-        ///   The amount of food chunks a creature amounts to once they
-        ///   become a corpse.  Larger creatures will have a larger amount
-        ///   of food chunks available to predators than smaller creatures.
+        ///   Represents the maximum achievable speed granted to a creature
+        ///   that places MaxAvailableCharacteristicPoints into the MaximumSpeedAttribute.
         ///  </para>
         /// </summary>
-        public const int FoodChunksPerUnitOfRadius = 25;      
-
-        /// <summary>
-        ///  <para>
-        ///   The amount of energy given to a creature for
-        ///   one food chunk from a corpse.
-        ///  </para>
-        /// </summary>
-        public const int EnergyPerAnimalFoodChunk = 1;
-
-        /// <summary>
-        ///  <para>
-        ///   The amount of damage required to before a creature
-        ///   is killed.  This is multiplied by the Radius of the
-        ///   creature and so larger creatures can take many more
-        ///   hits than smaller creatures.
-        ///  </para>
-        /// </summary>
-        public const int DamageToKillPerUnitOfRadius = 190;
-
-        /// <summary>
-        ///  <para>
-        ///   The maximum number of healing points a creature can
-        ///   heal per tick.  This is multiplied by the Radius of the
-        ///   creature and so larger creatures can heal many more points
-        ///   than smaller creatures.
-        ///  </para>
-        /// </summary>
-        public const int AnimalMaxHealingPerTickPerRadius = 2;
-
-        /// <summary>
-        ///  <para>
-        ///   The amount of energy burned by a plant each tick just for being
-        ///   alive in the game.  This constant is multiplied by the plant's
-        ///   radius so smaller plants been less energy per tick than larger
-        ///   plants.
-        ///  </para>
-        /// </summary>
-        public const int BasePlantEnergyPerUnitOfRadius = 1; 
-
-        /// <summary>
-        ///  <para>
-        ///   The amount of food chunks a plant amounts to. Larger plants will
-        ///   have a larger amount of food chunks available to herbivores than
-        ///   smaller plants.
-        ///  </para>
-        /// </summary>
-        public const int PlantFoodChunksPerUnitOfRadius= 50;
-
-        /// <summary>
-        ///  <para>
-        ///   The maximum amount of energy a plant can gain per tick from
-        ///   the natural light of the EcoSystem.
-        ///  </para>
-        /// </summary>
-        public const int MaxEnergyFromLightPerTick = 550;      
-
-        /// <summary>
-        ///  <para>
-        ///   The amount of energy burned by a plant in order to grow a single unit
-        ///   of radius.  For smaller plants this amount of energy will be quite
-        ///   taxing, but as the plant grows larger the amount of energy taken
-        ///   doesn't affect the plant as much.
-        ///  </para>
-        /// </summary>
-        public const double PlantRequiredEnergyPerUnitOfRadiusGrowth = MaxEnergyBasePerUnitRadius * ((double) 1 / (double) 5);
-
-        /// <summary>
-        ///  <para>
-        ///   The amount of energy given to a creature for
-        ///   one food chunk from a plant.
-        ///  </para>
-        /// </summary>
-        public const int EnergyPerPlantFoodChunk = 1;
-
-        /// <summary>
-        ///  <para>
-        ///   The amount of energy required to heal a plant by a single
-        ///   health unit.
-        ///  </para>
-        /// </summary>
-        public const int PlantRequiredEnergyPerUnitOfHealing = 100;
-
-        /// <summary>
-        ///  <para>
-        ///   The maximum number of healing points a plant can
-        ///   heal per tick.  This is multiplied by the Radius of the
-        ///   plant and so larger plants can heal many more points
-        ///   than smaller plants.
-        ///  </para>
-        /// </summary>
-        public const int PlantMaxHealingPerTickPerRadius = 1;
-
-        /// <internal/>
-        public const int ViewPortHeight = 450;
-        /// <internal/>
-        public const int ViewPortWidth = 800;
-        /// <internal/>
-        public const int MonitorModeHeight = 600;
-        /// <internal/>
-        public const int MonitorModeWidth = 800;
-    
-        /// <internal/>
-        public const int GridWidthPowerOfTwo = 3;
-        /// <internal/>
-        public const int GridHeightPowerOfTwo = 3;
-        /// <internal/>
-        public const int GridCellWidth = 1 << GridWidthPowerOfTwo;
-        /// <internal/>
-        public const int GridCellHeight = 1 << GridHeightPowerOfTwo;
-
-
-        // Scheduling Constants (in microseconds)
-        // 50 msec: if the overtime gets to this point they are penalized
-        /// <internal/>
-        public const int OrganismSchedulingMaximumOvertime = 50000; 
-
-        // 500 msec: if the organism gets this far overtime, they are blacklisted
-        /// <internal/>
-        public const int OrganismSchedulingBlacklistOvertime = 500000; 
-
-        // We don't want too many teleporters or it really scrambles things up.  We base it on
-        // the size of the world, which is related to the maximum number of animals alive.
-        /// <internal/>
-        public const int NumberOfAnimalsPerTeleporter = 100;
-
-        /// <summary>
-        ///  <para>
-        ///   Attack and Defense modifier applied to Carnivores.  This
-        ///   gives Carnivores an advantage in both attacking and defending
-        ///   against Herbivores since they have to attack and expend extra
-        ///   energy to obtain food.
-        ///  </para>
-        /// </summary>
-        public const double CarnivoreAttackDefendMultiplier = 2;
+        public const int SpeedMaximum = 100;
 
         /// <summary>
         ///  <para>
@@ -489,34 +503,19 @@ namespace OrganismBase
 
         /// <summary>
         ///  <para>
-        ///   The amount of energy required per tick in order to incubate
-        ///   an offspring.  This is multiplied by the creature's Radius
-        ///   so larger creatures require more energy to incubate than
-        ///   smaller creatures.
+        ///   The amount of time in game ticks that a creature's corpse stays
+        ///   in the EcoSystem before it rots away and is removed.  Carnivores
+        ///   should make sure to quickly pounce on dead corpses as a food source
+        ///   before they rot.
         ///  </para>
         /// </summary>
-        public const double AnimalIncubationEnergyPerUnitOfRadius = (AnimalMatureSizeProvidedEnergyPerUnitRadius / (double) TicksToIncubate) *
-            AnimalIncubationEnergyMultiplier;
-
-        /// <summary>
-        ///  <para>
-        ///   The amount of energy required per tick in order to incubate
-        ///   an offspring.  This is multiplied by the plant's Radius
-        ///   so larger plants require more energy to incubate than
-        ///   smaller plants.
-        ///  </para>
-        /// </summary>
-        public const double PlantIncubationEnergyPerUnitOfRadius = (PlantMatureSizeProvidedEnergyPerUnitRadius / (double) TicksToIncubate) *
-            PlantIncubationEnergyMultiplier;
+        public const int TimeToRot = 60;
 
         /// <internal/>
-        public const double AnimalMatureSizeProvidedEnergyPerUnitRadius = FoodChunksPerUnitOfRadius * EnergyPerAnimalFoodChunk;
+        public const int ViewPortHeight = 450;
+
         /// <internal/>
-        public const double PlantMatureSizeProvidedEnergyPerUnitRadius  = PlantFoodChunksPerUnitOfRadius * EnergyPerPlantFoodChunk;
-        /// <internal/>
-        public const double AnimalIncubationEnergyMultiplier = 1.5;
-        /// <internal/>
-        public const double PlantIncubationEnergyMultiplier = 1.5;
+        public const int ViewPortWidth = 800;
 
         // Lots of the constants are interrelated.  The asserts below are checks we do to make sure
         // constants aren't set to something that causes bad side effects.
@@ -530,22 +529,22 @@ namespace OrganismBase
 
             // If we expend enough energy in one shot to go from normal to below hungry it's a problem
             // Just growing could kill.
-            Debug.Assert((double) PlantRequiredEnergyPerUnitOfRadiusGrowth <= (((MaxEnergyBasePerUnitRadius / (double) 5) * (double) 1)));
-            Debug.Assert((double) AnimalRequiredEnergyPerUnitOfRadiusGrowth <= (((MaxEnergyBasePerUnitRadius / (double) 5) * (double) 1)));
+            Debug.Assert(PlantRequiredEnergyPerUnitOfRadiusGrowth <= (((MaxEnergyBasePerUnitRadius/5)*1)));
+            Debug.Assert(AnimalRequiredEnergyPerUnitOfRadiusGrowth <= (((MaxEnergyBasePerUnitRadius/5)*1)));
 
             // If we expend enough energy in incubation tick to go from normal to below hungry it's a problem
             // Just growing could kill.
-            Debug.Assert((double) AnimalIncubationEnergyPerUnitOfRadius <= (((MaxEnergyBasePerUnitRadius / (double) 5) * (double) 1)));
-            Debug.Assert((double) PlantIncubationEnergyPerUnitOfRadius <= (((MaxEnergyBasePerUnitRadius / (double) 5) * (double) 1)));
+            Debug.Assert(AnimalIncubationEnergyPerUnitOfRadius <= (((MaxEnergyBasePerUnitRadius/5)*1)));
+            Debug.Assert(PlantIncubationEnergyPerUnitOfRadius <= (((MaxEnergyBasePerUnitRadius/5)*1)));
 
             // Make sure that a full sized plant can survive with only half available light
-            Debug.Assert((float) (BasePlantEnergyPerUnitOfRadius * MaxMatureSize) < 
-                ((float) MaxEnergyFromLightPerTick / (float) 2));
-        
+            Debug.Assert((BasePlantEnergyPerUnitOfRadius*MaxMatureSize) <
+                         (MaxEnergyFromLightPerTick/(float) 2));
+
             // If the base energy burn per turn is smaller than what you can eat, you can't
             // survive
-            Debug.Assert((float) BaseAnimalEnergyPerUnitOfRadius * (float)MaxMatureSize < 
-                (float) EnergyPerPlantFoodChunk * (float) BaseEatingSpeedPerUnitOfRadius);
+            Debug.Assert((float) BaseAnimalEnergyPerUnitOfRadius*MaxMatureSize <
+                         EnergyPerPlantFoodChunk*(float) BaseEatingSpeedPerUnitOfRadius);
 
             // 1.   An organism needs to be able to reproduce twice in its lifetime in order to have 
             //      it's population grow.
@@ -558,10 +557,10 @@ namespace OrganismBase
             // Also: if AnimalLifeSpanPerUnitMaximumRadius <  PlantReproductionWaitPerUnitRadius, it means
             // that larger animals get a less chance to reproduce, if it's > it means that larger animals get
             // more of a chance to reproduce.
-            Debug.Assert( ((float) (AnimalLifeSpanPerUnitMaximumRadius * MaxMatureSize) / (float) 2) >= 
-                3 * ((float) AnimalReproductionWaitPerUnitRadius * MaxMatureSize));
-            Debug.Assert( ((float) (PlantLifeSpanPerUnitMaximumRadius * MaxMatureSize) / (float) 2) >= 
-                3 * ((float) PlantReproductionWaitPerUnitRadius * MaxMatureSize));
+            Debug.Assert(((AnimalLifeSpanPerUnitMaximumRadius*MaxMatureSize)/(float) 2) >=
+                         3*((float) AnimalReproductionWaitPerUnitRadius*MaxMatureSize));
+            Debug.Assert(((PlantLifeSpanPerUnitMaximumRadius*MaxMatureSize)/(float) 2) >=
+                         3*((float) PlantReproductionWaitPerUnitRadius*MaxMatureSize));
 
             Debug.Assert(OrganismSchedulingMaximumOvertime < OrganismSchedulingBlacklistOvertime);
 

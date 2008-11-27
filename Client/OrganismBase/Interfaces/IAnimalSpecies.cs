@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -15,7 +15,6 @@ namespace OrganismBase
     /// </summary>
     public interface IAnimalSpecies : ISpecies
     {
-
         /// <summary>
         ///  <para>
         ///   Returns the SkinFamily the creature will use when being displayed in the Terrarium.
@@ -24,10 +23,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.String identifying the creature's skin family.
         /// </returns>
-        AnimalSkinFamily SkinFamily
-        {
-            get;
-        }
+        AnimalSkinFamily SkinFamily { get; }
 
         /// <summary>
         ///  <para>
@@ -37,10 +33,7 @@ namespace OrganismBase
         /// <returns>
         ///  True if the creature is a Carnivore, False otherwise.
         /// </returns>
-        Boolean IsCarnivore
-        {
-            get;
-        }
+        Boolean IsCarnivore { get; }
 
         /// <summary>
         ///  <para>
@@ -52,10 +45,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 representing the food chunks that can be eaten per tick per unit radius.
         /// </returns>
-        int EatingSpeedPerUnitRadius
-        {
-            get;
-        }
+        int EatingSpeedPerUnitRadius { get; }
 
         /// <summary>
         ///  <para>
@@ -67,10 +57,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 representing the maximum damage that can be inflicted per unit radius
         /// </returns>
-        int MaximumAttackDamagePerUnitRadius
-        {
-            get;
-        }
+        int MaximumAttackDamagePerUnitRadius { get; }
 
         /// <summary>
         ///  <para>
@@ -82,10 +69,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 representing the maximum damage that can be absorbed per unit radius
         /// </returns>
-        int MaximumDefendDamagePerUnitRadius
-        {
-            get;
-        }
+        int MaximumDefendDamagePerUnitRadius { get; }
 
         /// <summary>
         ///  <para>
@@ -95,10 +79,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 representing the maximum speed the creature is capable of moving.
         /// </returns>
-        int MaximumSpeed
-        {
-            get;
-        }
+        int MaximumSpeed { get; }
 
         /// <summary>
         ///  <para>
@@ -109,10 +90,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 representing the odds a creature will appear invisible.
         /// </returns>
-        int InvisibleOdds
-        {
-            get;
-        }
+        int InvisibleOdds { get; }
 
         /// <summary>
         ///  <para>
@@ -123,9 +101,6 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 representing the distance a creature can see.
         /// </returns>
-        int EyesightRadius
-        {
-            get;
-        }
+        int EyesightRadius { get; }
     }
 }

@@ -2,20 +2,18 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                             
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace OrganismBase
 {
     /// <summary>
     ///    <para>Can only apply 100 points to any given characteristic.</para>
     /// </summary>
-    public class TooManyPointsOnOneCharacteristicException : GameEngineException 
+    public class TooManyPointsOnOneCharacteristicException : GameEngineException
     {
         /// <summary>
         ///    <para>Can only apply 100 points to any given characteristic.</para>
         /// </summary>
-        public TooManyPointsOnOneCharacteristicException() : base("Point-based characteristics must be <= " + 
-            EngineSettings.MaxAvailableCharacteristicPoints.ToString())
+        public TooManyPointsOnOneCharacteristicException() : base("Point-based characteristics must be <= " +
+                                                                  EngineSettings.MaxAvailableCharacteristicPoints)
         {
         }
     }

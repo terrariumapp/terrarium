@@ -2,13 +2,10 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                             
 //------------------------------------------------------------------------------
 
-
-using System;
 using System.IO;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
-
     /// <summary>
     ///  <para>
     ///   This is the base class used by any creatures that
@@ -18,29 +15,9 @@ namespace OrganismBase
     /// </summary>
     public abstract class Plant : Organism
     {
-
-        /// <internal/>
-        abstract public void SerializePlant(MemoryStream m);
-
-        /// <internal/>
-        abstract public void DeserializePlant(MemoryStream m);
-
-        /// <internal/>
-        public void InternalPlantSerialize(MemoryStream m)
-        {
-        }
-    
-        /// <internal/>
-        public void InternalPlantDeserialize(MemoryStream m)
-        {
-        }
-
         internal IPlantWorldBoundary World
         {
-            get
-            {
-                return (IPlantWorldBoundary) OrganismWorldBoundary;
-            }
+            get { return (IPlantWorldBoundary) OrganismWorldBoundary; }
         }
 
         /// <summary>
@@ -54,18 +31,41 @@ namespace OrganismBase
         /// <returns>
         ///  PlantState object representing your plant's current world state.
         /// </returns>
-        new public PlantState State
+        public new PlantState State
         {
-            get
-            {
-                return World.CurrentPlantState;
-            }
+            get { return World.CurrentPlantState; }
         }
 
-        /// <internal/>
+        ///<summary>
+        ///</summary>
+        ///<param name="m"></param>
+        public abstract void SerializePlant(MemoryStream m);
+
+        ///<summary>
+        ///</summary>
+        ///<param name="m"></param>
+        public abstract void DeserializePlant(MemoryStream m);
+
+        ///<summary>
+        ///</summary>
+        ///<param name="m"></param>
+        public void InternalPlantSerialize(MemoryStream m)
+        {
+        }
+
+        ///<summary>
+        ///</summary>
+        ///<param name="m"></param>
+        public void InternalPlantDeserialize(MemoryStream m)
+        {
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="clearOnly"></param>
         public override sealed void InternalMain(bool clearOnly)
         {
-            OrganismEventResults events = State.OrganismEvents;
+            var events = State.OrganismEvents;
 
             // Call Initialize once
             if (!IsInitialized)
@@ -81,7 +81,6 @@ namespace OrganismBase
                     if (InProgressActions.ReproduceAction != null &&
                         events.ReproduceCompleted.ActionID == InProgressActions.ReproduceAction.ActionID)
                     {
-
                         InProgressActions.SetReproduceAction(null);
                     }
                 }
