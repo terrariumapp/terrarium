@@ -4,7 +4,7 @@
 
 using System;
 
-namespace Terrarium.Renderer 
+namespace Terrarium.Renderer
 {
     /// <summary>
     ///  Seeds a given array with a division/offset based height map.
@@ -18,77 +18,73 @@ namespace Terrarium.Renderer
     internal class HeightMap
     {
         /// <summary>
+        ///  A random number generator used throughout the process
+        ///  of fractal height map generation.
+        /// </summary>
+        private readonly Random rand;
+
+        /// <summary>
         ///  The actual height map being generated.  By the time
         ///  the height map is complete the values are already
         ///  clamped.
         /// </summary>
-        int[,] worldMap;
+        private readonly int[,] worldMap;
 
         /// <summary>
-        ///  The maximum number assigned to any point on the map.
+        ///  The number of horizontal map locations.
         /// </summary>
-        int maxLevel = 256;
+        private readonly int xMapTiles;
 
         /// <summary>
-        ///  The minimum number assigned to any point on the map.
+        /// 
+        ///  The number of vertical map locations.
         /// </summary>
-        int minLevel = 0;
-
-        /// <summary>
-        ///  The bumpiness factor for terrain computations.
-        /// </summary>
-        int variance = 10;
+        private readonly int yMapTiles;
 
         /// <summary>
         ///  This controls how far the algorithm recurses.
         ///  Whenever the granularity is greater than the
         ///  distance between points, the algorithm stops.
         /// </summary>
-        int granularity = 2;
+        private const int Granularity = 2;
+
+        /// <summary>
+        ///  Make sure we can break out of the sea level creation
+        ///  routines in the case we get into a loop where we can't
+        ///  get our percentages correct.  This happens on smaller
+        ///  maps quite easily.
+        /// </summary>
+        private int lastSeaLevel;
+
+        /// <summary>
+        ///  The maximum number assigned to any point on the map.
+        /// </summary>
+        private const int MaxLevel = 256;
 
         /// <summary>
         ///  Gives an initial sea level value to begin processing
         ///  the grid for a sea level percentage.
         /// </summary>
-        int seaLevel = 100;
+        private int seaLevel = 100;
 
         /// <summary>
         ///  Gives a sea level percentage for renegotiating which
         ///  points are sea level.  This dynamically modifies the
         ///  seaLevel value to achieve consistent results.
         /// </summary>
-        int seaPercent = 15;
+        private const int SeaPercent = 15;
 
         /// <summary>
         ///  The allowable variance in sea level area.  This makes
         ///  sea level between (seaPercent - seaVariance),(seaPercent
         ///  + seaVariance).
         /// </summary>
-        int seaVariance = 2;
-
-		/// <summary>
-		///  Make sure we can break out of the sea level creation
-		///  routines in the case we get into a loop where we can't
-		///  get our percentages correct.  This happens on smaller
-		///  maps quite easily.
-		/// </summary>
-		int lastSeaLevel = 0;
+        private const int SeaVariance = 2;
 
         /// <summary>
-        ///  The number of horizontal map locations.
+        ///  The bumpiness factor for terrain computations.
         /// </summary>
-        int xMapTiles;
-        /// <summary>
-        /// 
-        ///  The number of vertical map locations.
-        /// </summary>
-        int yMapTiles;
-
-        /// <summary>
-        ///  A random number generator used throughout the process
-        ///  of fractal height map generation.
-        /// </summary>
-        Random rand;
+        private const int BumpinessFactor = 10;
 
         /// <summary>
         ///  Computes a new height map and fills in the by ref integer
@@ -97,7 +93,7 @@ namespace Terrarium.Renderer
         /// <param name="worldMap">A by ref int array that holds the world values.</param>
         /// <param name="xMapTiles">The number of horizontal map locations.</param>
         /// <param name="yMapTiles">The number of vertical map locations.</param>
-        internal HeightMap(ref int[,] worldMap, int xMapTiles, int yMapTiles)
+        internal HeightMap(int[,] worldMap, int xMapTiles, int yMapTiles)
         {
             this.worldMap = worldMap;
             this.xMapTiles = xMapTiles;
@@ -109,26 +105,26 @@ namespace Terrarium.Renderer
             InitMap();
 
             // Begin diamond square average fractal
-            MapArea(0, 0, xMapTiles-1, yMapTiles-1);
+            MapArea(0, 0, xMapTiles - 1, yMapTiles - 1);
 
             // Populate all unpopulated cells
             NormalizeMap();
 
             // Compute Sea Level
-			int seaLevelChange = 0;
+            var seaLevelChange = 0;
             while (!ComputeSeaLevel())
             {
-				if ( seaLevelChange == 0 )
-				{
-					seaLevelChange = lastSeaLevel;
-					continue;
-				}
+                if (seaLevelChange == 0)
+                {
+                    seaLevelChange = lastSeaLevel;
+                    continue;
+                }
 
-				if ( seaLevelChange != lastSeaLevel )
-				{
-					// We just reversed
-					break;
-				}
+                if (seaLevelChange != lastSeaLevel)
+                {
+                    // We just reversed
+                    break;
+                }
             }
 
             NormalizeMapToBaseTiles();
@@ -145,37 +141,37 @@ namespace Terrarium.Renderer
         /// <returns>True if the iteration of the method achieved the desired results, false if it should be run again.</returns>
         internal bool ComputeSeaLevel()
         {
-            int total = 0;
-            int water = 0;
+            var total = 0;
+            var water = 0;
 
-            for (int j = 0; j < yMapTiles; j++)
+            for (var j = 0; j < yMapTiles; j++)
             {
-                for (int i = 0; i < xMapTiles; i++)
+                for (var i = 0; i < xMapTiles; i++)
                 {
                     total++;
-                    if (worldMap[i,j] <= seaLevel)
+                    if (worldMap[i, j] <= seaLevel)
                     {
                         water++;
                     }
                 }
             }
 
-            int percentWater = (water * 100) / total;
-            if (percentWater > (seaPercent + seaVariance))
+            var percentWater = (water*100)/total;
+            if (percentWater > (SeaPercent + SeaVariance))
             {
-				lastSeaLevel = -1;
-            }
-        
-            if (percentWater < (seaPercent - seaVariance))
-            {
-				lastSeaLevel = 1;
+                lastSeaLevel = -1;
             }
 
-			if ( lastSeaLevel != 0 )
-			{
-				seaLevel += lastSeaLevel;
-				return false;
-			}
+            if (percentWater < (SeaPercent - SeaVariance))
+            {
+                lastSeaLevel = 1;
+            }
+
+            if (lastSeaLevel != 0)
+            {
+                seaLevel += lastSeaLevel;
+                return false;
+            }
 
             return true;
         }
@@ -197,18 +193,11 @@ namespace Terrarium.Renderer
         /// </summary>
         internal void NormalizeMapToBaseTiles()
         {
-            for (int j = 0; j < yMapTiles; j++)
+            for (var j = 0; j < yMapTiles; j++)
             {
-                for (int i = 0; i < xMapTiles; i++)
+                for (var i = 0; i < xMapTiles; i++)
                 {
-                    if (worldMap[i,j] > seaLevel)
-                    {
-                        worldMap[i,j] = 0;
-                    }
-                    else
-                    {
-                        worldMap[i,j] = 1;
-                    }
+                    worldMap[i, j] = worldMap[i, j] > seaLevel ? 0 : 1;
                 }
             }
         }
@@ -224,21 +213,21 @@ namespace Terrarium.Renderer
         /// </summary>
         internal void NormalizeMap()
         {
-            for (int j = 0; j < yMapTiles; j++)
+            for (var j = 0; j < yMapTiles; j++)
             {
-                for (int i = 0; i < xMapTiles; i++)
+                for (var i = 0; i < xMapTiles; i++)
                 {
-                    if (worldMap[i,j] == 0)
+                    if (worldMap[i, j] == 0)
                     {
                         // We have to set these points up by hand
                         // since we have to account for areas where
                         // we are out of bounds
-                        worldMap[i,j] = SquareAverage(
-                            NearestPoint(i-1,j-1,-1,-1),
-                            NearestPoint(i-1,j+1,-1,+1),
-                            NearestPoint(i+1,j-1,+1,-1),
-                            NearestPoint(i+1,j+1,+1,+1),
-                            variance);
+                        worldMap[i, j] = SquareAverage(
+                            NearestPoint(i - 1, j - 1, -1, -1),
+                            NearestPoint(i - 1, j + 1, -1, +1),
+                            NearestPoint(i + 1, j - 1, +1, -1),
+                            NearestPoint(i + 1, j + 1, +1, +1),
+                            BumpinessFactor);
                     }
                 }
             }
@@ -261,33 +250,30 @@ namespace Terrarium.Renderer
                 xdelta = -xdelta;
                 x = 0;
             }
-        
+
             if (y < 0)
             {
                 ydelta = -ydelta;
                 y = 0;
             }
-        
+
             if (x >= xMapTiles)
             {
                 xdelta = -xdelta;
                 x = xMapTiles - 1;
             }
-        
+
             if (y >= yMapTiles)
             {
                 ydelta = -ydelta;
                 y = yMapTiles - 1;
             }
 
-            if (worldMap[x,y] != 0)
+            if (worldMap[x, y] != 0)
             {
-                return worldMap[x,y];
+                return worldMap[x, y];
             }
-            else
-            {
-                return NearestPoint(x+xdelta, y+ydelta, xdelta, ydelta);
-            }
+            return NearestPoint(x + xdelta, y + ydelta, xdelta, ydelta);
         }
 
         /// <summary>
@@ -316,27 +302,27 @@ namespace Terrarium.Renderer
             // Fractal algorithms are meant to work in a very defined
             // space.  Since we can't establish the grid on a 5x5 set
             // of boundaries we have to do some extra work.
-            if (granularity > (x1 - x0) || granularity > (y1 - y0))
+            if (Granularity > (x1 - x0) || Granularity > (y1 - y0))
             {
                 return;
             }
 
-            int centerPoint = 0;
-        
-            if (worldMap[(x1+x0) >> 1, (y1+y0) >> 1] != 0)
+            int centerPoint;
+
+            if (worldMap[(x1 + x0) >> 1, (y1 + y0) >> 1] != 0)
             {
-                centerPoint = worldMap[(x1+x0) >> 1, (y1+y0) >> 1];
+                centerPoint = worldMap[(x1 + x0) >> 1, (y1 + y0) >> 1];
             }
             else
             {
                 // Computer center of square
                 centerPoint = SquareAverage(
-                    worldMap[x0,y0],
-                    worldMap[x0,y1],
-                    worldMap[x1,y0],
-                    worldMap[x1,y1],
-                    variance);
-                worldMap[(x1+x0) >> 1, (y1+y0) >> 1] = centerPoint;
+                    worldMap[x0, y0],
+                    worldMap[x0, y1],
+                    worldMap[x1, y0],
+                    worldMap[x1, y1],
+                    BumpinessFactor);
+                worldMap[(x1 + x0) >> 1, (y1 + y0) >> 1] = centerPoint;
             }
 
             // Compute Cross points to make a diamond
@@ -345,38 +331,38 @@ namespace Terrarium.Renderer
             // taking the center point twice weights us
             // to the midpoint of the landmass which isn't
             // that bad.
-            worldMap[x0, (y1+y0) >> 1] = SquareAverage(
+            worldMap[x0, (y1 + y0) >> 1] = SquareAverage(
                 worldMap[x0, y0],
                 worldMap[x0, y1],
                 centerPoint,
                 centerPoint,
-                variance);
+                BumpinessFactor);
 
-            worldMap[(x1+x0) >> 1, y0] = SquareAverage(
+            worldMap[(x1 + x0) >> 1, y0] = SquareAverage(
                 worldMap[x0, y0],
                 worldMap[x1, y0],
                 centerPoint,
                 centerPoint,
-                variance);
+                BumpinessFactor);
 
-            worldMap[x1, (y1+y0) >> 1] = SquareAverage(
+            worldMap[x1, (y1 + y0) >> 1] = SquareAverage(
                 worldMap[x1, y0],
                 worldMap[x1, y1],
                 centerPoint,
                 centerPoint,
-                variance);
+                BumpinessFactor);
 
-            worldMap[(x1+x0) >> 1, y1] = SquareAverage(
+            worldMap[(x1 + x0) >> 1, y1] = SquareAverage(
                 worldMap[x0, y1],
                 worldMap[x1, y1],
                 centerPoint,
                 centerPoint,
-                variance);
+                BumpinessFactor);
 
-            MapArea(x0, y0, (x1+x0) >> 1, (y1+y0) >> 1);
-            MapArea((x1+x0) >> 1, y0, x1, (y1+y0) >> 1);
-            MapArea(x0, (y1+y0) >> 1, (x1+x0) >> 1, y1);
-            MapArea((x1+x0) >> 1, (y1+y0) >> 1, x1, y1);
+            MapArea(x0, y0, (x1 + x0) >> 1, (y1 + y0) >> 1);
+            MapArea((x1 + x0) >> 1, y0, x1, (y1 + y0) >> 1);
+            MapArea(x0, (y1 + y0) >> 1, (x1 + x0) >> 1, y1);
+            MapArea((x1 + x0) >> 1, (y1 + y0) >> 1, x1, y1);
         }
 
         /// <summary>
@@ -393,14 +379,11 @@ namespace Terrarium.Renderer
         /// <returns>The averaged height, +/- a random bumpy factor</returns>
         internal int SquareAverage(int p1, int p2, int p3, int p4, int v)
         {
-            if (rand.Next(0,2) == 1)
+            if (rand.Next(0, 2) == 1)
             {
                 return ((p1 + p2 + p3 + p4) >> 2) + rand.Next(0, v);
             }
-            else
-            {
-                return ((p1 + p2 + p3 + p4) >> 2) - rand.Next(0, v);
-            }
+            return ((p1 + p2 + p3 + p4) >> 2) - rand.Next(0, v);
         }
 
         /// <summary>
@@ -419,59 +402,59 @@ namespace Terrarium.Renderer
             //  Here we are seeding values to get a nice map.
             //  We will be giving 1 high value, 2 mid values,
             //  and 1 low value.
-            int highDirection = rand.Next(1,5);
-            int lowDirection = highDirection;
+            var highDirection = rand.Next(1, 5);
+            var lowDirection = highDirection;
 
-            int highValue = maxLevel - (maxLevel >> 2);
-            int lowValue = minLevel + (maxLevel >> 2);
-            int midValue = (maxLevel >> 1);
+            var highValue = MaxLevel - (MaxLevel >> 2);
+            var lowValue = (MaxLevel >> 2);
+            var midValue = (MaxLevel >> 1);
 
             while (lowDirection == highDirection)
             {
-                lowDirection = rand.Next(1,6); // Add in a center point 1-4 corners, 5 center
+                lowDirection = rand.Next(1, 6); // Add in a center point 1-4 corners, 5 center
             }
 
-            worldMap[0,0] = midValue;
-            worldMap[0,yMapTiles-1] = midValue;
-            worldMap[xMapTiles-1,0] = midValue;
-            worldMap[xMapTiles-1,yMapTiles-1] = midValue;
-            worldMap[((xMapTiles-1) >> 1), ((yMapTiles-1) >> 1)] = midValue;
+            worldMap[0, 0] = midValue;
+            worldMap[0, yMapTiles - 1] = midValue;
+            worldMap[xMapTiles - 1, 0] = midValue;
+            worldMap[xMapTiles - 1, yMapTiles - 1] = midValue;
+            worldMap[((xMapTiles - 1) >> 1), ((yMapTiles - 1) >> 1)] = midValue;
 
             switch (highDirection)
             {
                 case 1:
-                    worldMap[0,0] = highValue;
+                    worldMap[0, 0] = highValue;
                     break;
                 case 2:
-                    worldMap[0,yMapTiles-1] = highValue;
+                    worldMap[0, yMapTiles - 1] = highValue;
                     break;
                 case 3:
-                    worldMap[xMapTiles-1,0] = highValue;
+                    worldMap[xMapTiles - 1, 0] = highValue;
                     break;
                 case 4:
-                    worldMap[xMapTiles-1,yMapTiles-1] = highValue;
+                    worldMap[xMapTiles - 1, yMapTiles - 1] = highValue;
                     break;
                 case 5:
-                    worldMap[((xMapTiles-1) >> 1), ((yMapTiles-1) >> 1)] = highValue;
+                    worldMap[((xMapTiles - 1) >> 1), ((yMapTiles - 1) >> 1)] = highValue;
                     break;
             }
 
             switch (lowDirection)
             {
                 case 1:
-                    worldMap[0,0] = lowValue;
+                    worldMap[0, 0] = lowValue;
                     break;
                 case 2:
-                    worldMap[0,yMapTiles-1] = lowValue;
+                    worldMap[0, yMapTiles - 1] = lowValue;
                     break;
                 case 3:
-                    worldMap[xMapTiles-1,0] = lowValue;
+                    worldMap[xMapTiles - 1, 0] = lowValue;
                     break;
                 case 4:
-                    worldMap[xMapTiles-1,yMapTiles-1] = lowValue;
+                    worldMap[xMapTiles - 1, yMapTiles - 1] = lowValue;
                     break;
                 case 5:
-                    worldMap[((xMapTiles-1) >> 1), ((yMapTiles-1) >> 1)] = lowValue;
+                    worldMap[((xMapTiles - 1) >> 1), ((yMapTiles - 1) >> 1)] = lowValue;
                     break;
             }
         }

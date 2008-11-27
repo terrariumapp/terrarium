@@ -5,9 +5,10 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using DxVBLib;
 
-namespace Terrarium.Renderer.DirectX 
+namespace Terrarium.Renderer.DirectX
 {
     /// <summary>
     ///  Managed Wrapper for a DirectX7 DirectDraw Surface.
@@ -30,14 +31,9 @@ namespace Terrarium.Renderer.DirectX
         public static DDSURFACEDESC2 SystemMemorySurfaceDescription;
 
         /// <summary>
-        ///  The transparency key for this surface
+        ///  Pointer to the surface description used to create this surface.
         /// </summary>
-        private DDCOLORKEY transparencyKey;
-
-        /// <summary>
-        ///  Determines if transparency is enabled for this surface.
-        /// </summary>
-        private bool transparencyEnabled = false;
+        private DDSURFACEDESC2 descriptor;
 
         /// <summary>
         ///  File based image used to initialize this surface.
@@ -45,19 +41,24 @@ namespace Terrarium.Renderer.DirectX
         private String image;
 
         /// <summary>
+        ///  The size of the surface.
+        /// </summary>
+        private RECT rect;
+
+        /// <summary>
         ///  Pointer to the real DirectDrawSurface7 class
         /// </summary>
         private DirectDrawSurface7 surface;
 
         /// <summary>
-        ///  Pointer to the surface description used to create this surface.
+        ///  Determines if transparency is enabled for this surface.
         /// </summary>
-        private DDSURFACEDESC2 descriptor;
+        private bool transparencyEnabled;
 
         /// <summary>
-        ///  The size of the surface.
+        ///  The transparency key for this surface
         /// </summary>
-        private RECT rect;
+        private DDCOLORKEY transparencyKey;
 
         /// <summary>
         ///  Static constructor used to intialize static surface description fields.
@@ -76,10 +77,11 @@ namespace Terrarium.Renderer.DirectX
 
             SystemMemorySurfaceDescription = new DDSURFACEDESC2();
             SystemMemorySurfaceDescription.lFlags = CONST_DDSURFACEDESCFLAGS.DDSD_CAPS;
-            SystemMemorySurfaceDescription.ddsCaps.lCaps = CONST_DDSURFACECAPSFLAGS.DDSCAPS_OFFSCREENPLAIN | CONST_DDSURFACECAPSFLAGS.DDSCAPS_SYSTEMMEMORY;
+            SystemMemorySurfaceDescription.ddsCaps.lCaps = CONST_DDSURFACECAPSFLAGS.DDSCAPS_OFFSCREENPLAIN |
+                                                           CONST_DDSURFACECAPSFLAGS.DDSCAPS_SYSTEMMEMORY;
         }
 
-        
+
         /// <summary>
         ///  Creates a new DirectDrawSurface given a width and height.
         /// </summary>
@@ -88,7 +90,8 @@ namespace Terrarium.Renderer.DirectX
         public DirectDrawSurface(int x, int y)
         {
             descriptor = new DDSURFACEDESC2();
-            descriptor.lFlags = CONST_DDSURFACEDESCFLAGS.DDSD_CAPS | CONST_DDSURFACEDESCFLAGS.DDSD_HEIGHT | CONST_DDSURFACEDESCFLAGS.DDSD_WIDTH;
+            descriptor.lFlags = CONST_DDSURFACEDESCFLAGS.DDSD_CAPS | CONST_DDSURFACEDESCFLAGS.DDSD_HEIGHT |
+                                CONST_DDSURFACEDESCFLAGS.DDSD_WIDTH;
             descriptor.ddsCaps.lCaps = CONST_DDSURFACECAPSFLAGS.DDSCAPS_OFFSCREENPLAIN;
             descriptor.lWidth = x;
             descriptor.lHeight = y;
@@ -104,7 +107,7 @@ namespace Terrarium.Renderer.DirectX
         public DirectDrawSurface(DDSURFACEDESC2 surfaceDescription) : this("", surfaceDescription)
         {
         }
-        
+
         /// <summary>
         ///  Create a new surface given an image path
         /// </summary>
@@ -140,31 +143,29 @@ namespace Terrarium.Renderer.DirectX
         /// </summary>
         public static DDCOLORKEY DefaultColorKey
         {
-            get
-            {
-                return MagentaColorKey;
-            }
+            get { return MagentaColorKey; }
         }
 
         /// <summary>
         ///  Creates a transparency key for the color Magenta.
         /// </summary>
-        public static DDCOLORKEY MagentaColorKey 
+        public static DDCOLORKEY MagentaColorKey
         {
             get
             {
-                DDCOLORKEY ddck = new DDCOLORKEY();
-                DDSURFACEDESC2 ddsd2 = new DDSURFACEDESC2();
+                var ddck = new DDCOLORKEY();
+                var ddsd2 = new DDSURFACEDESC2();
                 ManagedDirectX.DirectDraw.GetDisplayMode(ref ddsd2);
 
-                if ((ddsd2.ddpfPixelFormat.lFlags & CONST_DDPIXELFORMATFLAGS.DDPF_PALETTEINDEXED8) == CONST_DDPIXELFORMATFLAGS.DDPF_PALETTEINDEXED8)
+                if ((ddsd2.ddpfPixelFormat.lFlags & CONST_DDPIXELFORMATFLAGS.DDPF_PALETTEINDEXED8) ==
+                    CONST_DDPIXELFORMATFLAGS.DDPF_PALETTEINDEXED8)
                 {
                     ddck.low = 253;
                     ddck.high = 253;
                 }
                 else
                 {
-                    ddck.low  = ddsd2.ddpfPixelFormat.lRBitMask + ddsd2.ddpfPixelFormat.lBBitMask;
+                    ddck.low = ddsd2.ddpfPixelFormat.lRBitMask + ddsd2.ddpfPixelFormat.lBBitMask;
                     ddck.high = ddsd2.ddpfPixelFormat.lRBitMask + ddsd2.ddpfPixelFormat.lBBitMask;
                 }
 
@@ -179,19 +180,22 @@ namespace Terrarium.Renderer.DirectX
         {
             get
             {
-                DDCOLORKEY ddck = new DDCOLORKEY();
-                DDSURFACEDESC2 ddsd2 = new DDSURFACEDESC2();
+                var ddck = new DDCOLORKEY();
+                var ddsd2 = new DDSURFACEDESC2();
                 ManagedDirectX.DirectDraw.GetDisplayMode(ref ddsd2);
 
-                if ((ddsd2.ddpfPixelFormat.lFlags & CONST_DDPIXELFORMATFLAGS.DDPF_PALETTEINDEXED8) == CONST_DDPIXELFORMATFLAGS.DDPF_PALETTEINDEXED8)
+                if ((ddsd2.ddpfPixelFormat.lFlags & CONST_DDPIXELFORMATFLAGS.DDPF_PALETTEINDEXED8) ==
+                    CONST_DDPIXELFORMATFLAGS.DDPF_PALETTEINDEXED8)
                 {
                     ddck.low = 255;
                     ddck.high = 255;
                 }
                 else
                 {
-                    ddck.low  = ddsd2.ddpfPixelFormat.lRBitMask + ddsd2.ddpfPixelFormat.lGBitMask + ddsd2.ddpfPixelFormat.lBBitMask;
-                    ddck.high = ddsd2.ddpfPixelFormat.lRBitMask + ddsd2.ddpfPixelFormat.lGBitMask + ddsd2.ddpfPixelFormat.lBBitMask;
+                    ddck.low = ddsd2.ddpfPixelFormat.lRBitMask + ddsd2.ddpfPixelFormat.lGBitMask +
+                               ddsd2.ddpfPixelFormat.lBBitMask;
+                    ddck.high = ddsd2.ddpfPixelFormat.lRBitMask + ddsd2.ddpfPixelFormat.lGBitMask +
+                                ddsd2.ddpfPixelFormat.lBBitMask;
                 }
 
                 return ddck;
@@ -205,23 +209,108 @@ namespace Terrarium.Renderer.DirectX
         {
             get
             {
-                DDCOLORKEY ddck = new DDCOLORKEY();
-                DDSURFACEDESC2 ddsd2 = new DDSURFACEDESC2();
+                var ddck = new DDCOLORKEY();
+                var ddsd2 = new DDSURFACEDESC2();
                 ManagedDirectX.DirectDraw.GetDisplayMode(ref ddsd2);
 
-                if ((ddsd2.ddpfPixelFormat.lFlags & CONST_DDPIXELFORMATFLAGS.DDPF_PALETTEINDEXED8) == CONST_DDPIXELFORMATFLAGS.DDPF_PALETTEINDEXED8)
+                if ((ddsd2.ddpfPixelFormat.lFlags & CONST_DDPIXELFORMATFLAGS.DDPF_PALETTEINDEXED8) ==
+                    CONST_DDPIXELFORMATFLAGS.DDPF_PALETTEINDEXED8)
                 {
                     ddck.low = 250;
                     ddck.high = 250;
                 }
                 else
                 {
-                    ddck.low  = ddsd2.ddpfPixelFormat.lGBitMask;
+                    ddck.low = ddsd2.ddpfPixelFormat.lGBitMask;
                     ddck.high = ddsd2.ddpfPixelFormat.lGBitMask;
                 }
 
                 return ddck;
             }
+        }
+
+        /// <summary>
+        ///  Determines if the surface is in video memory
+        ///  or system memory.
+        /// </summary>
+        public bool InVideo
+        {
+            get
+            {
+                if (surface != null)
+                {
+                    var ddsc = new DDSCAPS2();
+                    surface.GetCaps(ref ddsc);
+                    if ((ddsc.lCaps & CONST_DDSURFACECAPSFLAGS.DDSCAPS_VIDEOMEMORY) > 0)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
+        ///  Path to the image used to initialize this surface if one exists.
+        /// </summary>
+        public String ImagePath
+        {
+            get { return image; }
+            set
+            {
+                image = value;
+                CreateSurface();
+            }
+        }
+
+        /// <summary>
+        ///  Determines if this is a transparent surface.
+        /// </summary>
+        public bool TransparentSurface
+        {
+            get { return transparencyEnabled; }
+        }
+
+        /// <summary>
+        ///  Sets the transparency key for this surface.
+        /// </summary>
+        public DDCOLORKEY TransparencyKey
+        {
+            get { return transparencyKey; }
+            set
+            {
+                transparencyKey = value;
+                transparencyEnabled = true;
+                if (surface != null)
+                {
+                    surface.SetColorKey(CONST_DDCKEYFLAGS.DDCKEY_SRCBLT, ref transparencyKey);
+                }
+            }
+        }
+
+        /// <summary>
+        ///  Modifies the Surface Description
+        /// </summary>
+        public DDSURFACEDESC2 Descriptor
+        {
+            get { return descriptor; }
+            set { descriptor = value; }
+        }
+
+        /// <summary>
+        ///  Retrieves the size of this surface.
+        /// </summary>
+        public RECT Rect
+        {
+            get { return rect; }
+        }
+
+        /// <summary>
+        ///  Provides access to the native surface object
+        /// </summary>
+        public DirectDrawSurface7 Surface
+        {
+            get { return surface; }
         }
 
         /// <summary>
@@ -235,21 +324,21 @@ namespace Terrarium.Renderer.DirectX
         {
             // This may not be perfect since we are going to have to average
             // different bit depths together
-            DDCOLORKEY ddck = new DDCOLORKEY();
-            DDSURFACEDESC2 ddsd2 = new DDSURFACEDESC2();
+            var ddck = new DDCOLORKEY();
+            var ddsd2 = new DDSURFACEDESC2();
             ManagedDirectX.DirectDraw.GetDisplayMode(ref ddsd2);
 
-            int bBitCount = CountBits(ddsd2.ddpfPixelFormat.lBBitMask);
-            int gBitCount = CountBits(ddsd2.ddpfPixelFormat.lGBitMask);
-            int rBitCount = CountBits(ddsd2.ddpfPixelFormat.lRBitMask);
+            var bBitCount = CountBits(ddsd2.ddpfPixelFormat.lBBitMask);
+            var gBitCount = CountBits(ddsd2.ddpfPixelFormat.lGBitMask);
+            var rBitCount = CountBits(ddsd2.ddpfPixelFormat.lRBitMask);
 
-            int bBitMask = ddsd2.ddpfPixelFormat.lBBitMask;
-            int gBitMask = ddsd2.ddpfPixelFormat.lGBitMask >> bBitCount;
-            int rBitMask = ddsd2.ddpfPixelFormat.lRBitMask >> (gBitCount + bBitCount);
+            var bBitMask = ddsd2.ddpfPixelFormat.lBBitMask;
+            var gBitMask = ddsd2.ddpfPixelFormat.lGBitMask >> bBitCount;
+            var rBitMask = ddsd2.ddpfPixelFormat.lRBitMask >> (gBitCount + bBitCount);
 
-            int bValue = (b / 255) * bBitMask;
-            int gValue = (g / 255) * gBitMask;
-            int rValue = (r / 255) * rBitMask;
+            var bValue = (b/255)*bBitMask;
+            var gValue = (g/255)*gBitMask;
+            var rValue = (r/255)*rBitMask;
 
             ddck.low = (rValue << (gBitCount + bBitCount)) + (gValue << bBitCount) + bValue;
             ddck.high = ddck.low;
@@ -264,7 +353,7 @@ namespace Terrarium.Renderer.DirectX
         /// <returns>The number specified by the number of bits.</returns>
         private static int CountBits(int number)
         {
-            int bits = 0;
+            var bits = 0;
 
             while (number != 0)
             {
@@ -291,111 +380,6 @@ namespace Terrarium.Renderer.DirectX
         }
 
         /// <summary>
-        ///  Determines if the surface is in video memory
-        ///  or system memory.
-        /// </summary>
-        public bool InVideo
-        {
-            get
-            {
-                if (surface != null)
-                {
-                    DDSCAPS2 ddsc = new DDSCAPS2();
-                    surface.GetCaps(ref ddsc);
-                    if ((ddsc.lCaps & CONST_DDSURFACECAPSFLAGS.DDSCAPS_VIDEOMEMORY) > 0)
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
-
-        /// <summary>
-        ///  Path to the image used to initialize this surface if one exists.
-        /// </summary>
-        public String ImagePath
-        {
-            get
-            {
-                return image;
-            }
-            set
-            {
-                image = value;
-                CreateSurface();
-            }
-        }
-
-        /// <summary>
-        ///  Determines if this is a transparent surface.
-        /// </summary>
-        public bool TransparentSurface
-        {
-            get
-            {
-                return transparencyEnabled;
-            }
-        }
-
-        /// <summary>
-        ///  Sets the transparency key for this surface.
-        /// </summary>
-        public DDCOLORKEY TransparencyKey
-        {
-            get
-            {
-                return transparencyKey;
-            }
-            set
-            {
-                transparencyKey = value;
-                transparencyEnabled = true;
-                if (surface != null)
-                {
-                    surface.SetColorKey(CONST_DDCKEYFLAGS.DDCKEY_SRCBLT, ref transparencyKey );
-                }
-            }
-        }
-
-        /// <summary>
-        ///  Modifies the Surface Description
-        /// </summary>
-        public DDSURFACEDESC2 Descriptor
-        {
-            get
-            {
-                return descriptor;
-            }
-            set
-            {
-                descriptor = value;
-            }
-        }
-
-        /// <summary>
-        ///  Retrieves the size of this surface.
-        /// </summary>
-        public RECT Rect
-        {
-            get
-            {
-                return rect;
-            }
-        }
-
-        /// <summary>
-        ///  Provides access to the native surface object
-        /// </summary>
-        public DirectDrawSurface7 Surface
-        {
-            get
-            {
-                return surface;
-            }
-        }
-
-        /// <summary>
         ///  Helper function used to complete initialization of a surface.
         /// </summary>
         private void CreateSurface()
@@ -405,7 +389,7 @@ namespace Terrarium.Renderer.DirectX
 #endif
             try
             {
-                if (image == null || image.Length == 0)
+                if (string.IsNullOrEmpty(image))
                 {
                     surface = ManagedDirectX.DirectDraw.CreateSurface(ref descriptor);
                     if (surface != null)
@@ -429,19 +413,23 @@ namespace Terrarium.Renderer.DirectX
                             surface = ManagedDirectX.DirectDraw.CreateSurfaceFromFile(image, ref descriptor);
                         }
                     }
-                    catch (System.Runtime.InteropServices.COMException e)
+                    catch (COMException e)
                     {
                         // File Not Found
-                        switch ((uint)e.ErrorCode)
+                        switch ((uint) e.ErrorCode)
                         {
                             case 0x800A0035:
-                                Trace.WriteLine( "Could not find the file '" + image + "'.  This must be placed in the current directory.", "Picture Not Found" );
+                                Trace.WriteLine(
+                                    "Could not find the file '" + image +
+                                    "'.  This must be placed in the current directory.", "Picture Not Found");
                                 break;
                             case 0x8876024E:
-                                Trace.WriteLine( "The graphics card is in an unsupported mode.  We will try to initalize again later." );
-                                throw new DirectXException("Error Creating a DirectDraw Surface because of unsupported graphics mode.", e);
+                                Trace.WriteLine(
+                                    "The graphics card is in an unsupported mode.  We will try to initalize again later.");
+                                throw new DirectXException(
+                                    "Error Creating a DirectDraw Surface because of unsupported graphics mode.", e);
                             default:
-                                Trace.WriteLine( "Unexpected exception: " + e.ToString(), "Unexpected Exception" );
+                                Trace.WriteLine("Unexpected exception: " + e, "Unexpected Exception");
                                 break;
                         }
                     }

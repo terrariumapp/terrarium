@@ -16,28 +16,17 @@ namespace Terrarium.Renderer
     public class OrganismClickedEventArgs : EventArgs
     {
         /// <summary>
-        ///  The state of the organism that was clicked
-        /// </summary>
-        OrganismState state;
-
-        /// <summary>
         ///  Creates event args that identify a clicked creature.
         /// </summary>
         /// <param name="state">State of the creature that was clicked.</param>
         public OrganismClickedEventArgs(OrganismState state)
         {
-            this.state = state;
+            OrganismState = state;
         }
 
         /// <summary>
         ///  Provides access to the state object of the clicked creature.
         /// </summary>
-        public OrganismState OrganismState
-        {
-            get
-            {
-                return state;
-            }
-        }
+        public OrganismState OrganismState { get; private set; }
     }
 }
