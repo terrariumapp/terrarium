@@ -5,7 +5,7 @@
 using System;
 using System.Drawing;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -16,15 +16,6 @@ namespace OrganismBase
     /// </summary>
     public class Vector
     {
-        /// <summary>
-        ///  The value of the x component.
-        /// </summary>
-        double x;
-        /// <summary>
-        ///  The value of the y component.
-        /// </summary>
-        double y;
-    
         /// <summary>
         ///  <para>
         ///   Constructs a new Vector using an x and y coordinate pair.
@@ -38,10 +29,10 @@ namespace OrganismBase
         /// </param>
         public Vector(double x, double y)
         {
-            this.x = x;
-            this.y = y;
+            X = x;
+            Y = y;
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Constructs a new Vector using System.Drawing.Point
@@ -52,8 +43,8 @@ namespace OrganismBase
         /// </param>
         public Vector(Point point)
         {
-            this.x = point.X;
-            this.y = point.Y;
+            X = point.X;
+            Y = point.Y;
         }
 
         /// <summary>
@@ -64,14 +55,8 @@ namespace OrganismBase
         /// <returns>
         ///  System.Double for the X coordinate.
         /// </returns>
-        public double X
-        {
-            get
-            {
-                return x;
-            }
-        }
-    
+        public double X { get; private set; }
+
         /// <summary>
         ///  <para>
         ///   Used to retrieve the Y component of the vector.
@@ -80,14 +65,8 @@ namespace OrganismBase
         /// <returns>
         ///  System.Double for the Y coordinate.
         /// </returns>
-        public double Y
-        {
-            get
-            {
-                return y;
-            }
-        }
-    
+        public double Y { get; private set; }
+
         /// <summary>
         ///  <para>
         ///   Returns the x,y coordinate pair in the form of a System.Drawing.Point
@@ -98,10 +77,7 @@ namespace OrganismBase
         /// </returns>
         public Point Point
         {
-            get
-            {
-                return new Point((int) x, (int) y);
-            }
+            get { return new Point((int) X, (int) Y); }
         }
 
         /// <summary>
@@ -119,10 +95,7 @@ namespace OrganismBase
         /// </returns>
         public double Magnitude
         {
-            get
-            {
-                return FastMagnitude;
-            }
+            get { return FastMagnitude; }
         }
 
         /// <summary>
@@ -141,10 +114,7 @@ namespace OrganismBase
         /// </returns>
         public double TrueMagnitude
         {
-            get
-            {
-                return Math.Sqrt((double) (X * X) + (Y * Y));
-            }
+            get { return Math.Sqrt((X*X) + (Y*Y)); }
         }
 
         /// <summary>
@@ -160,10 +130,10 @@ namespace OrganismBase
         {
             get
             {
-                double direction = Math.Atan2(y, x); 
+                var direction = Math.Atan2(Y, X);
                 if (direction < 0)
                 {
-                    direction = 2 * Math.PI + direction;
+                    direction = 2*Math.PI + direction;
                 }
 
                 return direction;
@@ -180,17 +150,15 @@ namespace OrganismBase
         {
             get
             {
-                double absX = (x < 0 ? -x : x);
-                double absY = (y < 0 ? -y : y);
-        
+                var absX = (X < 0 ? -X : X);
+                var absY = (Y < 0 ? -Y : Y);
+
                 if (absX < absY)
                 {
-                    return absX + absY - absX / 2;
+                    return absX + absY - absX/2;
                 }
-                else
-                {
-                    return absX + absY - absY / 2;
-                }
+                
+                return absX + absY - absY/2;
             }
         }
 
@@ -208,7 +176,7 @@ namespace OrganismBase
         /// </returns>
         public Vector Scale(double scalar)
         {
-            return new Vector(x * scalar, y * scalar);
+            return new Vector(X*scalar, Y*scalar);
         }
 
         /// <summary>
@@ -223,9 +191,9 @@ namespace OrganismBase
         /// <returns>
         ///  System.Double representing the amount in radians.
         /// </returns>
-        static public double ToRadians(double degrees)
+        public static double ToRadians(double degrees)
         {
-            return (degrees / (double) 360) * 2 * Math.PI;
+            return (degrees/360)*2*Math.PI;
         }
 
         /// <summary>
@@ -240,9 +208,9 @@ namespace OrganismBase
         /// <returns>
         ///  System.Double representing the amount in degrees.
         /// </returns>
-        static public double ToDegrees(double radians)
+        public static double ToDegrees(double radians)
         {
-            return (radians / (2 * Math.PI)) * 360;
+            return (radians/(2*Math.PI))*360;
         }
 
         /// <summary>
@@ -266,11 +234,11 @@ namespace OrganismBase
         /// </returns>
         public Vector Rotate(double radians)
         {
-            Vector newVector = new Vector(  Math.Cos(radians) * x - Math.Sin(radians) * y, 
-                Math.Sin(radians) * x + Math.Cos(radians) * y);
+            var newVector = new Vector(Math.Cos(radians)*X - Math.Sin(radians)*Y,
+                                       Math.Sin(radians)*X + Math.Cos(radians)*Y);
             return newVector;
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Used to get the unit vector for the current vector.  The unit
@@ -282,11 +250,11 @@ namespace OrganismBase
         /// </returns>
         public Vector GetUnitVector()
         {
-            double magnitude = Magnitude;
-            
-            return new Vector(x / magnitude, y / magnitude);
+            var magnitude = Magnitude;
+
+            return new Vector(X/magnitude, Y/magnitude);
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Helper function that subtracts two points and computes
@@ -302,11 +270,11 @@ namespace OrganismBase
         /// <returns>
         ///  Vector representing the result of the subtraction.
         /// </returns>
-        static public Vector Subtract(Point point1, Point point2)
+        public static Vector Subtract(Point point1, Point point2)
         {
             return new Vector(point2.X - point1.X, point2.Y - point1.Y);
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Helper function that adds the components values of
@@ -323,7 +291,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.Drawing.Point of the combined x,y components of vector and point.
         /// </returns>
-        static public Point Add(Point point, Vector vector)
+        public static Point Add(Point point, Vector vector)
         {
             return new Point(point.X + (int) vector.X, point.Y + (int) vector.Y);
         }
@@ -339,7 +307,7 @@ namespace OrganismBase
         /// </returns>
         public override string ToString()
         {
-            return "{" + x.ToString() + ", " + y.ToString() + ", mag=" + Magnitude + "}";
-        }    
+            return string.Format("{{{0}, {1}, mag={2}}}", X, Y, Magnitude);
+        }
     }
 }

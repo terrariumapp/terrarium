@@ -6,7 +6,7 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -24,34 +24,14 @@ namespace OrganismBase
     [Serializable]
     public sealed class AnimalState : OrganismState
     {
-        int damage = 0;
-        int rotTickCount = 0;
-        AntennaState state = new AntennaState(null);
+        private int damage;
+        private AntennaState state = new AntennaState(null);
 
         /// <internal/>
-        public AnimalState(string id, IAnimalSpecies species, int generation) : base(id, species, generation)
+        public AnimalState(string id, ISpecies species, int generation) : base(id, species, generation)
         {
         }
 
-        /// <internal/>
-        public override OrganismState CloneMutable()
-        {
-            AnimalState newInstance = new AnimalState(ID, AnimalSpecies, Generation);
-            CopyStateInto(newInstance);
-
-            return newInstance;
-        }
-
-        /// <internal/>
-        protected override void CopyStateInto(OrganismState newInstance)
-        {
-            base.CopyStateInto(newInstance);
-
-            ((AnimalState)newInstance).damage = damage;
-            ((AnimalState)newInstance).rotTickCount = rotTickCount;
-            ((AnimalState)newInstance).state = new AntennaState(state);
-        }
-    
         /// <summary>
         ///  <para>
         ///   Provides access to a read-only version of a creature's Antenna.  Each Antenna
@@ -67,7 +47,7 @@ namespace OrganismBase
         /// <returns>
         ///  AntennaState for the organism to initiate communication.
         /// </returns>
-        [TypeConverter((typeof(ExpandableObjectConverter)))]
+        [TypeConverter((typeof (ExpandableObjectConverter)))]
         public AntennaState Antennas
         {
             get
@@ -76,10 +56,10 @@ namespace OrganismBase
                 {
                     state.MakeImmutable();
                 }
-            
+
                 return state;
             }
-        
+
             set
             {
                 if (!IsImmutable)
@@ -91,7 +71,8 @@ namespace OrganismBase
                 }
                 else
                 {
-                    throw new GameEngineException("Antennas can not be set on the State object.  Use the Antennas property on your Creature class instead.");
+                    throw new GameEngineException(
+                        "Antennas can not be set on the State object.  Use the Antennas property on your Creature class instead.");
                 }
             }
         }
@@ -108,10 +89,7 @@ namespace OrganismBase
         /// </returns>
         public IAnimalSpecies AnimalSpecies
         {
-            get
-            {
-                return (IAnimalSpecies) Species;
-            }
+            get { return (IAnimalSpecies) Species; }
         }
 
         /// <summary>
@@ -129,13 +107,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 representing the number of ticks the creature has been dead.
         /// </returns>
-        public int RotTicks
-        {
-            get
-            {
-                return rotTickCount;
-            }
-        }
+        public int RotTicks { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -152,11 +124,13 @@ namespace OrganismBase
         {
             get
             {
-                Debug.Assert((((double) damage / ((double) EngineSettings.DamageToKillPerUnitOfRadius * (double) Radius)) *
-                    (double) 100) <= 100, "Percent Injured returned '" + (((double) damage / ((double) EngineSettings.DamageToKillPerUnitOfRadius * (double) Radius)) *
-                    (double) 100) + "', damage = " + damage + " Radius = " + Radius);
+                Debug.Assert(((damage/(EngineSettings.DamageToKillPerUnitOfRadius*(double) Radius))*
+                              100) <= 100,
+                             "Percent Injured returned '" +
+                             ((damage/(EngineSettings.DamageToKillPerUnitOfRadius*(double) Radius))*
+                              100) + "', damage = " + damage + " Radius = " + Radius);
 
-                return (((double) damage / ((double) EngineSettings.DamageToKillPerUnitOfRadius * (double) Radius)));
+                return ((damage/(EngineSettings.DamageToKillPerUnitOfRadius*(double) Radius)));
             }
         }
 
@@ -166,26 +140,13 @@ namespace OrganismBase
             get
             {
                 // If we *just* died, return DisplayAction.Died 
-                if (!this.IsAlive && this.RotTicks == 0)
+                if (!IsAlive && RotTicks == 0)
                 {
                     return DisplayAction.Died;
                 }
 
                 return base.PreviousDisplayAction;
             }
-        }
-
-        /// <internal/>
-        public void AddRotTick()
-        {
-            if (IsImmutable)
-            {
-                throw new GameEngineException("Object is immutable.");
-            }
-
-            Debug.Assert(!IsAlive);
-
-            rotTickCount++;
         }
 
         /// <summary>
@@ -210,13 +171,53 @@ namespace OrganismBase
         /// </returns>
         public int Damage
         {
-            get
-            {
-                return damage;
-            }
+            get { return damage; }
         }
-    
-        /// <internal/>
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override OrganismState CloneMutable()
+        {
+            var newInstance = new AnimalState(ID, AnimalSpecies, Generation);
+            CopyStateInto(newInstance);
+
+            return newInstance;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="newInstance"></param>
+        protected override void CopyStateInto(OrganismState newInstance)
+        {
+            base.CopyStateInto(newInstance);
+
+            ((AnimalState) newInstance).damage = damage;
+            ((AnimalState) newInstance).RotTicks = RotTicks;
+            ((AnimalState) newInstance).state = new AntennaState(state);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void AddRotTick()
+        {
+            if (IsImmutable)
+            {
+                throw new GameEngineException("Object is immutable.");
+            }
+
+            Debug.Assert(!IsAlive);
+
+            RotTicks++;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="incrementalDamage"></param>
         public void CauseDamage(int incrementalDamage)
         {
             if (IsImmutable)
@@ -228,18 +229,20 @@ namespace OrganismBase
             {
                 throw new GameEngineException("Damage must be positive.");
             }
-        
-            if (Damage + incrementalDamage >= EngineSettings.DamageToKillPerUnitOfRadius * Radius)
+
+            if (Damage + incrementalDamage >= EngineSettings.DamageToKillPerUnitOfRadius*Radius)
             {
                 Kill(PopulationChangeReason.Killed);
-                damage = EngineSettings.DamageToKillPerUnitOfRadius * Radius;
+                damage = EngineSettings.DamageToKillPerUnitOfRadius*Radius;
                 return;
             }
 
             damage = damage + incrementalDamage;
         }
 
-        /// <internal/>
+        /// <summary>
+        /// 
+        /// </summary>
         public override void HealDamage()
         {
             if (IsImmutable)
@@ -247,15 +250,15 @@ namespace OrganismBase
                 throw new GameEngineException("Object is immutable.");
             }
 
-            double maxHealing = EngineSettings.AnimalMaxHealingPerTickPerRadius * Radius;
+            double maxHealing = EngineSettings.AnimalMaxHealingPerTickPerRadius*Radius;
             Debug.Assert(maxHealing > 0);
 
-            double usableEnergy = StoredEnergy - UpperBoundaryForEnergyState(EnergyState.Hungry);
+            var usableEnergy = StoredEnergy - UpperBoundaryForEnergyState(EnergyState.Hungry);
             if (usableEnergy > 0)
             {
-                double availableHealing = (double) usableEnergy / 
-                    ((double) EngineSettings.AnimalRequiredEnergyPerUnitOfHealing);
-            
+                var availableHealing = usableEnergy/
+                                       (EngineSettings.AnimalRequiredEnergyPerUnitOfHealing);
+
                 if (availableHealing < maxHealing)
                 {
                     maxHealing = availableHealing;
@@ -273,11 +276,14 @@ namespace OrganismBase
                     damage = (int) (damage - maxHealing);
                 }
 
-                BurnEnergy(damageDelta * (double) EngineSettings.AnimalRequiredEnergyPerUnitOfHealing);
+                BurnEnergy(damageDelta*EngineSettings.AnimalRequiredEnergyPerUnitOfHealing);
             }
         }
 
-        /// <internal/>
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="newRadius"></param>
         public override void IncreaseRadiusTo(int newRadius)
         {
             if (IsImmutable)
@@ -285,14 +291,17 @@ namespace OrganismBase
                 throw new GameEngineException("Object is immutable.");
             }
 
-            int additionalRadius = newRadius - Radius; 
-                
+            var additionalRadius = newRadius - Radius;
+
             base.IncreaseRadiusTo(newRadius);
-        
-            currentFoodChunks += additionalRadius * EngineSettings.FoodChunksPerUnitOfRadius;
+
+            currentFoodChunks += additionalRadius*EngineSettings.FoodChunksPerUnitOfRadius;
         }
-    
-        /// <internal/>
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public override OrganismState Grow()
         {
             if (IsImmutable)
@@ -304,11 +313,11 @@ namespace OrganismBase
             {
                 if (EnergyState >= EnergyState.Normal)
                 {
-                    AnimalState newState = (AnimalState) CloneMutable();
+                    var newState = (AnimalState) CloneMutable();
 
                     // we have to set the events because the cloned object won't have them
                     // and the engine may have already stuck events in there
-                    newState.OrganismEvents = this.OrganismEvents;
+                    newState.OrganismEvents = OrganismEvents;
                     newState.IncreaseRadiusTo(Radius + 1);
                     newState.BurnEnergy(EngineSettings.AnimalRequiredEnergyPerUnitOfRadiusGrowth);
                     newState.ResetGrowthWait();
@@ -340,8 +349,8 @@ namespace OrganismBase
         /// </returns>
         public double EnergyRequiredToMove(double distance, int speed)
         {
-            return distance * (double) Radius * 
-                (double) speed * EngineSettings.RequiredEnergyPerUnitOfRadiusSpeedDistance;
+            return distance*Radius*
+                   speed*EngineSettings.RequiredEnergyPerUnitOfRadiusSpeedDistance;
         }
     }
 }

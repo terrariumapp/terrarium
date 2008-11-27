@@ -2,9 +2,7 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                             
 //------------------------------------------------------------------------------
 
-using System;
-
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -15,7 +13,6 @@ namespace OrganismBase
     /// </summary>
     public interface IPlantSpecies : ISpecies
     {
-
         /// <summary>
         ///  <para>
         ///   Returns the SkinFamily the creature will use when being displayed in the Terrarium.
@@ -24,9 +21,6 @@ namespace OrganismBase
         /// <returns>
         ///  System.String identifying the creature's skin family.
         /// </returns>
-        PlantSkinFamily SkinFamily
-        {
-            get;
-        }
+        PlantSkinFamily SkinFamily { get; }
     }
 }

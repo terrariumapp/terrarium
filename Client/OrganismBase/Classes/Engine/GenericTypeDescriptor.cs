@@ -5,7 +5,7 @@
 using System;
 using System.ComponentModel;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  A Custom Type Descriptor class used to expand the Organism,
@@ -13,19 +13,20 @@ namespace OrganismBase
     ///  Browser dialog.
     /// </summary>
     /// <internal/>
-    [TypeConverter((typeof(ExpandableObjectConverter)))]
+    [TypeConverter((typeof (ExpandableObjectConverter)))]
     public class GenericTypeDescriptor : ICustomTypeDescriptor
     {
+        /// <summary>
+        ///  The currently selected or visible object.
+        /// </summary>
+        private object currentObject;
+
         /// <summary>
         ///  Collection of property descriptors that define the visible
         ///  properties when the object is viewed in the property
         ///  grid.
         /// </summary>
-        private PropertyDescriptorCollection propsCollection = null;
-        /// <summary>
-        ///  The currently selected or visible object.
-        /// </summary>
-        private object currentObject = null;
+        private PropertyDescriptorCollection propsCollection;
 
         /// <summary>
         ///  Creates a new type descriptor object given a currently
@@ -35,18 +36,10 @@ namespace OrganismBase
         /// <param name="current">The object to retrieve properties from.</param>
         public GenericTypeDescriptor(object current)
         {
-            this.currentObject = current;
+            currentObject = current;
         }
 
-        /// <summary>
-        ///  Set a new object on the descriptor whose properties
-        ///  will be enumerated and displayed.
-        /// </summary>
-        /// <param name="current">The object to retrieve properties from.</param>
-        public void SetObject(object current)
-        {
-            this.currentObject = current;
-        }
+        #region ICustomTypeDescriptor Members
 
         AttributeCollection ICustomTypeDescriptor.GetAttributes()
         {
@@ -96,7 +89,7 @@ namespace OrganismBase
 
         PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties()
         {
-            return((ICustomTypeDescriptor)this).GetProperties(null);
+            return ((ICustomTypeDescriptor) this).GetProperties(null);
         }
 
         PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
@@ -111,6 +104,18 @@ namespace OrganismBase
         object ICustomTypeDescriptor.GetPropertyOwner(PropertyDescriptor pd)
         {
             return currentObject;
+        }
+
+        #endregion
+
+        /// <summary>
+        ///  Set a new object on the descriptor whose properties
+        ///  will be enumerated and displayed.
+        /// </summary>
+        /// <param name="current">The object to retrieve properties from.</param>
+        public void SetObject(object current)
+        {
+            currentObject = current;
         }
     }
 }

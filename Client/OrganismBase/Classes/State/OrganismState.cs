@@ -25,30 +25,6 @@ namespace OrganismBase
     public abstract class OrganismState : IComparable
     {
         /// <summary>
-        ///  A generational number used to figure out how
-        ///  long a species has been alive and how many
-        ///  times reproduction has occured.
-        /// </summary>
-        private readonly int generation;
-
-        /// <summary>
-        ///  A GUID representing the unique ID of this organism.
-        /// </summary>
-        private readonly string organismID;
-
-        /// <summary>
-        ///  A pointer to the species for this creature.  Each
-        ///  creature can identify various basic traits by
-        ///  it's species.
-        /// </summary>
-        private readonly ISpecies species;
-
-        /// <summary>
-        ///  The direction the creature is moving in degrees.
-        /// </summary>
-        private int actualDirection;
-
-        /// <summary>
         ///  The amount of food chunks this creature represents.
         ///  This is important for plants and dead animals.
         /// </summary>
@@ -80,14 +56,6 @@ namespace OrganismBase
         [NonSerialized] private ReproduceAction currentReproduceAction;
 
         /// <summary>
-        ///  The creature's death reason.  Generally this is the
-        ///  special value NotDead meaning the creature is still
-        ///  alive.  It will be changed to another reason upon the
-        ///  creature's death or teleportation.
-        /// </summary>
-        private PopulationChangeReason deathReason = PopulationChangeReason.NotDead;
-
-        /// <summary>
         ///  The amount of energy the creature currently has.
         /// </summary>
         private double energy;
@@ -100,27 +68,6 @@ namespace OrganismBase
         [NonSerialized] private OrganismEventResults events;
 
         /// <summary>
-        ///  The amount of time in game ticks a creature
-        ///  must wait before being capable of growing.
-        /// </summary>
-        private int growthWait;
-
-        /// <summary>
-        ///  Determines if the state object shold be able to be modified
-        ///  or whether the object should keep its current values regardless
-        ///  of what methods are called or properties are changed.
-        /// </summary>
-        /// <internal/>
-        private bool immutable;
-
-        /// <summary>
-        ///  The number of ticks the creature has been incubating
-        ///  a child.  This also gets reset during teleportation
-        ///  since it is dependent on the currentReproduceAction.
-        /// </summary>
-        [NonSerialized] private int incubationTicks;
-
-        /// <summary>
         ///  A less restrictive immutability flag used just for locking
         ///  location and size properties.
         /// </summary>
@@ -128,40 +75,6 @@ namespace OrganismBase
         // and we don't have a mechanism to have the index get updated.  This allows us to lock them
         // down.
         private bool lockedSizeAndPosition;
-
-        /// <summary>
-        ///  The radius of the organism.  The actual size is twice the
-        ///  radius.
-        /// </summary>
-        private int radius;
-
-        /// <summary>
-        ///  <para>
-        ///   This is a special object that is used to hold game
-        ///   engine information.  Primarily used by the rendering engine
-        ///   it contains information about selection, graphical sprite
-        ///   information, animation offsets, and anything else that
-        ///   needs to be specified by the gaming engine that shouldn't
-        ///   be directly part of the OrganismState itself.
-        ///  </para>
-        ///  <para>
-        ///   This object is not serialized because all animation information
-        ///   needs to be reset after switching machines.
-        ///  </para>
-        /// </summary>
-        /// <internal/>
-        [NonSerialized] private object renderInfo;
-
-        /// <summary>
-        ///  The amount of time in game ticks a creature
-        ///  must wait before being capable of reproduction.
-        /// </summary>
-        private int reproductionWait;
-
-        /// <summary>
-        ///  The current age of the creature in game ticks.
-        /// </summary>
-        private int tickAge;
 
 
         /// <summary>
@@ -172,9 +85,10 @@ namespace OrganismBase
         /// <param name="generation">The familial generation number.</param>
         internal OrganismState(string id, ISpecies species, int generation)
         {
-            organismID = id;
-            this.species = species;
-            this.generation = generation;
+            DeathReason = PopulationChangeReason.NotDead;
+            ID = id;
+            Species = species;
+            Generation = generation;
             events = new OrganismEventResults();
         }
 
@@ -182,10 +96,7 @@ namespace OrganismBase
         ///  Determines if the current creature state is immutable.
         /// </summary>
         /// <internal/>
-        public bool IsImmutable
-        {
-            get { return immutable; }
-        }
+        public bool IsImmutable { get; private set; }
 
         /// <summary>
         ///  Returns the action that the organism was performing
@@ -244,12 +155,7 @@ namespace OrganismBase
         ///  worldstate instances (like whether the organism is selected or not).
         /// </summary>
         /// <internal/>
-        public object RenderInfo
-        {
-            get { return renderInfo; }
-
-            set { renderInfo = value; }
-        }
+        public object RenderInfo { get; set; }
 
         /// <summary>
         ///  When events are completed the completion actions get listed into
@@ -263,7 +169,7 @@ namespace OrganismBase
 
             set
             {
-                if (immutable)
+                if (IsImmutable)
                 {
                     throw new GameEngineException("Object is immutable.");
                 }
@@ -282,10 +188,7 @@ namespace OrganismBase
         ///  ISpecies interface representing the characteristics of the creature.
         /// </returns>
         [TypeConverter(typeof (ExpandableObjectConverter))]
-        public ISpecies Species
-        {
-            get { return species; }
-        }
+        public ISpecies Species { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -298,7 +201,7 @@ namespace OrganismBase
         /// </returns>
         public Boolean IsMature
         {
-            get { return Radius == species.MatureRadius; }
+            get { return Radius == Species.MatureRadius; }
         }
 
         /// <summary>
@@ -311,10 +214,7 @@ namespace OrganismBase
         /// <returns>
         ///  PopulationChangeReason describing the reason for death.
         /// </returns>
-        public PopulationChangeReason DeathReason
-        {
-            get { return deathReason; }
-        }
+        public PopulationChangeReason DeathReason { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -326,10 +226,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 representing the age of the creature in game ticks.
         /// </returns>
-        public int TickAge
-        {
-            get { return tickAge; }
-        }
+        public int TickAge { get; private set; }
 
 
         /// <summary>
@@ -342,10 +239,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 representing the generation number for this creature.
         /// </returns>
-        public int Generation
-        {
-            get { return generation; }
-        }
+        public int Generation { get; private set; }
 
         /// <summary>
         ///  Used to obtain or modify the current action representing
@@ -359,7 +253,7 @@ namespace OrganismBase
 
             set
             {
-                if (immutable)
+                if (IsImmutable)
                 {
                     throw new GameEngineException("Object is immutable.");
                 }
@@ -373,11 +267,11 @@ namespace OrganismBase
 
                 if (value == null)
                 {
-                    incubationTicks = 0;
+                    IncubationTicks = 0;
                 }
                 else
                 {
-                    Debug.Assert(incubationTicks == 0,
+                    Debug.Assert(IncubationTicks == 0,
                                  "Organism should not be able to start reproduction while already incubating.");
                 }
             }
@@ -395,7 +289,7 @@ namespace OrganismBase
         /// </returns>
         public Boolean ReadyToReproduce
         {
-            get { return reproductionWait == 0; }
+            get { return ReproductionWait == 0; }
         }
 
 
@@ -409,10 +303,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 representing the time in ticks before the creature can reproduce.
         /// </returns>
-        public int ReproductionWait
-        {
-            get { return reproductionWait; }
-        }
+        public int ReproductionWait { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -439,10 +330,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 representing the number of ticks left for incubation.
         /// </returns>
-        public int IncubationTicks
-        {
-            get { return incubationTicks; }
-        }
+        public int IncubationTicks { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -459,7 +347,7 @@ namespace OrganismBase
             get { return currentFoodChunks; }
             set
             {
-                if (immutable)
+                if (IsImmutable)
                 {
                     throw new GameEngineException("Object is immutable.");
                 }
@@ -488,7 +376,7 @@ namespace OrganismBase
 
             set
             {
-                if (immutable)
+                if (IsImmutable)
                 {
                     throw new GameEngineException("Object is immutable.");
                 }
@@ -504,9 +392,9 @@ namespace OrganismBase
                     return;
                 }
 
-                if (value > (double) Radius*species.MaximumEnergyPerUnitRadius)
+                if (value > (double) Radius*Species.MaximumEnergyPerUnitRadius)
                 {
-                    value = species.MaximumEnergyPerUnitRadius*(double) Radius;
+                    value = Species.MaximumEnergyPerUnitRadius*(double) Radius;
                 }
 
                 energy = value;
@@ -527,25 +415,24 @@ namespace OrganismBase
         {
             get
             {
-                int energyBuckets = (species.MaximumEnergyPerUnitRadius*Radius)/5;
+                var energyBuckets = (Species.MaximumEnergyPerUnitRadius*Radius)/5;
 
                 if (energy > energyBuckets*4)
                 {
                     return EnergyState.Full;
                 }
+
                 if (energy > energyBuckets*2)
                 {
                     return EnergyState.Normal;
                 }
+
                 if (energy > energyBuckets*1)
                 {
                     return EnergyState.Hungry;
                 }
-                if (energy > 0)
-                {
-                    return EnergyState.Deterioration;
-                }
-                return EnergyState.Dead;
+
+                return energy > 0 ? EnergyState.Deterioration : EnergyState.Dead;
             }
         }
 
@@ -611,7 +498,7 @@ namespace OrganismBase
 
             set
             {
-                if (immutable)
+                if (IsImmutable)
                 {
                     throw new GameEngineException("Object is immutable.");
                 }
@@ -693,10 +580,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 of the actual radius of the creature.
         /// </returns>
-        public int Radius
-        {
-            get { return radius; }
-        }
+        public int Radius { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -707,10 +591,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.String uniquely identifying this creature in the EcoSystem.
         /// </returns>
-        public string ID
-        {
-            get { return organismID; }
-        }
+        public string ID { get; private set; }
 
         /// <summary>
         ///  Retrieves information about the creature's current movement vector.
@@ -725,7 +606,7 @@ namespace OrganismBase
 
             set
             {
-                if (immutable)
+                if (IsImmutable)
                 {
                     throw new GameEngineException("Object is immutable.");
                 }
@@ -772,10 +653,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 representing the direction the creature is moving in degrees.
         /// </returns>
-        public int ActualDirection
-        {
-            get { return actualDirection; }
-        }
+        public int ActualDirection { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -821,10 +699,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 for the amount of time in game ticks a creature has before they can grow.
         /// </returns>
-        public int GrowthWait
-        {
-            get { return growthWait; }
-        }
+        public int GrowthWait { get; private set; }
 
         #region IComparable Members
 
@@ -833,14 +708,14 @@ namespace OrganismBase
         ///  account the Y position for graphical Z-Ordering purposes and can be used
         ///  to sort creatures for back to front rendering.
         /// </summary>
-        /// <param name="b">The object to be compared.  Has to be another OrganismState.</param>
+        /// <param name="other">The object to be compared.  Has to be another OrganismState.</param>
         /// <returns>Less than 0 if the zOrder is less, 0 for equal, and greater than 0 for more.</returns>
         /// <internal/>
-        public int CompareTo(Object b)
+        public int CompareTo(Object other)
         {
-            if (b is OrganismState)
+            if (other is OrganismState)
             {
-                return currentPosition.Y.CompareTo(((OrganismState) b).Position.Y);
+                return currentPosition.Y.CompareTo(((OrganismState) other).Position.Y);
             }
             return 0;
         }
@@ -856,7 +731,7 @@ namespace OrganismBase
         /// <internal/>
         public void LockSizeAndPosition()
         {
-            if (immutable)
+            if (IsImmutable)
             {
                 throw new GameEngineException("Object is immutable.");
             }
@@ -876,7 +751,7 @@ namespace OrganismBase
                 events.MakeImmutable();
             }
 
-            immutable = true;
+            IsImmutable = true;
         }
 
         /// <summary>
@@ -895,7 +770,7 @@ namespace OrganismBase
         protected virtual void CopyStateInto(OrganismState newInstance)
         {
             // OrganismID and species are copied via the constructor
-            newInstance.radius = radius;
+            newInstance.Radius = Radius;
 
             // Safe because they are immutable
             newInstance.currentMoveToAction = currentMoveToAction;
@@ -906,17 +781,17 @@ namespace OrganismBase
 
             newInstance.energy = energy;
             newInstance.currentFoodChunks = currentFoodChunks;
-            newInstance.incubationTicks = incubationTicks;
-            newInstance.tickAge = tickAge;
-            newInstance.reproductionWait = reproductionWait;
-            newInstance.growthWait = growthWait;
-            newInstance.deathReason = deathReason;
-            newInstance.actualDirection = actualDirection;
+            newInstance.IncubationTicks = IncubationTicks;
+            newInstance.TickAge = TickAge;
+            newInstance.ReproductionWait = ReproductionWait;
+            newInstance.GrowthWait = GrowthWait;
+            newInstance.DeathReason = DeathReason;
+            newInstance.ActualDirection = ActualDirection;
 
             // This object remains mutable because it is information
             // that the renderer updates after the WorldVector has been
             // created.  Nothing besides the renderer should ever touch this
-            newInstance.renderInfo = renderInfo;
+            newInstance.RenderInfo = RenderInfo;
         }
 
         /// <summary>
@@ -929,7 +804,7 @@ namespace OrganismBase
         /// <internal/>
         public virtual void AddTickToAge()
         {
-            if (immutable)
+            if (IsImmutable)
             {
                 throw new GameEngineException("Object is immutable.");
             }
@@ -939,18 +814,18 @@ namespace OrganismBase
                 throw new ApplicationException("Dead organisms can't age.");
             }
 
-            tickAge++;
-            if (growthWait != 0)
+            TickAge++;
+            if (GrowthWait != 0)
             {
-                growthWait--;
+                GrowthWait--;
             }
 
-            if (reproductionWait != 0)
+            if (ReproductionWait != 0)
             {
-                reproductionWait--;
+                ReproductionWait--;
             }
 
-            if (tickAge > Species.LifeSpan)
+            if (TickAge > Species.LifeSpan)
             {
                 Kill(PopulationChangeReason.OldAge);
             }
@@ -966,12 +841,12 @@ namespace OrganismBase
         /// <internal/>
         public void ResetReproductionWait()
         {
-            if (immutable)
+            if (IsImmutable)
             {
                 throw new GameEngineException("Object is immutable.");
             }
 
-            reproductionWait = Species.ReproductionWait;
+            ReproductionWait = Species.ReproductionWait;
         }
 
         /// <summary>
@@ -984,12 +859,12 @@ namespace OrganismBase
         /// <internal/>
         public void AddIncubationTick()
         {
-            if (immutable)
+            if (IsImmutable)
             {
                 throw new GameEngineException("Object is immutable.");
             }
 
-            incubationTicks++;
+            IncubationTicks++;
         }
 
         /// <summary>
@@ -1000,7 +875,7 @@ namespace OrganismBase
         /// <internal/>
         public void BurnEnergy(double energyValue)
         {
-            if (immutable)
+            if (IsImmutable)
             {
                 throw new GameEngineException("Object is immutable.");
             }
@@ -1036,7 +911,7 @@ namespace OrganismBase
         /// </returns>
         public double UpperBoundaryForEnergyState(EnergyState energyState)
         {
-            double energyBuckets = (species.MaximumEnergyPerUnitRadius*(double) Radius)/5;
+            var energyBuckets = (Species.MaximumEnergyPerUnitRadius*(double) Radius)/5;
 
             switch (energyState)
             {
@@ -1049,7 +924,7 @@ namespace OrganismBase
                 case EnergyState.Normal:
                     return energyBuckets*4;
                 case EnergyState.Full:
-                    return species.MaximumEnergyPerUnitRadius*(double) Radius;
+                    return Species.MaximumEnergyPerUnitRadius*(double) Radius;
                 default:
                     throw new ApplicationException("Unknown EnergyState.");
             }
@@ -1065,7 +940,7 @@ namespace OrganismBase
         /// <internal/>
         public virtual void IncreaseRadiusTo(int newRadius)
         {
-            if (immutable)
+            if (IsImmutable)
             {
                 throw new GameEngineException("Object is immutable.");
             }
@@ -1085,7 +960,7 @@ namespace OrganismBase
                 throw new GameEngineException("New radius must be bigger than old one.");
             }
 
-            radius = newRadius;
+            Radius = newRadius;
         }
 
         /// <summary>
@@ -1094,25 +969,25 @@ namespace OrganismBase
         /// </summary>
         private void SetBitmapDirection()
         {
-            if (immutable)
+            if (IsImmutable)
             {
                 throw new GameEngineException("Object is immutable.");
             }
 
             if (CurrentMoveToAction != null)
             {
-                Vector direction = Vector.Subtract(CurrentMoveToAction.MovementVector.Destination,
-                                                   currentPosition);
-                Vector unitVector = direction.GetUnitVector();
+                var direction = Vector.Subtract(CurrentMoveToAction.MovementVector.Destination,
+                                                currentPosition);
+                var unitVector = direction.GetUnitVector();
 
-                double angle = Math.Acos(unitVector.X);
+                var angle = Math.Acos(unitVector.X);
                 if (unitVector.Y < 0)
                 {
                     angle = 6.2831853 - angle;
                 }
 
                 // convert radians to degrees
-                actualDirection = (int) ((angle/6.283185)*360);
+                ActualDirection = (int) ((angle/6.283185)*360);
             }
         }
 
@@ -1125,14 +1000,14 @@ namespace OrganismBase
         /// <internal/>
         public void Kill(PopulationChangeReason reason)
         {
-            if (immutable)
+            if (IsImmutable)
             {
                 throw new GameEngineException("Object is immutable.");
             }
 
             currentMoveToAction = null;
             energy = 0;
-            deathReason = reason;
+            DeathReason = reason;
         }
 
         /// <summary>
@@ -1153,12 +1028,12 @@ namespace OrganismBase
         /// <internal/>
         public void ResetGrowthWait()
         {
-            if (immutable)
+            if (IsImmutable)
             {
                 throw new GameEngineException("Object is immutable.");
             }
 
-            growthWait = Species.GrowthWait;
+            GrowthWait = Species.GrowthWait;
         }
 
         /// <summary>
@@ -1201,10 +1076,10 @@ namespace OrganismBase
                 return false;
             }
 
-            int state1Radius = CellRadius + state1ExtraRadius;
-            int state2Radius = state2.CellRadius;
+            var state1Radius = CellRadius + state1ExtraRadius;
+            var state2Radius = state2.CellRadius;
 
-            int difference = (GridX - state1Radius) - (state2.GridX - state2Radius);
+            var difference = (GridX - state1Radius) - (state2.GridX - state2Radius);
             if (difference < 0)
             {
                 // Negative means state1 boundary < state2 boundary

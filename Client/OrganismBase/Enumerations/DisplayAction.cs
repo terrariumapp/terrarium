@@ -2,7 +2,7 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                             
 //------------------------------------------------------------------------------
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  Used to determine what the most prominent completed

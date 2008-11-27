@@ -5,7 +5,7 @@
 using System;
 using System.Diagnostics;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -23,10 +23,12 @@ namespace OrganismBase
     public sealed class PlantState : OrganismState
     {
         /// <summary>
-        ///  The height of the plant.  This is unimplemented, but could be used
-        ///  for differentiation between things like trees, grass, and shrubs.
+        ///  Determines how high a plant is compared to its base.  This can be
+        ///  used to make squatty plants or tall plants.  This is currently not
+        ///  used.  Height could be derived from this ratio, and it should probably
+        ///  be made into a characteristic.
         /// </summary>
-        int height = 0;
+        private const double heightToRadiusRatio = 1;
 
         /// <summary>
         ///  This is incomplete, this should be a characteristic that enables
@@ -34,15 +36,7 @@ namespace OrganismBase
         ///  energy per tick.  This can be used to create trees that require
         ///  lots of light or moss that requires very little.
         /// </summary>
-        const int optimalLightPercentage = 100;
-
-        /// <summary>
-        ///  Determines how high a plant is compared to its base.  This can be
-        ///  used to make squatty plants or tall plants.  This is currently not
-        ///  used.  Height could be derived from this ratio, and it should probably
-        ///  be made into a characteristic.
-        /// </summary>
-        const double heightToRadiusRatio = 1;
+        private const int optimalLightPercentage = 100;
 
         /// <summary>
         ///  Creates a brand new state object for a plant.
@@ -53,6 +47,53 @@ namespace OrganismBase
         }
 
         /// <summary>
+        ///  <para>
+        ///   Returns the height of the plant.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  System.Int32 representing the height of the plant.
+        /// </returns>
+        public int Height { get; private set; }
+
+        /// <summary>
+        ///  <para>
+        ///   Returns the number of food chunks this plant represents if
+        ///   it hasn't taken any damage.  This along with the PercentInjured
+        ///   property can be used to compute the total remaining food chunks
+        ///   for a plant.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  System.Int32 representing the maximum food chunks the plant can hold.
+        /// </returns>
+        public int CurrentMaxFoodChunks
+        {
+            get { return Radius*EngineSettings.PlantFoodChunksPerUnitOfRadius; }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   Returns the amount of defoliation this plant has lived through.
+        ///   This is a percentage total with 100 representing a full defoliated
+        ///   or dead plant, and 0 representing a fully healthy plant.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  System.Double representing the percentage of defoliation on a plant.
+        /// </returns>
+        public override double PercentInjured
+        {
+            get
+            {
+                Debug.Assert(1 - ((FoodChunks/(double) CurrentMaxFoodChunks)*100)
+                             <= 100);
+
+                return 1 - (FoodChunks/(double) CurrentMaxFoodChunks);
+            }
+        }
+
+        /// <summary>
         ///  Clones the current plant state while resetting the immutability attribute
         ///  so that the new state can be updated with new information.
         /// </summary>
@@ -60,7 +101,7 @@ namespace OrganismBase
         /// <internal/>
         public override OrganismState CloneMutable()
         {
-            PlantState newInstance = new PlantState(ID, Species, Generation);
+            var newInstance = new PlantState(ID, Species, Generation);
             CopyStateInto(newInstance);
 
             return newInstance;
@@ -77,23 +118,7 @@ namespace OrganismBase
         {
             base.CopyStateInto(newInstance);
 
-            ((PlantState)newInstance).height = height;
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   Returns the height of the plant.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  System.Int32 representing the height of the plant.
-        /// </returns>
-        public int Height
-        {
-            get
-            {
-                return height;
-            }
+            ((PlantState) newInstance).Height = Height;
         }
 
         /// <summary>
@@ -108,16 +133,16 @@ namespace OrganismBase
                 throw new GameEngineException("Object is immutable.");
             }
 
-            int percentageFromOptimal = availableLightPercentage - optimalLightPercentage;
+            var percentageFromOptimal = availableLightPercentage - optimalLightPercentage;
             if (percentageFromOptimal < 0)
             {
                 percentageFromOptimal = -percentageFromOptimal;
             }
             Debug.Assert(percentageFromOptimal <= 100);
 
-            int energyGained = (int) (((double) 1 -
-                ((double) percentageFromOptimal /
-                (double) 100)) * (double) EngineSettings.MaxEnergyFromLightPerTick);
+            var energyGained = (int) ((1 -
+                                       (percentageFromOptimal/
+                                        (double) 100))*EngineSettings.MaxEnergyFromLightPerTick);
 
             StoredEnergy = StoredEnergy + energyGained;
         }
@@ -137,31 +162,12 @@ namespace OrganismBase
                 throw new GameEngineException("Object is immutable.");
             }
 
-            int newHeight = (int) ((double) newRadius * heightToRadiusRatio);
-            int additionalRadius = newRadius - Radius;
+            var newHeight = (int) (newRadius*heightToRadiusRatio);
+            var additionalRadius = newRadius - Radius;
             base.IncreaseRadiusTo(newRadius);
-            height = newHeight;
+            Height = newHeight;
 
-            currentFoodChunks += additionalRadius * EngineSettings.PlantFoodChunksPerUnitOfRadius;
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   Returns the number of food chunks this plant represents if
-        ///   it hasn't taken any damage.  This along with the PercentInjured
-        ///   property can be used to compute the total remaining food chunks
-        ///   for a plant.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  System.Int32 representing the maximum food chunks the plant can hold.
-        /// </returns>
-        public int CurrentMaxFoodChunks
-        {
-            get
-            {
-                return Radius * EngineSettings.PlantFoodChunksPerUnitOfRadius;
-            }
+            currentFoodChunks += additionalRadius*EngineSettings.PlantFoodChunksPerUnitOfRadius;
         }
 
         /// <summary>
@@ -186,11 +192,11 @@ namespace OrganismBase
             {
                 if (EnergyState >= EnergyState.Normal && GrowthWait == 0)
                 {
-                    PlantState newState = (PlantState) CloneMutable();
+                    var newState = (PlantState) CloneMutable();
 
                     // we have to set the events because the cloned object won't have them
                     // and the engine may have already stuck events in there
-                    newState.OrganismEvents = this.OrganismEvents;
+                    newState.OrganismEvents = OrganismEvents;
 
                     newState.IncreaseRadiusTo(Radius + 1);
                     newState.BurnEnergy(EngineSettings.PlantRequiredEnergyPerUnitOfRadiusGrowth);
@@ -201,27 +207,6 @@ namespace OrganismBase
             }
 
             return this;
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   Returns the amount of defoliation this plant has lived through.
-        ///   This is a percentage total with 100 representing a full defoliated
-        ///   or dead plant, and 0 representing a fully healthy plant.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  System.Double representing the percentage of defoliation on a plant.
-        /// </returns>
-        public override double PercentInjured
-        {
-            get
-            {
-                Debug.Assert(1 - (((double) FoodChunks / (double) CurrentMaxFoodChunks) * (double) 100)
-                    <= 100);
-
-                return 1 - ((double) FoodChunks / (double) CurrentMaxFoodChunks);
-            }
         }
 
         /// <summary>
@@ -237,33 +222,32 @@ namespace OrganismBase
                 throw new GameEngineException("Object is immutable.");
             }
 
-            int maxHealingChunks = EngineSettings.PlantMaxHealingPerTickPerRadius * Radius;
+            var maxHealingChunks = EngineSettings.PlantMaxHealingPerTickPerRadius*Radius;
 
-            double usableEnergy = StoredEnergy - UpperBoundaryForEnergyState(EnergyState.Deterioration);
-            if (usableEnergy > 0)
+            var usableEnergy = StoredEnergy - UpperBoundaryForEnergyState(EnergyState.Deterioration);
+            if (usableEnergy <= 0) return;
+
+            var availableHealingChunks = (int) (usableEnergy/
+                                                (EngineSettings.PlantRequiredEnergyPerUnitOfHealing));
+            if (availableHealingChunks < maxHealingChunks)
             {
-                int availableHealingChunks = (int)(usableEnergy /
-                    ((double) EngineSettings.PlantRequiredEnergyPerUnitOfHealing));
-                if (availableHealingChunks < maxHealingChunks)
-                {
-                    maxHealingChunks = availableHealingChunks;
-                }
-
-                int foodChunkDelta = 0;
-                if (CurrentMaxFoodChunks - FoodChunks < maxHealingChunks)
-                {
-                    foodChunkDelta = CurrentMaxFoodChunks - FoodChunks;
-                    currentFoodChunks = CurrentMaxFoodChunks;
-                }
-                else
-                {
-                    foodChunkDelta = maxHealingChunks;
-                    currentFoodChunks += foodChunkDelta;
-                }
-
-                BurnEnergy(foodChunkDelta *
-                    (double) EngineSettings.PlantRequiredEnergyPerUnitOfHealing);
+                maxHealingChunks = availableHealingChunks;
             }
+
+            var foodChunkDelta = 0;
+            if (CurrentMaxFoodChunks - FoodChunks < maxHealingChunks)
+            {
+                foodChunkDelta = CurrentMaxFoodChunks - FoodChunks;
+                currentFoodChunks = CurrentMaxFoodChunks;
+            }
+            else
+            {
+                foodChunkDelta = maxHealingChunks;
+                currentFoodChunks += foodChunkDelta;
+            }
+
+            BurnEnergy(foodChunkDelta*
+                       (double) EngineSettings.PlantRequiredEnergyPerUnitOfHealing);
         }
     }
 }
