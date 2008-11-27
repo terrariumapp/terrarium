@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     /// Determines the top speed your animal can attain.
@@ -30,8 +30,8 @@ namespace OrganismBase
         {
             get
             {
-                return (int) ((float) EngineSettings.SpeedBase +
-                    PercentOfMaximum * (float) EngineSettings.SpeedMaximum);
+                return (int) (EngineSettings.SpeedBase +
+                              PercentOfMaximum*EngineSettings.SpeedMaximum);
             }
         }
     }

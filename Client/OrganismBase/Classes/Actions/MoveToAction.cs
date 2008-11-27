@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -16,12 +16,6 @@ namespace OrganismBase
     public class MoveToAction : Action
     {
         /// <summary>
-        ///  A vector representing the location and speed for the current
-        ///  movement action.
-        /// </summary>
-        MovementVector moveTo;
-    
-        /// <summary>
         ///  Creates a new movement action for an organism.
         /// </summary>
         /// <param name="organismID">The ID of the organism the action will work on.</param>
@@ -29,9 +23,9 @@ namespace OrganismBase
         /// <param name="moveTo">The movement vector that defines this action.</param>
         internal MoveToAction(string organismID, int actionID, MovementVector moveTo) : base(organismID, actionID)
         {
-            this.moveTo = moveTo;
+            MovementVector = moveTo;
         }
-    
+
         /// <summary>
         ///  <para>
         ///   A MovementVector object representing the current speed and destination
@@ -41,13 +35,7 @@ namespace OrganismBase
         /// <returns>
         ///  MovementVector object representing your creature's destination and speed.
         /// </returns>
-        public MovementVector MovementVector
-        {
-            get
-            {
-                return moveTo;
-            }
-        }
+        public MovementVector MovementVector { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -60,7 +48,7 @@ namespace OrganismBase
         /// </returns>
         public override string ToString()
         {
-            return moveTo.ToString();
+            return MovementVector.ToString();
         }
     }
 }

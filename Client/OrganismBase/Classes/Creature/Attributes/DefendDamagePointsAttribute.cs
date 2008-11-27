@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     /// Maximum damage your animal can defend against.
@@ -20,7 +20,8 @@ namespace OrganismBase
         /// <param name="defensePoints">
         /// Specify the number of points (from 1 to 100) to apply to this attribute.
         /// </param>
-        public DefendDamagePointsAttribute(int defensePoints) : base(defensePoints, EngineSettings.MaximumDefendedDamagePerUnitOfRadius)
+        public DefendDamagePointsAttribute(int defensePoints)
+            : base(defensePoints, EngineSettings.MaximumDefendedDamagePerUnitOfRadius)
         {
         }
 
@@ -30,8 +31,8 @@ namespace OrganismBase
         {
             get
             {
-                return (int) (((float) EngineSettings.BaseDefendedDamagePerUnitOfRadius +
-                    PercentOfMaximum * (float) EngineSettings.MaximumDefendedDamagePerUnitOfRadius) + 0.001f);
+                return (int) ((EngineSettings.BaseDefendedDamagePerUnitOfRadius +
+                               PercentOfMaximum*EngineSettings.MaximumDefendedDamagePerUnitOfRadius) + 0.001f);
             }
         }
     }

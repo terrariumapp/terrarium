@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>Points applied to the MaximumEnergyPoints Attribute determine how much energy your animal can store -- 
     /// it determines how often your organism has to eat.</summary>
@@ -20,7 +20,8 @@ namespace OrganismBase
         /// <param name="maximumEnergyPoints">
         /// Specify the number of points (from 1 to 100) to apply to this attribute.
         /// </param>
-        public MaximumEnergyPointsAttribute(int maximumEnergyPoints) : base(maximumEnergyPoints, (int) EngineSettings.MaxEnergyMaximumPerUnitRadius)
+        public MaximumEnergyPointsAttribute(int maximumEnergyPoints)
+            : base(maximumEnergyPoints, (int) EngineSettings.MaxEnergyMaximumPerUnitRadius)
         {
         }
 
@@ -30,7 +31,7 @@ namespace OrganismBase
             get
             {
                 return (int) ((float) EngineSettings.MaxEnergyBasePerUnitRadius +
-                    PercentOfMaximum * (float) EngineSettings.MaxEnergyMaximumPerUnitRadius);
+                              PercentOfMaximum*(float) EngineSettings.MaxEnergyMaximumPerUnitRadius);
             }
         }
     }

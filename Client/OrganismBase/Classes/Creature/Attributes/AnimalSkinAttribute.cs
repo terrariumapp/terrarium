@@ -4,26 +4,14 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  Determines the skin used to display the organism on screen.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
-    public sealed class AnimalSkinAttribute : System.Attribute
+    public sealed class AnimalSkinAttribute : Attribute
     {
-        /// <summary>
-        ///  The skin family defined by this attribute.  The default is the
-        ///  Ant skin.  Think of this like a font family.
-        /// </summary>
-        private AnimalSkinFamily skinFamily = AnimalSkinFamily.Ant;
-
-        /// <summary>
-        ///  The custom skin defined by this attribute.  The default is no
-        ///  default skin.
-        /// </summary>
-        private string skin = string.Empty;
-
         /// <summary>
         ///    <para>Use this constructor if you don't want to specify a Skin Family to use if
         ///       your custom skin doesn't exist.</para>
@@ -31,7 +19,8 @@ namespace OrganismBase
         /// <param name='skin'>The name of the assembly the contains the skin you want to use.</param>
         public AnimalSkinAttribute(string skin)
         {
-            this.skin = skin;
+            SkinFamily = AnimalSkinFamily.Ant;
+            Skin = skin;
         }
 
         /// <summary>
@@ -41,7 +30,8 @@ namespace OrganismBase
         /// <param name='skinFamily'>An AnimalSkinFamily value that specifies the skin to use for this organism.</param>
         public AnimalSkinAttribute(AnimalSkinFamily skinFamily)
         {
-            this.skinFamily = skinFamily;
+            Skin = string.Empty;
+            SkinFamily = skinFamily;
         }
 
         /// <summary>
@@ -53,30 +43,18 @@ namespace OrganismBase
         /// <param name='skin'>The name of the assembly the contains the skin you want to use.</param>
         public AnimalSkinAttribute(AnimalSkinFamily skinFamily, string skin)
         {
-            this.skinFamily = skinFamily;
-            this.skin = skin;
+            SkinFamily = skinFamily;
+            Skin = skin;
         }
 
         /// <summary>
         ///  Provides read-only access to the string value specifying the skin.
         /// </summary>
-        public string Skin
-        {
-            get
-            {
-                return skin;
-            }
-        }
+        public string Skin { get; private set; }
 
         /// <summary>
         ///  Provides read-only access to the enumeration value representing the family of skins.
         /// </summary>
-        public AnimalSkinFamily SkinFamily
-        {
-            get
-            {
-                return skinFamily;
-            }
-        }
+        public AnimalSkinFamily SkinFamily { get; private set; }
     }
 }

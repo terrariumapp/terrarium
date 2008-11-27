@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -21,7 +21,7 @@ namespace OrganismBase
         ///  A byte array representing the information that will be passed
         ///  from the parent to the child.
         /// </summary>
-        byte[] dna;
+        private readonly byte[] _dna;
 
         /// <summary>
         ///  Creates a new ReproduceAction that defines information passed to
@@ -34,8 +34,8 @@ namespace OrganismBase
         /// <param name="dna">An array of bytes that is going to be passed to the child.</param>
         internal ReproduceAction(string organismID, int actionID, byte[] dna) : base(organismID, actionID)
         {
-            this.dna = dna;
-        }    
+            _dna = dna;
+        }
 
         /// <summary>
         ///  <para>
@@ -52,10 +52,9 @@ namespace OrganismBase
         {
             get
             {
-                if(dna != null)
-                    return (byte[]) dna.Clone();
-                else
-                    return null;
+                if (_dna != null)
+                    return (byte[]) _dna.Clone();
+                return null;
             }
         }
     }

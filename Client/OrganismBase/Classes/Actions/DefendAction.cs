@@ -2,10 +2,9 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                              
 //------------------------------------------------------------------------------
 
-
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -18,11 +17,6 @@ namespace OrganismBase
     public class DefendAction : Action
     {
         /// <summary>
-        ///  The target animal to defend against.
-        /// </summary>
-        AnimalState targetAnimal;
-    
-        /// <summary>
         ///  Creates a new defend action to defend against a particular target
         ///  creature.
         /// </summary>
@@ -31,9 +25,9 @@ namespace OrganismBase
         /// <param name="targetAnimal">The state representing the creature to defend against.</param>
         internal DefendAction(string organismID, int actionID, AnimalState targetAnimal) : base(organismID, actionID)
         {
-            this.targetAnimal = targetAnimal;
+            TargetAnimal = targetAnimal;
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Returns the Animal your creature chose to defend against by
@@ -43,13 +37,7 @@ namespace OrganismBase
         /// <returns>
         ///  AnimalState object for the creature you're defending against.
         /// </returns>
-        public AnimalState TargetAnimal
-        {
-            get
-            {
-                return targetAnimal;
-            }
-        }
+        public AnimalState TargetAnimal { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -62,7 +50,7 @@ namespace OrganismBase
         /// </returns>
         public override string ToString()
         {
-            return "TargetAnimal=" + targetAnimal.ID;
+            return string.Format("TargetAnimal={0}", TargetAnimal.ID);
         }
     }
 }

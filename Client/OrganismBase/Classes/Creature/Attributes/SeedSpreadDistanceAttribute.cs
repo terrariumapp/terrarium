@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  This attribute would control the distance that a plant could spread it
@@ -13,10 +13,8 @@ namespace OrganismBase
     ///  (not currently used by Terrarium)
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
-    public sealed class SeedSpreadDistanceAttribute : System.Attribute
+    public sealed class SeedSpreadDistanceAttribute : Attribute
     {
-        int seedSpreadDistance;
-
         /// <summary>
         ///  Creates a new attribute that can be used on plants to specify
         ///  how far new children can appear from the plant.  This attribute
@@ -27,21 +25,17 @@ namespace OrganismBase
         {
             if (seedSpreadDistance > EngineSettings.MaxSeedSpreadDistance)
             {
-                throw new ApplicationException("You have placed too many points into SeedSpreadDistance.  Please limit this number to " + EngineSettings.MaxSeedSpreadDistance + ".");
+                throw new ApplicationException(
+                    "You have placed too many points into SeedSpreadDistance.  Please limit this number to " +
+                    EngineSettings.MaxSeedSpreadDistance + ".");
             }
 
-            this.seedSpreadDistance = seedSpreadDistance;
+            SeedSpreadDistance = seedSpreadDistance;
         }
 
         /// <summary>
         ///  Read-only access to the distacnce seeds can be spread.
         /// </summary>
-        public int SeedSpreadDistance
-        {
-            get
-            {
-                return seedSpreadDistance;
-            }
-        }
+        public int SeedSpreadDistance { get; private set; }
     }
 }

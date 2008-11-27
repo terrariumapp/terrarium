@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -15,14 +15,12 @@ namespace OrganismBase
     ///  </para>
     /// </summary>
     [Serializable]
-    public class BornEventArgs : OrganismEventArgs 
-    { 
-        byte [] dna;
-
+    public class BornEventArgs : OrganismEventArgs
+    {
         /// <internal/>
-        public BornEventArgs(byte [] dna)
+        public BornEventArgs(byte[] dna)
         {
-            this.dna = dna;
+            Dna = dna;
         }
 
         /// <summary>
@@ -35,13 +33,7 @@ namespace OrganismBase
         /// <returns>
         ///  a System.Byte[] of special data usable by a child creature.
         /// </returns>
-        public byte[] Dna 
-        {
-            get
-            { 
-                return dna;
-            }
-        }
+        public byte[] Dna { get; private set; }
 
         /// <summary>
         ///  <para>

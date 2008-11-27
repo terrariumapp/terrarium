@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     /// Determines how large your organism will be.</summary>
@@ -26,9 +26,9 @@ namespace OrganismBase
     /// </para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
-    public sealed class MatureSizeAttribute : System.Attribute
+    public sealed class MatureSizeAttribute : Attribute
     {
-        int matureSize;
+        private readonly int _matureSize;
 
         /// <param name="matureSize">
         /// a size less than or equal to EngineSettings.MaxMatureSize
@@ -41,17 +41,15 @@ namespace OrganismBase
                 throw new SizeOutOfRangeCharacteristicException();
             }
 
-            this.matureSize = matureSize;
+            _matureSize = matureSize;
         }
 
-        /// <internal/>
+        ///<summary>
+        ///</summary>
         public int MatureRadius
         {
             // Divide by two since we track radius
-            get
-            {
-                return matureSize / 2;
-            }
+            get { return _matureSize/2; }
         }
     }
 }

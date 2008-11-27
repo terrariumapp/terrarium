@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -17,20 +17,7 @@ namespace OrganismBase
     /// </summary>
     [Serializable]
     public class AttackCompletedEventArgs : ActionResponseEventArgs
-    {   
-        /// <summary>
-        ///  The amount of inflicted damage.
-        /// </summary>
-        int inflictedDamage;
-        /// <summary>
-        ///  Whether the creature escaped.
-        /// </summary>
-        Boolean escaped; 
-        /// <summary>
-        ///  Whether the creature was killed.
-        /// </summary>
-        Boolean killed;
-
+    {
         /// <summary>
         ///  Initializes a new set of event arguments that can be used
         ///  in an event handler to notify the creature that an attack
@@ -42,13 +29,14 @@ namespace OrganismBase
         /// <param name="escaped">Whether the target escaped.</param>
         /// <param name="inflictedDamage">How much damage was inflicted.</param>
         /// <internal />
-        public AttackCompletedEventArgs(int actionID, AttackAction action, Boolean killed, Boolean escaped, int inflictedDamage) : base(actionID, action)
+        public AttackCompletedEventArgs(int actionID, Action action, Boolean killed, Boolean escaped,
+                                        int inflictedDamage) : base(actionID, action)
         {
-            this.inflictedDamage = inflictedDamage;
-            this.escaped = escaped;
-            this.killed = killed;
+            InflictedDamage = inflictedDamage;
+            Escaped = escaped;
+            Killed = killed;
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Provides the AttackAction that was created from the values
@@ -62,12 +50,9 @@ namespace OrganismBase
         /// </returns>
         public AttackAction AttackAction
         {
-            get
-            {
-                return (AttackAction) Action;
-            }
-        }    
-    
+            get { return (AttackAction) Action; }
+        }
+
         /// <summary>
         ///  <para>
         ///   Returns the amount of damage done to the target creature as
@@ -79,13 +64,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 representing the amount of absolute damage inflicted.
         /// </returns>
-        public int InflictedDamage
-        {
-            get
-            {
-                return inflictedDamage;
-            }
-        }
+        public int InflictedDamage { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -97,13 +76,7 @@ namespace OrganismBase
         /// <returns>
         ///  True if the target creature was killed, False otherwise.
         /// </returns>
-        public Boolean Killed
-        {
-            get
-            {
-                return killed;
-            }
-        }
+        public bool Killed { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -116,13 +89,7 @@ namespace OrganismBase
         /// <returns>
         ///  True if the target creature escaped, False otherwise.
         /// </returns>
-        public Boolean Escaped
-        {
-            get
-            {
-                return escaped;
-            }
-        }
+        public bool Escaped { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -136,8 +103,8 @@ namespace OrganismBase
         /// </returns>
         public override string ToString()
         {
-            return "#AttackCompleted {InflictedDamage=" + inflictedDamage.ToString() + 
-                ", Killed=" + Killed.ToString() + ", Escaped=" + Escaped.ToString() + ", " + base.ToString() + "}" ;
+            return string.Format("#AttackCompleted {{InflictedDamage={0}, Killed={1}, Escaped={2}, {3}}}",
+                                 InflictedDamage, Killed, Escaped, base.ToString());
         }
     }
 }

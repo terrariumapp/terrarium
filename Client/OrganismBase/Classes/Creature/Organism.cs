@@ -6,7 +6,7 @@ using System;
 using System.Drawing;
 using System.IO;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     // All 'Pending' methods don't guarantee that the action is actually occurring, just that it's in some state between
     // waiting for processing and in progress.  If it's done, it isn't pending.
@@ -20,30 +20,19 @@ namespace OrganismBase
     /// </summary>
     public abstract class Organism
     {
-        /// <internal/>
-        private TraceEventHandler traceHandler = null;
-
         // Every action an organism makes has an ID that is unique only to the organism
         // so that its response event is trackable and tied to the originating action.
-        private int nextActionID = 0;   
-
-        // How many turns have been skipped in a row before this one
-        private int turnsSkipped = 0;
-
-        // Anything that touches this needs a lock around it since we don't want it modified once it's detached
-        private PendingActions pendingActions = new PendingActions();
 
         // This is here to give the illusion that everything happens instantaneously
         // It always reflects any actions that are in progress
-        private PendingActions inProgressActions = new PendingActions();
+        private readonly PendingActions inProgressActions = new PendingActions();
 
         // Used to hold the serialized bytes that the user serialized until the world is
         // set up enough to allow them to deserialize them
-        private MemoryStream serializedStream;
 
-        private Random random;
-        private IOrganismWorldBoundary worldBoundary;
-        private bool isInitialized = false;
+        private readonly Random random;
+        private int nextActionID;
+        private PendingActions pendingActions = new PendingActions();
 
         /// <internal/>
         protected Organism()
@@ -51,77 +40,15 @@ namespace OrganismBase
             random = new Random(GetHashCode());
         }
 
-        /// <summary>
-        /// The Initialize method is called immediately after instantiating a new creature.
-        /// The developer should override this method to set up event handlers for the
-        /// creature and do any first time initialization that needs to be done to set
-        /// up member variables.
-        /// </summary>
-        protected virtual void Initialize()
-        {
-        }
+        /// <internal/>
+        public TraceEventHandler Trace { get; set; }
+
+        internal bool IsInitialized { get; set; }
+
+        internal IOrganismWorldBoundary OrganismWorldBoundary { get; private set; }
 
         /// <internal/>
-        public TraceEventHandler Trace
-        {
-            get
-            {
-                return traceHandler;
-            }
-
-            set 
-            {
-                traceHandler = value;
-            }
-        }
-
-        internal bool IsInitialized
-        {
-            get
-            {
-                return isInitialized;
-            }
-        
-            set
-            {
-                isInitialized = value;
-            }
-        }
-
-        internal IOrganismWorldBoundary OrganismWorldBoundary
-        {
-            get
-            {
-                return worldBoundary;
-            }
-        }
-
-        /// <internal/>
-        public MemoryStream SerializedStream
-        {
-            get
-            {
-                return serializedStream;
-            }
-        
-            set
-            {
-                serializedStream = value;
-            }
-        }
-
-        /// <internal/>
-        public void SetWorldBoundary(IOrganismWorldBoundary boundary)
-        {
-            // This is so organisms can't mess around with it
-            if (worldBoundary != null)
-            {
-                return;
-            }
-
-            worldBoundary = boundary;
-        }
-
+        public MemoryStream SerializedStream { get; set; }
 
         /// <summary>
         ///  <para>
@@ -135,10 +62,7 @@ namespace OrganismBase
         /// </returns>
         public Random OrganismRandom
         {
-            get
-            {
-                return random;
-            }
+            get { return random; }
         }
 
         /// <summary>
@@ -153,33 +77,7 @@ namespace OrganismBase
         /// </returns>
         public Point Position
         {
-            get
-            {
-                return OrganismWorldBoundary.CurrentOrganismState.Position;
-            }
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   Calculates the linear distance between your creature and another using
-        ///   various API's defined by the Vector class.
-        ///  </para>
-        /// </summary>
-        /// <param name="organismState">
-        /// The OrganismState object for the creature to
-        /// use when computing linear distance from you're creature.
-        /// </param>
-        /// <returns>
-        /// A System.Double representing the linear distance between your creature and another.
-        /// </returns>
-        public double DistanceTo(OrganismState organismState)
-        {
-            if (organismState == null)
-            {
-                throw new ArgumentNullException("organismState", "The argument 'organismState' cannot be null");
-            }
-
-            return Vector.Subtract(Position, organismState.Position).Magnitude;
+            get { return OrganismWorldBoundary.CurrentOrganismState.Position; }
         }
 
         /// <summary>
@@ -194,10 +92,7 @@ namespace OrganismBase
         /// </returns>
         public OrganismState State
         {
-            get
-            {
-                return OrganismWorldBoundary.CurrentOrganismState;
-            }
+            get { return OrganismWorldBoundary.CurrentOrganismState; }
         }
 
         /// <summary>
@@ -224,25 +119,12 @@ namespace OrganismBase
         ///  A System.Int32 value for the number of turns the creature was skipped before it was
         ///  assigned another time slice.
         /// </returns>
-        public int TurnsSkipped
-        {
-            get
-            {
-                return turnsSkipped;
-            }
-        }
+        public int TurnsSkipped { get; private set; }
 
         internal int InternalTurnsSkipped
         {
-            get
-            {
-                return turnsSkipped;
-            }
-        
-            set
-            {
-                turnsSkipped = value;
-            }
+            get { return TurnsSkipped; }
+            set { TurnsSkipped = value; }
         }
 
         /// <summary>
@@ -260,8 +142,114 @@ namespace OrganismBase
             get
             {
                 return State.ReadyToReproduce && !IsReproducing &&
-                    State.IsMature && (State.EnergyState >= EnergyState.Normal);
+                       State.IsMature && (State.EnergyState >= EnergyState.Normal);
             }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   After your creature has begun reproduction you can get the ReproduceAction object that
+        ///   represents your creature's current reproduction.  You can use this to examine
+        ///   the dna byte array that will be passed to the child.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  A ReproduceAction object representing the current reproduction and the values
+        ///  passed into BeginReproduction.
+        /// </returns>
+        public ReproduceAction CurrentReproduceAction
+        {
+            get { return PendingActions.ReproduceAction ?? InProgressActions.ReproduceAction; }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   Determines if your organism is currently in the process of reproducing.  Because
+        ///   reproducing is an asynchronous action, the organism may not actually be giving
+        ///   birth yet.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  True if the creature is in the state of reproduction, False otherwise.
+        /// </returns>
+        public Boolean IsReproducing
+        {
+            get { return CurrentReproduceAction != null; }
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   The unique GUID for an organism.  This is used to store plant/animal state
+        ///   when being saved to disk, or when passing plant/animal information to children
+        ///   during reproduction.
+        ///  </para>
+        /// </summary>
+        /// <returns>
+        ///  A string value representing the unique GUID or ID for the organism.
+        /// </returns>
+        public string ID
+        {
+            get { return OrganismWorldBoundary.ID; }
+        }
+
+        internal PendingActions PendingActions
+        {
+            get { return pendingActions; }
+        }
+
+        internal PendingActions InProgressActions
+        {
+            get { return inProgressActions; }
+        }
+
+        internal Boolean IsTracing
+        {
+            get { return Trace != null; }
+        }
+
+        /// <summary>
+        /// The Initialize method is called immediately after instantiating a new creature.
+        /// The developer should override this method to set up event handlers for the
+        /// creature and do any first time initialization that needs to be done to set
+        /// up member variables.
+        /// </summary>
+        protected virtual void Initialize()
+        {
+        }
+
+        /// <internal/>
+        public void SetWorldBoundary(IOrganismWorldBoundary boundary)
+        {
+            // This is so organisms can't mess around with it
+            if (OrganismWorldBoundary != null)
+            {
+                return;
+            }
+
+            OrganismWorldBoundary = boundary;
+        }
+
+        /// <summary>
+        ///  <para>
+        ///   Calculates the linear distance between your creature and another using
+        ///   various API's defined by the Vector class.
+        ///  </para>
+        /// </summary>
+        /// <param name="organismState">
+        /// The OrganismState object for the creature to
+        /// use when computing linear distance from you're creature.
+        /// </param>
+        /// <returns>
+        /// A System.Double representing the linear distance between your creature and another.
+        /// </returns>
+        public double DistanceTo(OrganismState organismState)
+        {
+            if (organismState == null)
+            {
+                throw new ArgumentNullException("organismState", "The argument 'organismState' cannot be null");
+            }
+
+            return Vector.Subtract(Position, organismState.Position).Magnitude;
         }
 
         /// <summary>
@@ -317,78 +305,12 @@ namespace OrganismBase
                 throw new NotReadyToReproduceException();
             }
 
-            int actionID = GetNextActionID();
-            ReproduceAction action = new ReproduceAction(ID, actionID, dna);
-            lock (this.PendingActions)
+            var actionID = GetNextActionID();
+            var action = new ReproduceAction(ID, actionID, dna);
+            lock (PendingActions)
             {
                 PendingActions.SetReproduceAction(action);
                 InProgressActions.SetReproduceAction(action);
-            }
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   After your creature has begun reproduction you can get the ReproduceAction object that
-        ///   represents your creature's current reproduction.  You can use this to examine
-        ///   the dna byte array that will be passed to the child.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  A ReproduceAction object representing the current reproduction and the values
-        ///  passed into BeginReproduction.
-        /// </returns>
-        public ReproduceAction CurrentReproduceAction
-        {
-            get
-            {
-                if (PendingActions.ReproduceAction != null)
-                {
-                    return PendingActions.ReproduceAction;
-                }
-                else if (InProgressActions.ReproduceAction != null)
-                {
-                    return InProgressActions.ReproduceAction;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   Determines if your organism is currently in the process of reproducing.  Because
-        ///   reproducing is an asynchronous action, the organism may not actually be giving
-        ///   birth yet.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  True if the creature is in the state of reproduction, False otherwise.
-        /// </returns>
-        public Boolean IsReproducing
-        {
-            get
-            {
-                return CurrentReproduceAction != null;
-            }
-        }
-
-        /// <summary>
-        ///  <para>
-        ///   The unique GUID for an organism.  This is used to store plant/animal state
-        ///   when being saved to disk, or when passing plant/animal information to children
-        ///   during reproduction.
-        ///  </para>
-        /// </summary>
-        /// <returns>
-        ///  A string value representing the unique GUID or ID for the organism.
-        /// </returns>
-        public string ID
-        {
-            get
-            {
-                return OrganismWorldBoundary.ID;
             }
         }
 
@@ -401,7 +323,7 @@ namespace OrganismBase
         public PendingActions GetThenErasePendingActions()
         {
             PendingActions detachedActions;
-            lock (this.PendingActions)
+            lock (PendingActions)
             {
                 detachedActions = pendingActions;
                 pendingActions = new PendingActions();
@@ -410,29 +332,13 @@ namespace OrganismBase
             return detachedActions;
         }
 
-        internal PendingActions PendingActions
-        {
-            get
-            {
-                return pendingActions;
-            }
-        }
-
-        internal PendingActions InProgressActions
-        {
-            get 
-            { 
-                return inProgressActions;
-            }
-        }
-
         /// <internal/>
         public abstract void InternalMain(bool clearOnly);
 
         private void InternalTrace(params object[] tracings)
         {
-            string[] strings = new string[tracings.Length];
-            for (int i = 0; i < tracings.Length; i++)
+            var strings = new string[tracings.Length];
+            for (var i = 0; i < tracings.Length; i++)
             {
                 strings[i] = tracings[i].ToString();
                 strings[i] = strings[i].Substring(0, (strings[i].Length > 8000) ? 8000 : strings[i].Length);
@@ -536,14 +442,6 @@ namespace OrganismBase
             if (Trace != null)
             {
                 InternalTrace(item1, item2, item3, item4);
-            }
-        }
-
-        internal Boolean IsTracing
-        {
-            get
-            {
-                return Trace != null;
             }
         }
 

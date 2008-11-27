@@ -5,16 +5,14 @@
 using System;
 using System.Drawing;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  Determines the color used for special markings on the organism (not currently used by Terrarium).
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
-    public sealed class MarkingColorAttribute : System.Attribute
+    public sealed class MarkingColorAttribute : Attribute
     {
-        private KnownColor markingColor;
-
         /// <param name="markingColor">
         /// The special marking color for the animal.  This could be
         /// the color of the dot on a black widow or the stripes
@@ -22,16 +20,11 @@ namespace OrganismBase
         /// </param>
         public MarkingColorAttribute(KnownColor markingColor)
         {
-            this.markingColor = markingColor;
+            MarkingColor = markingColor;
         }
 
-        /// <internal/>
-        public KnownColor MarkingColor
-        {
-            get
-            {
-                return markingColor;
-            }
-        }
+        ///<summary>
+        ///</summary>
+        public KnownColor MarkingColor { get; private set; }
     }
 }
