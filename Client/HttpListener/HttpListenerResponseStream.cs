@@ -171,15 +171,15 @@ namespace Terrarium.Net
                 }
             }
 
-            int DataToWrite = count;
+            var DataToWrite = count;
 
             if (_writeChunked)
             {
-                string ChunkHeader = "0x" + Convert.ToString(count, 16);
+                var ChunkHeader = "0x" + Convert.ToString(count, 16);
                 DataToWrite += ChunkHeader.Length + 4;
-                byte[] newBuffer = new byte[DataToWrite];
+                var newBuffer = new byte[DataToWrite];
 
-                for (int index = 0; index < ChunkHeader.Length; index++)
+                for (var index = 0; index < ChunkHeader.Length; index++)
                 {
                     newBuffer[index] = (byte) ChunkHeader[index];
                 }
@@ -232,7 +232,7 @@ namespace Terrarium.Net
                 //
                 // send the trailer
                 //
-                byte[] buffer = new byte[3] {(byte) '0', 0x0D, 0x0A};
+                var buffer = new byte[3] {(byte) '0', 0x0D, 0x0A};
 #if DEBUG
                 if (HttpTraceHelper.Socket.TraceVerbose)
                 {
@@ -242,7 +242,7 @@ namespace Terrarium.Net
 #endif
                 // we null out the Socket when we cleanup
                 // make a local copy to avoid null reference exceptions
-                Socket checkSocket = _httpListenerWebResponse.Request.ConnectionState.ConnectionSocket;
+                var checkSocket = _httpListenerWebResponse.Request.ConnectionState.ConnectionSocket;
                 if (checkSocket != null)
                 {
                     checkSocket.Send(buffer, 0, 3, SocketFlags.None);

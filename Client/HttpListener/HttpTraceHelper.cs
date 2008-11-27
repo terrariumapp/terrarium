@@ -44,7 +44,7 @@ namespace Terrarium.Net
                 if (_api == null)
                 {
                     _api = new TraceSwitch("WebListener.Api",
-                                          "Enable tracing for calls made to the System.Net WebListener public APIs");
+                                           "Enable tracing for calls made to the System.Net WebListener public APIs");
                 }
                 return _api;
             }
@@ -57,7 +57,7 @@ namespace Terrarium.Net
                 if (_internalLog == null)
                 {
                     _internalLog = new TraceSwitch("WebListener.InternalLog",
-                                                  "Enable tracing for public logging made by the System.Net WebListener classes");
+                                                   "Enable tracing for public logging made by the System.Net WebListener classes");
                 }
                 return _internalLog;
             }
@@ -70,7 +70,7 @@ namespace Terrarium.Net
                 if (_protocol == null)
                 {
                     _protocol = new TraceSwitch("WebListener.Protocol",
-                                               "Enable tracing for Protocol handling made by the System.Net WebListener classes");
+                                                "Enable tracing for Protocol handling made by the System.Net WebListener classes");
                 }
                 return _protocol;
             }
@@ -83,7 +83,7 @@ namespace Terrarium.Net
                 if (_socket == null)
                 {
                     _socket = new TraceSwitch("WebListener.Socket",
-                                             "Enable tracing for Socket calls made by the System.Net WebListener classes");
+                                              "Enable tracing for Socket calls made by the System.Net WebListener classes");
                 }
                 return _socket;
             }
@@ -96,7 +96,7 @@ namespace Terrarium.Net
                 if (_exceptionThrown == null)
                 {
                     _exceptionThrown = new TraceSwitch("WebListener.Exception",
-                                                      "Enable tracing for all Exceptions thrown by the System.Net WebListener classes");
+                                                       "Enable tracing for all Exceptions thrown by the System.Net WebListener classes");
                 }
                 return _exceptionThrown;
             }
@@ -109,7 +109,7 @@ namespace Terrarium.Net
                 if (_exceptionCaught == null)
                 {
                     _exceptionCaught = new TraceSwitch("WebListener.Exception",
-                                                      "Enable tracing for all Exceptions caught by the System.Net WebListener classes");
+                                                       "Enable tracing for all Exceptions caught by the System.Net WebListener classes");
                 }
                 return _exceptionCaught;
             }
@@ -120,7 +120,7 @@ namespace Terrarium.Net
         //
         public static bool IsBlankString(string stringValue)
         {
-            return stringValue == null || stringValue.Length == 0;
+            return string.IsNullOrEmpty(stringValue);
         }
 
         public static string MakeStringNull(string stringValue)
@@ -139,14 +139,11 @@ namespace Terrarium.Net
             {
                 return "(null)";
             }
-            else if (objectValue is string && ((string) objectValue).Length == 0)
+            if (objectValue is string && ((string) objectValue).Length == 0)
             {
                 return "(string.empty)";
             }
-            else
-            {
-                return objectValue.ToString();
-            }
+            return objectValue.ToString();
         }
 
         public static string HashString(object objectValue)
@@ -155,14 +152,11 @@ namespace Terrarium.Net
             {
                 return "(null)";
             }
-            else if (objectValue is string && ((string) objectValue).Length == 0)
+            if (objectValue is string && ((string) objectValue).Length == 0)
             {
                 return "(string.empty)";
             }
-            else
-            {
-                return objectValue.GetHashCode().ToString();
-            }
+            return objectValue.GetHashCode().ToString();
         }
 
         public static void WriteLine(string msg)

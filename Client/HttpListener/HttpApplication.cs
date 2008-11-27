@@ -11,61 +11,44 @@ namespace Terrarium.Net
     // for queueing up listeners and encapsulating their state.
     public class HttpApplication
     {
-        private readonly byte[] _readBuffer = new byte[4096];
-        private MemoryStream _buffer = new MemoryStream();
-        private HttpListenerWebRequest _httpRequest;
         private HttpListenerWebResponse _httpResponse;
-        private int _readBytes;
-        private Stream _requestStream;
 
-        public HttpListenerWebRequest HttpRequest
+        public HttpApplication()
         {
-            get { return _httpRequest; }
-            set { _httpRequest = value; }
+            Buffer = new MemoryStream();
+            ReadBuffer = new byte[4096];
         }
+
+        public HttpListenerWebRequest HttpRequest { get; set; }
 
         public HttpListenerWebResponse HttpResponse
         {
             get
             {
-                if (_httpResponse == null && _httpRequest != null)
+                if (_httpResponse == null && HttpRequest != null)
                 {
-                    _httpResponse = _httpRequest.GetResponse();
+                    _httpResponse = HttpRequest.GetResponse();
                 }
 
                 return _httpResponse;
             }
         }
 
-        public byte[] ReadBuffer
-        {
-            get { return _readBuffer; }
-        }
+        public byte[] ReadBuffer { get; private set; }
 
-        public Stream RequestStream
-        {
-            get { return _requestStream; }
-            set { _requestStream = value; }
-        }
+        public Stream RequestStream { get; set; }
 
-        public int ReadBytes
-        {
-            get { return _readBytes; }
-            set { _readBytes = value; }
-        }
+        public int ReadBytes { get; set; }
 
-        public MemoryStream Buffer
-        {
-            get { return _buffer; }
-        }
+        public MemoryStream Buffer { get; private set; }
 
         public void Reset()
         {
-            _httpRequest = null;
-            _requestStream = null;
+            HttpRequest = null;
+            RequestStream = null;
             _httpResponse = null;
-            _readBytes = 0;
-            _buffer = new MemoryStream();
+            ReadBytes = 0;
+            Buffer = new MemoryStream();
         }
     }
 }

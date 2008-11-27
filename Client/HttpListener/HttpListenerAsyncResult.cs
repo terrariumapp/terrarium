@@ -10,14 +10,13 @@ namespace Terrarium.Net
     // Special AsyncResult for asynchronous processing of requests arriving at this Terrarium
     public class HttpListenerAsyncResult : IAsyncResult
     {
-        private static readonly WaitOrTimerCallback _staticCallback = GetRequestCallback;
         private readonly AsyncCallback _asyncCallback;
-        private readonly object _asyncState;
-        private readonly HttpWebListener _httpWebListener;
         private AutoResetEvent _asyncWaitHandle;
-        private bool _completedSynchronously;
-        private HttpListenerWebRequest _httpListenerWebRequest;
-        private bool _isCompleted;
+
+        static HttpListenerAsyncResult()
+        {
+            StaticCallback = GetRequestCallback;
+        }
 
         public HttpListenerAsyncResult(AsyncCallback callback, object userState, HttpWebListener httpWebListener)
         {
@@ -27,42 +26,24 @@ namespace Terrarium.Net
                 HttpTraceHelper.WriteLine("ListenerAsyncResult#" + HttpTraceHelper.HashString(this) + "::.ctor()");
             }
 #endif
-            _asyncState = userState;
+            AsyncState = userState;
             _asyncCallback = callback;
-            _httpWebListener = httpWebListener;
+            Listener = httpWebListener;
         }
 
-        public static WaitOrTimerCallback StaticCallback
-        {
-            get { return _staticCallback; }
-        }
+        public static WaitOrTimerCallback StaticCallback { get; private set; }
 
-        public HttpWebListener Listener
-        {
-            get { return _httpWebListener; }
-        }
+        public HttpWebListener Listener { get; private set; }
 
-        public HttpListenerWebRequest Request
-        {
-            get { return _httpListenerWebRequest; }
+        public HttpListenerWebRequest Request { get; set; }
 
-            set { _httpListenerWebRequest = value; }
-        }
+        #region IAsyncResult Members
 
-        public object AsyncState
-        {
-            get { return _asyncState; }
-        }
+        public object AsyncState { get; private set; }
 
-        public bool CompletedSynchronously
-        {
-            get { return _completedSynchronously; }
-        }
+        public bool CompletedSynchronously { get; private set; }
 
-        public bool IsCompleted
-        {
-            get { return _isCompleted; }
-        }
+        public bool IsCompleted { get; private set; }
 
         public WaitHandle AsyncWaitHandle
         {
@@ -82,9 +63,11 @@ namespace Terrarium.Net
             }
         }
 
+        #endregion
+
         private static void GetRequestCallback(object stateObject, bool signaled)
         {
-            HttpListenerAsyncResult asyncResult = stateObject as HttpListenerAsyncResult;
+            var asyncResult = stateObject as HttpListenerAsyncResult;
 #if DEBUG
             if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
@@ -93,7 +76,7 @@ namespace Terrarium.Net
             }
 #endif
 
-            asyncResult.Request = asyncResult._httpWebListener.GetNextRequest();
+            asyncResult.Request = asyncResult.Listener.GetNextRequest();
 
             if (asyncResult.Request == null)
             {
@@ -109,7 +92,7 @@ namespace Terrarium.Net
 #endif
 
                 ThreadPool.RegisterWaitForSingleObject(
-                    asyncResult._httpWebListener.RequestReady,
+                    asyncResult.Listener.RequestReady,
                     StaticCallback,
                     asyncResult,
                     -1,
@@ -123,8 +106,8 @@ namespace Terrarium.Net
 
         public void Complete(bool completedSynchronously)
         {
-            _completedSynchronously = completedSynchronously;
-            _isCompleted = true;
+            CompletedSynchronously = completedSynchronously;
+            IsCompleted = true;
 
             if (_asyncWaitHandle != null)
             {
@@ -138,6 +121,7 @@ namespace Terrarium.Net
 
                 _asyncWaitHandle.Set();
             }
+
             if (_asyncCallback != null)
             {
 #if DEBUG

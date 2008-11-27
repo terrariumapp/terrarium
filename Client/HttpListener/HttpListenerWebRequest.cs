@@ -6,7 +6,6 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 
 namespace Terrarium.Net
@@ -14,21 +13,8 @@ namespace Terrarium.Net
     public class HttpListenerWebRequest
     {
         private readonly HttpConnectionState _connectionState;
-        private readonly IPEndPoint _remoteEndPoint;
-        private bool _chunked;
-        private string _connection;
-        private long _contentLength;
-        private int _delay100Continue;
-        private int _delayResponse;
         private bool _handleConnectionCalled;
-        private WebHeaderCollection _headers;
-        private string _host;
         private bool _interpretHeadersCalled;
-        private bool _keepAlive;
-        private string _method;
-        private Version _protocolVersion;
-        private string _relativeUri;
-        private Uri _requestUri;
         private HttpListenerWebResponse _response;
         private bool _sent100Continue;
         private Stream _stream;
@@ -49,7 +35,7 @@ namespace Terrarium.Net
                                           "::.ctor() calling Socket.get_RemoteEndPoint()");
             }
 #endif
-            _remoteEndPoint = (IPEndPoint) (connectionState.ConnectionSocket.RemoteEndPoint);
+            RemoteEndPoint = (IPEndPoint) (connectionState.ConnectionSocket.RemoteEndPoint);
         }
 
         public HttpConnectionState ConnectionState
@@ -66,82 +52,35 @@ namespace Terrarium.Net
                 //
                 InterpretHeaders();
 
-                return _chunked || _contentLength > 0;
+                return Chunked || ContentLength > 0;
             }
         }
 
-        public int DelayResponse
-        {
-            get { return _delayResponse; }
-            set { _delayResponse = value; }
-        }
+        public int DelayResponse { get; set; }
 
-        public int Delay100Continue
-        {
-            get { return _delay100Continue; }
+        public int Delay100Continue { get; set; }
 
-            set { _delay100Continue = value; }
-        }
+        public IPEndPoint RemoteEndPoint { get; private set; }
 
-        public IPEndPoint RemoteEndPoint
-        {
-            get { return _remoteEndPoint; }
-        }
+        public string RelativeUri { get; set; }
 
-        public string RelativeUri
-        {
-            get { return _relativeUri; }
-            set { _relativeUri = value; }
-        }
+        public Uri RequestUri { get; set; }
 
-        public Uri RequestUri
-        {
-            get { return _requestUri; }
-            set { _requestUri = value; }
-        }
+        public string Method { get; set; }
 
-        public string Method
-        {
-            get { return _method; }
-            set { _method = value; }
-        }
+        public Version ProtocolVersion { get; set; }
 
-        public Version ProtocolVersion
-        {
-            get { return _protocolVersion; }
-            set { _protocolVersion = value; }
-        }
+        public string Host { get; private set; }
 
-        public string Host
-        {
-            get { return _host; }
-        }
+        public bool Chunked { get; private set; }
 
-        public bool Chunked
-        {
-            get { return _chunked; }
-        }
+        public long ContentLength { get; private set; }
 
-        public long ContentLength
-        {
-            get { return _contentLength; }
-        }
+        public bool KeepAlive { get; private set; }
 
-        public bool KeepAlive
-        {
-            get { return _keepAlive; }
-        }
+        public string Connection { get; private set; }
 
-        public string Connection
-        {
-            get { return _connection; }
-        }
-
-        public WebHeaderCollection Headers
-        {
-            get { return _headers; }
-            set { _headers = value; }
-        }
+        public WebHeaderCollection Headers { get; set; }
 
         public bool InterpretHeaders()
         {
@@ -150,9 +89,9 @@ namespace Terrarium.Net
             // interpret the values of the "special" headers and set
             // the corresponding properties to the correct values.
             //
-            if (_headers == null)
+            if (Headers == null)
             {
-                Exception exception = new Exception("Don't have headers yet");
+                var exception = new Exception("Don't have headers yet");
 #if DEBUG
                 if (HttpTraceHelper.ExceptionThrown.TraceVerbose)
                 {
@@ -170,26 +109,24 @@ namespace Terrarium.Net
 
             _interpretHeadersCalled = true;
 
-            string value;
-
             //
             // Connection && KeepAlive
             //
-            _connection = _headers["Connection"];
-            _keepAlive = _connection == null ||
-                          _connection.ToLower(CultureInfo.InvariantCulture).IndexOf("close") == -1;
+            Connection = Headers["Connection"];
+            KeepAlive = Connection == null ||
+                        Connection.ToLower(CultureInfo.InvariantCulture).IndexOf("close") == -1;
 
             //
             // RequestUri
             //
-            _host = _headers["Host"];
-            _requestUri = null;
+            Host = Headers["Host"];
+            RequestUri = null;
             // we should try this only if this is a fully qualified Uri
-            if (_relativeUri.StartsWith("http://") || _relativeUri.StartsWith("https://"))
+            if (RelativeUri.StartsWith("http://") || RelativeUri.StartsWith("https://"))
             {
                 try
                 {
-                    _requestUri = new Uri(_relativeUri);
+                    RequestUri = new Uri(RelativeUri);
                 }
                 catch (Exception exception)
                 {
@@ -203,18 +140,13 @@ namespace Terrarium.Net
                 }
             }
 
-            if (_requestUri == null || !(_requestUri.Scheme.Equals("http") || _requestUri.Scheme.Equals("https")))
+            if (RequestUri == null || !(RequestUri.Scheme.Equals("http") || RequestUri.Scheme.Equals("https")))
             {
                 try
                 {
-                    if (_relativeUri[0] != '/')
-                    {
-                        _requestUri = new Uri("http://" + _host + "/" + _relativeUri);
-                    }
-                    else
-                    {
-                        _requestUri = new Uri("http://" + _host + _relativeUri);
-                    }
+                    RequestUri = RelativeUri[0] != '/'
+                                     ? new Uri("http://" + Host + "/" + RelativeUri)
+                                     : new Uri("http://" + Host + RelativeUri);
                 }
                 catch (Exception exception)
                 {
@@ -231,28 +163,28 @@ namespace Terrarium.Net
             //
             // Chunked
             //
-            value = _headers["Transfer-Encoding"];
-            _chunked = value != null && value.ToLower(CultureInfo.InvariantCulture).IndexOf("chunked") >= 0;
+            var value = Headers["Transfer-Encoding"];
+            Chunked = value != null && value.ToLower(CultureInfo.InvariantCulture).IndexOf("chunked") >= 0;
 
             //
             // ContentLength
             //
-            if (_chunked)
+            if (Chunked)
             {
                 //
                 // if the client is chunking we ignore Content-Length
                 //
-                _contentLength = -1;
+                ContentLength = -1;
             }
             else
             {
-                _contentLength = 0;
-                value = _headers["Content-Length"];
+                ContentLength = 0;
+                value = Headers["Content-Length"];
                 if (value != null)
                 {
                     try
                     {
-                        _contentLength = Int64.Parse(value);
+                        ContentLength = Int64.Parse(value);
                     }
                     catch (Exception exception)
                     {
@@ -272,16 +204,16 @@ namespace Terrarium.Net
             if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
                 HttpTraceHelper.WriteLine("HttpListenerWebRequest#" + HttpTraceHelper.HashString(this) +
-                                          "::InterpretHeaders() ContentLength:" + _contentLength + " Chunked:" +
-                                          _chunked);
+                                          "::InterpretHeaders() ContentLength:" + ContentLength + " Chunked:" +
+                                          Chunked);
             }
 #endif
 
             // check validity of request delimiters
             // i.e.: will we be able to tell when the request is over?
             // if not, return a bad request and close the connection
-            if ((string.Compare(_method, "post", true, CultureInfo.InvariantCulture) == 0 ||
-                 string.Compare(_method, "put", true, CultureInfo.InvariantCulture) == 0) && !Uploading)
+            if ((string.Compare(Method, "post", true, CultureInfo.InvariantCulture) == 0 ||
+                 string.Compare(Method, "put", true, CultureInfo.InvariantCulture) == 0) && !Uploading)
             {
                 //
                 // connection Keep Alive, neither Chunking nor Content Length
@@ -336,7 +268,7 @@ namespace Terrarium.Net
             //
             InterpretHeaders();
 
-            string expect = _headers["Expect"];
+            var expect = Headers["Expect"];
 
             if (expect != null && expect.ToLower(CultureInfo.InvariantCulture).IndexOf("100-continue") >= 0 && Uploading)
             {
@@ -363,7 +295,7 @@ namespace Terrarium.Net
 
                 // we null out the Socket when we cleanup
                 // make a local copy to avoid null reference exceptions
-                Socket checkSocket = _connectionState.ConnectionSocket;
+                var checkSocket = _connectionState.ConnectionSocket;
                 if (checkSocket != null)
                 {
 #if DEBUG
@@ -410,7 +342,7 @@ namespace Terrarium.Net
                                               "::GetRequestStream() creating ListenerRequestStream()");
                 }
 #endif
-                _stream = new HttpListenerRequestStream(_connectionState, _contentLength, _chunked);
+                _stream = new HttpListenerRequestStream(_connectionState, ContentLength, Chunked);
             }
             return _stream;
         }
@@ -467,13 +399,13 @@ namespace Terrarium.Net
             if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
                 HttpTraceHelper.WriteLine("HttpListenerWebRequest#" + HttpTraceHelper.HashString(this) +
-                                          "::HandleConnection() _keepAlive:" + _keepAlive);
+                                          "::HandleConnection() _keepAlive:" + KeepAlive);
             }
 #endif
             if (!_handleConnectionCalled)
             {
                 _handleConnectionCalled = true;
-                if (_keepAlive)
+                if (KeepAlive)
                 {
 #if DEBUG
                     if (HttpTraceHelper.InternalLog.TraceVerbose)
