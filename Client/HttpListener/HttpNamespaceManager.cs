@@ -21,8 +21,6 @@ namespace Terrarium.Net
         private readonly AsyncCallback _getRequestCB;
         private readonly Hashtable _nsModules = new Hashtable();
         private readonly AsyncCallback _readCB;
-        private EventHandler _afterProcessRequest;
-        private EventHandler _beforeProcessRequest;
         private HttpWebListener _listener;
 
         /// <summary>
@@ -35,17 +33,9 @@ namespace Terrarium.Net
             _readCB = ReadCallback;
         }
 
-        public EventHandler BeforeProcessRequest
-        {
-            get { return _beforeProcessRequest; }
-            set { _beforeProcessRequest = value; }
-        }
+        public EventHandler BeforeProcessRequest { get; set; }
 
-        public EventHandler AfterProcessRequest
-        {
-            get { return _afterProcessRequest; }
-            set { _afterProcessRequest = value; }
-        }
+        public EventHandler AfterProcessRequest { get; set; }
 
         /// <summary>
         ///  Start listening on the given host IP Address, on the given
@@ -61,7 +51,7 @@ namespace Terrarium.Net
             _listener.Start(port);
 
             // Put this in a loop if we want more listeners in the pool
-            HttpApplication stateObject = new HttpApplication();
+            var stateObject = new HttpApplication();
             _listener.BeginGetRequest(_getRequestCB, stateObject);
         }
 
@@ -91,10 +81,7 @@ namespace Terrarium.Net
             {
                 throw new Exception("The " + ns + " namespace is already registered.");
             }
-            else
-            {
-                _nsModules.Add(ns, nsHandler);
-            }
+            _nsModules.Add(ns, nsHandler);
         }
 
         /// <summary>
@@ -122,15 +109,15 @@ namespace Terrarium.Net
             {
                 OnBeforeProcessRequest();
 
-                HttpApplication stateObject = asyncResult.AsyncState as HttpApplication;
+                var stateObject = asyncResult.AsyncState as HttpApplication;
                 stateObject.HttpRequest = _listener.EndGetRequest(asyncResult);
 
                 if (stateObject.HttpRequest.Method == "GET")
                 {
-                    string ns = stateObject.HttpRequest.RequestUri.Segments[1];
+                    var ns = stateObject.HttpRequest.RequestUri.Segments[1];
                     if (_nsModules.Contains(ns))
                     {
-                        IHttpNamespaceHandler nsHandler = (IHttpNamespaceHandler) _nsModules[ns];
+                        var nsHandler = (IHttpNamespaceHandler) _nsModules[ns];
                         nsHandler.ProcessRequest(stateObject);
                     }
                     else
@@ -142,7 +129,7 @@ namespace Terrarium.Net
                 {
                     if (stateObject.HttpRequest.ContentLength <= 0)
                     {
-                        string message = "<html><body>Bad Request - POST with no data";
+                        var message = "<html><body>Bad Request - POST with no data";
                         message += "</body></html>";
                         HandleBadRequest(stateObject, message);
                     }
@@ -171,7 +158,7 @@ namespace Terrarium.Net
                 }
 
                 // Queue up another _listener
-                HttpApplication newStateObject = new HttpApplication();
+                var newStateObject = new HttpApplication();
                 _listener.BeginGetRequest(_getRequestCB, newStateObject);
             }
             catch (Exception ex)
@@ -182,7 +169,7 @@ namespace Terrarium.Net
                     HttpTraceHelper.WriteLine("Caught exception:" + ex);
                 }
 #endif
-                HttpApplication stateObject = asyncResult.AsyncState as HttpApplication;
+                var stateObject = asyncResult.AsyncState as HttpApplication;
                 stateObject.Reset();
                 _listener.BeginGetRequest(_getRequestCB, stateObject);
             }
@@ -202,9 +189,8 @@ namespace Terrarium.Net
         {
             try
             {
-                int readBytes = 0;
-                HttpApplication stateObject = asyncResult.AsyncState as HttpApplication;
-                readBytes = stateObject.RequestStream.EndRead(asyncResult);
+                var stateObject = asyncResult.AsyncState as HttpApplication;
+                var readBytes = stateObject.RequestStream.EndRead(asyncResult);
 
                 if (readBytes > 0)
                 {
@@ -215,7 +201,8 @@ namespace Terrarium.Net
 
                     // Write data received to the memory stream buffer
                     stateObject.Buffer.Write(stateObject.ReadBuffer, 0, readBytes);
-                    stateObject.RequestStream.BeginRead(stateObject.ReadBuffer, 0, stateObject.ReadBuffer.Length, _readCB,
+                    stateObject.RequestStream.BeginRead(stateObject.ReadBuffer, 0, stateObject.ReadBuffer.Length,
+                                                        _readCB,
                                                         stateObject);
                 }
                 else
@@ -223,10 +210,10 @@ namespace Terrarium.Net
                     // Look to see which handler should be called
                     // Rewind the stream
                     stateObject.Buffer.Position = 0;
-                    string ns = stateObject.HttpRequest.RequestUri.Segments[1];
+                    var ns = stateObject.HttpRequest.RequestUri.Segments[1];
                     if (_nsModules.Contains(ns))
                     {
-                        IHttpNamespaceHandler nsHandler = (IHttpNamespaceHandler) _nsModules[ns];
+                        var nsHandler = (IHttpNamespaceHandler) _nsModules[ns];
                         nsHandler.ProcessRequest(stateObject);
                     }
                     else
@@ -264,12 +251,11 @@ namespace Terrarium.Net
             state.HttpResponse.Date = DateTime.Now;
             state.HttpResponse.ContentType = "text/html";
             state.HttpResponse.KeepAlive = false;
-            string body;
 
-            body = "<HTML><BODY>" + "The method " + state.HttpRequest.Method;
+            var body = "<HTML><BODY>" + "The method " + state.HttpRequest.Method;
             body += " is not allowed.</BODY></HTML>";
 
-            byte[] bodyBytes = Encoding.ASCII.GetBytes(body);
+            var bodyBytes = Encoding.ASCII.GetBytes(body);
             state.HttpResponse.ContentLength = bodyBytes.Length;
             state.HttpResponse.Close(bodyBytes);
         }
@@ -290,11 +276,10 @@ namespace Terrarium.Net
             state.HttpResponse.Date = DateTime.Now;
             state.HttpResponse.ContentType = "text/html";
             state.HttpResponse.KeepAlive = false;
-            string body;
 
-            body = "<HTML><BODY>Unsupported URI.</BODY></HTML>";
+            var body = "<HTML><BODY>Unsupported URI.</BODY></HTML>";
 
-            byte[] bodyBytes = Encoding.ASCII.GetBytes(body);
+            var bodyBytes = Encoding.ASCII.GetBytes(body);
             state.HttpResponse.ContentLength = bodyBytes.Length;
             state.HttpResponse.Close(bodyBytes);
         }
@@ -314,8 +299,8 @@ namespace Terrarium.Net
             state.HttpResponse.Date = DateTime.Now;
             state.HttpResponse.ContentType = "text/html";
             state.HttpResponse.KeepAlive = false;
-            string body = message;
-            byte[] bodyBytes = Encoding.ASCII.GetBytes(body);
+            var body = message;
+            var bodyBytes = Encoding.ASCII.GetBytes(body);
             state.HttpResponse.ContentLength = bodyBytes.Length;
             state.HttpResponse.Close(bodyBytes);
         }

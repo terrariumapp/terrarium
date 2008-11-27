@@ -16,31 +16,24 @@ namespace Terrarium.Net
     public class HttpConnectionState
     {
         private static int _activeConnections;
-        private readonly HttpWebListener _httpWebListener;
-        private byte[] _buffer;
-        private int _eofOffset;
-        private HttpListenerWebRequest _httpListenerWebRequest;
-        private int _parsedOffset;
-        private ParseState _parserState;
-        private Socket _socket;
 
         public HttpConnectionState(Socket socket, int bufferSize, HttpWebListener httpWebListener)
         {
 #if DEBUG
             if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                          "::ctor() New client connected from: " + socket.RemoteEndPoint);
+                HttpTraceHelper.WriteLine(string.Format("ConnectionState#{0}::ctor() New client connected from: {1}",
+                                                        HttpTraceHelper.HashString(this), socket.RemoteEndPoint));
             }
 #endif
             Interlocked.Increment(ref _activeConnections);
-            _httpWebListener = httpWebListener;
-            _socket = socket;
-            _buffer = new byte[bufferSize];
+            Listener = httpWebListener;
+            ConnectionSocket = socket;
+            ConnectionBuffer = new byte[bufferSize];
 
-            _parserState = ParseState.None;
-            _eofOffset = 0;
-            _parsedOffset = 0;
+            ParserState = ParseState.None;
+            EndOfOffset = 0;
+            ParsedOffset = 0;
         }
 
         public static int ActiveConnections
@@ -49,44 +42,19 @@ namespace Terrarium.Net
             set { _activeConnections = value; }
         }
 
-        public byte[] ConnectionBuffer
-        {
-            get { return _buffer; }
-            set { _buffer = value; }
-        }
+        public byte[] ConnectionBuffer { get; set; }
 
-        public int EndOfOffset
-        {
-            get { return _eofOffset; }
-            set { _eofOffset = value; }
-        }
+        public int EndOfOffset { get; set; }
 
-        public ParseState ParserState
-        {
-            get { return _parserState; }
-            set { _parserState = value; }
-        }
+        public ParseState ParserState { get; set; }
 
-        public Socket ConnectionSocket
-        {
-            get { return _socket; }
-        }
+        public Socket ConnectionSocket { get; private set; }
 
-        public HttpWebListener Listener
-        {
-            get { return _httpWebListener; }
-        }
+        public HttpWebListener Listener { get; private set; }
 
-        public HttpListenerWebRequest Request
-        {
-            get { return _httpListenerWebRequest; }
-        }
+        public HttpListenerWebRequest Request { get; private set; }
 
-        public int ParsedOffset
-        {
-            get { return _parsedOffset; }
-            set { _parsedOffset = value; }
-        }
+        public int ParsedOffset { get; set; }
 
         ~HttpConnectionState()
         {
@@ -97,12 +65,12 @@ namespace Terrarium.Net
         {
             // we null out the Socket when we cleanup
             // make a local copy to avoid null reference exceptions
-            Socket checkSocket = ConnectionSocket;
+            var checkSocket = ConnectionSocket;
 
             // null out the Socket as soon as possible, it's still possible
             // that two or more callers will execute the method below on the same
             // instance. for now that's ok.
-            _socket = null;
+            ConnectionSocket = null;
             if (checkSocket != null)
             {
                 // gracefully close (allow user to read the data)
@@ -112,8 +80,9 @@ namespace Terrarium.Net
 #if DEBUG
                     if (HttpTraceHelper.Socket.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                                  "::ctor() calling Socket.Shutdown()");
+                        HttpTraceHelper.WriteLine(string.Format(
+                                                      "ConnectionState#{0}::ctor() calling Socket.Shutdown()",
+                                                      HttpTraceHelper.HashString(this)));
                     }
 #endif
                     checkSocket.Shutdown(SocketShutdown.Both);
@@ -123,16 +92,17 @@ namespace Terrarium.Net
 #if DEBUG
                     if (HttpTraceHelper.ExceptionCaught.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                                  "::Close() caught exception in Socket.Shutdown(): " + exception);
+                        HttpTraceHelper.WriteLine(
+                            string.Format("ConnectionState#{0}::Close() caught exception in Socket.Shutdown(): {1}",
+                                          HttpTraceHelper.HashString(this), exception));
                     }
 #endif
                 }
 #if DEBUG
                 if (HttpTraceHelper.Socket.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                              "::Close() calling Socket.Close()");
+                    HttpTraceHelper.WriteLine(string.Format("ConnectionState#{0}::Close() calling Socket.Close()",
+                                                            HttpTraceHelper.HashString(this)));
                 }
 #endif
                 checkSocket.Close();
@@ -143,7 +113,7 @@ namespace Terrarium.Net
 
         public void StartReceiving()
         {
-            if (_eofOffset <= _parsedOffset)
+            if (EndOfOffset <= ParsedOffset)
             {
                 //
                 // if we consumed all the data we'll move to the beginning of the block
@@ -151,19 +121,20 @@ namespace Terrarium.Net
 #if DEBUG
                 if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                              "::StartReceiving() moving to beginning of buffer");
+                    HttpTraceHelper.WriteLine(
+                        string.Format("ConnectionState#{0}::StartReceiving() moving to beginning of buffer",
+                                      HttpTraceHelper.HashString(this)));
                 }
 #endif
-                _parsedOffset = 0;
-                _eofOffset = 0;
+                ParsedOffset = 0;
+                EndOfOffset = 0;
             }
-            else if (_eofOffset >= _buffer.Length)
+            else if (EndOfOffset >= ConnectionBuffer.Length)
             {
                 //
                 // if we're at the end of the buffer we have two options
                 //
-                if (_parsedOffset == 0)
+                if (ParsedOffset == 0)
                 {
                     //
                     // the buffer is not big enough, double its size.
@@ -171,13 +142,14 @@ namespace Terrarium.Net
 #if DEBUG
                     if (HttpTraceHelper.InternalLog.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                                  "::StartReceiving() growing the buffer");
+                        HttpTraceHelper.WriteLine(
+                            string.Format("ConnectionState#{0}::StartReceiving() growing the buffer",
+                                          HttpTraceHelper.HashString(this)));
                     }
 #endif
-                    byte[] newBuffer = new byte[_buffer.Length*2];
-                    Buffer.BlockCopy(_buffer, 0, newBuffer, 0, _eofOffset);
-                    _buffer = newBuffer;
+                    var newBuffer = new byte[ConnectionBuffer.Length*2];
+                    Buffer.BlockCopy(ConnectionBuffer, 0, newBuffer, 0, EndOfOffset);
+                    ConnectionBuffer = newBuffer;
                 }
                 else
                 {
@@ -187,11 +159,12 @@ namespace Terrarium.Net
 #if DEBUG
                     if (HttpTraceHelper.InternalLog.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                                  "::StartReceiving() moving data at the top of the buffer");
+                        HttpTraceHelper.WriteLine(
+                            string.Format("ConnectionState#{0}::StartReceiving() moving data at the top of the buffer",
+                                          HttpTraceHelper.HashString(this)));
                     }
 #endif
-                    Buffer.BlockCopy(_buffer, _parsedOffset, _buffer, 0, _eofOffset - _parsedOffset);
+                    Buffer.BlockCopy(ConnectionBuffer, ParsedOffset, ConnectionBuffer, 0, EndOfOffset - ParsedOffset);
                 }
             }
             else
@@ -199,21 +172,22 @@ namespace Terrarium.Net
 #if DEBUG
                 if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
-                    HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                              "::StartReceiving() reading in buffer with no changes");
+                    HttpTraceHelper.WriteLine(
+                        string.Format("ConnectionState#{0}::StartReceiving() reading in buffer with no changes",
+                                      HttpTraceHelper.HashString(this)));
                 }
 #endif
             }
 #if DEBUG
             if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                          "::StartReceiving() calling BeginReceive()");
+                HttpTraceHelper.WriteLine(string.Format("ConnectionState#{0}::StartReceiving() calling BeginReceive()",
+                                                        HttpTraceHelper.HashString(this)));
             }
 #endif
             // we null out the Socket when we cleanup
             // make a local copy to avoid null reference exceptions
-            Socket checkSocket = ConnectionSocket;
+            var checkSocket = ConnectionSocket;
             if (checkSocket != null)
             {
                 try
@@ -221,14 +195,15 @@ namespace Terrarium.Net
 #if DEBUG
                     if (HttpTraceHelper.Socket.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                                  "::StartReceiving() calling Socket.BeginReceive()");
+                        HttpTraceHelper.WriteLine(
+                            string.Format("ConnectionState#{0}::StartReceiving() calling Socket.BeginReceive()",
+                                          HttpTraceHelper.HashString(this)));
                     }
 #endif
                     checkSocket.BeginReceive(
-                        _buffer,
-                        _eofOffset,
-                        _buffer.Length - _eofOffset,
+                        ConnectionBuffer,
+                        EndOfOffset,
+                        ConnectionBuffer.Length - EndOfOffset,
                         SocketFlags.None,
                         HttpWebListener.staticReceiveCallback,
                         this);
@@ -238,9 +213,10 @@ namespace Terrarium.Net
 #if DEBUG
                     if (HttpTraceHelper.ExceptionCaught.TraceVerbose)
                     {
-                        HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                                  "::StartReceiving() caught exception in Socket.BeginReceive():" +
-                                                  exception);
+                        HttpTraceHelper.WriteLine(
+                            string.Format(
+                                "ConnectionState#{0}::StartReceiving() caught exception in Socket.BeginReceive():{1}",
+                                HttpTraceHelper.HashString(this), exception));
                     }
 #endif
                     Close();
@@ -250,12 +226,13 @@ namespace Terrarium.Net
 
         private int SkipWhite(int offset)
         {
-            while ((_buffer[offset] == (byte) ' ' || _buffer[offset] == (byte) '\t') && offset < _eofOffset)
+            while ((ConnectionBuffer[offset] == (byte) ' ' || ConnectionBuffer[offset] == (byte) '\t') &&
+                   offset < EndOfOffset)
             {
                 offset++;
             }
 
-            if (offset == _eofOffset)
+            if (offset == EndOfOffset)
             {
                 return -1;
             }
@@ -264,12 +241,13 @@ namespace Terrarium.Net
 
         private int FindWhite(int offset)
         {
-            while ((_buffer[offset] != (byte) ' ' && _buffer[offset] != (byte) '\t') && offset < _eofOffset)
+            while ((ConnectionBuffer[offset] != (byte) ' ' && ConnectionBuffer[offset] != (byte) '\t') &&
+                   offset < EndOfOffset)
             {
                 offset++;
             }
 
-            if (offset == _eofOffset)
+            if (offset == EndOfOffset)
             {
                 return -1;
             }
@@ -279,45 +257,49 @@ namespace Terrarium.Net
         private int FindCrLf(int offset)
         {
             offset++;
-            while (offset < _eofOffset && (_buffer[offset - 1] != (byte) '\r' || _buffer[offset] != (byte) '\n'))
+            while (offset < EndOfOffset &&
+                   (ConnectionBuffer[offset - 1] != (byte) '\r' || ConnectionBuffer[offset] != (byte) '\n'))
             {
                 offset++;
             }
 
-            if (offset == _eofOffset)
+            if (offset == EndOfOffset)
             {
                 return -1;
             }
             return offset - 1;
         }
 
+        /// <summary>
+        /// parse strictly, any exceptions will be treated as errors
+        /// </summary>
+        /// <returns></returns>
         public ParseState Parse()
         {
-            //
-            // parse strictly, any exceptions will be treated as errors
-            //
-            int first, last, column;
-            string header, headerName, headerValue;
+            string header;
 
 #if DEBUG
             if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
-                HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                          "::Parse() entering _parsedOffset:" + _parsedOffset + " _eofOffset:" +
-                                          _eofOffset + " _parserState:" + _parserState);
+                HttpTraceHelper.WriteLine(
+                    string.Format(
+                        "ConnectionState#{0}::Parse() entering _parsedOffset:{1} _eofOffset:{2} _parserState:{3}",
+                        HttpTraceHelper.HashString(this), ParsedOffset, EndOfOffset, ParserState));
             }
 #endif
 
-            while (_parsedOffset < _eofOffset)
+            while (ParsedOffset < EndOfOffset)
             {
-                switch (_parserState)
+                int first;
+                int last;
+                switch (ParserState)
                 {
                     case ParseState.None:
-                        _httpListenerWebRequest = new HttpListenerWebRequest(this);
-                        _parserState = ParseState.Method;
+                        Request = new HttpListenerWebRequest(this);
+                        ParserState = ParseState.Method;
                         goto case ParseState.Method;
                     case ParseState.Method:
-                        first = SkipWhite(_parsedOffset);
+                        first = SkipWhite(ParsedOffset);
                         if (first == -1)
                         {
                             return ParseState.Continue;
@@ -327,19 +309,19 @@ namespace Terrarium.Net
                         {
                             return ParseState.Continue;
                         }
-                        _httpListenerWebRequest.Method = Encoding.ASCII.GetString(_buffer, first, last - first);
+                        Request.Method = Encoding.ASCII.GetString(ConnectionBuffer, first, last - first);
 #if DEBUG
                         if (HttpTraceHelper.InternalLog.TraceVerbose)
                         {
-                            HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                                      "::Parse() Method:" + _httpListenerWebRequest.Method);
+                            HttpTraceHelper.WriteLine(string.Format("ConnectionState#{0}::Parse() Method:{1}",
+                                                                    HttpTraceHelper.HashString(this), Request.Method));
                         }
 #endif
-                        _parsedOffset = last;
-                        _parserState = ParseState.Uri;
+                        ParsedOffset = last;
+                        ParserState = ParseState.Uri;
                         goto case ParseState.Uri;
                     case ParseState.Uri:
-                        first = SkipWhite(_parsedOffset);
+                        first = SkipWhite(ParsedOffset);
                         if (first == -1)
                         {
                             return ParseState.Continue;
@@ -349,19 +331,20 @@ namespace Terrarium.Net
                         {
                             return ParseState.Continue;
                         }
-                        _httpListenerWebRequest.RelativeUri = Encoding.ASCII.GetString(_buffer, first, last - first);
+                        Request.RelativeUri = Encoding.ASCII.GetString(ConnectionBuffer, first, last - first);
 #if DEBUG
                         if (HttpTraceHelper.InternalLog.TraceVerbose)
                         {
-                            HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                                      "::Parse() RelativeUri:" + _httpListenerWebRequest.RelativeUri);
+                            HttpTraceHelper.WriteLine(string.Format("ConnectionState#{0}::Parse() RelativeUri:{1}",
+                                                                    HttpTraceHelper.HashString(this),
+                                                                    Request.RelativeUri));
                         }
 #endif
-                        _parsedOffset = last;
-                        _parserState = ParseState.Version;
+                        ParsedOffset = last;
+                        ParserState = ParseState.Version;
                         goto case ParseState.Version;
                     case ParseState.Version:
-                        first = SkipWhite(_parsedOffset);
+                        first = SkipWhite(ParsedOffset);
                         if (first == -1)
                         {
                             return ParseState.Continue;
@@ -371,28 +354,29 @@ namespace Terrarium.Net
                         {
                             return ParseState.Continue;
                         }
-                        if (last - first < 8 || _buffer[first] != (byte) 'H' || _buffer[first + 1] != (byte) 'T' ||
-                            _buffer[first + 2] != (byte) 'T' || _buffer[first + 3] != (byte) 'P' ||
-                            _buffer[first + 4] != (byte) '/' || _buffer[first + 6] != (byte) '.')
+                        if (last - first < 8 || ConnectionBuffer[first] != (byte) 'H' ||
+                            ConnectionBuffer[first + 1] != (byte) 'T' ||
+                            ConnectionBuffer[first + 2] != (byte) 'T' || ConnectionBuffer[first + 3] != (byte) 'P' ||
+                            ConnectionBuffer[first + 4] != (byte) '/' || ConnectionBuffer[first + 6] != (byte) '.')
                         {
                             return ParseState.Error;
                         }
-                        _httpListenerWebRequest.ProtocolVersion = new Version(((_buffer[first + 5] - '0')),
-                                                                               ((_buffer[first + 7] - '0')));
+                        Request.ProtocolVersion = new Version(((ConnectionBuffer[first + 5] - '0')),
+                                                              ((ConnectionBuffer[first + 7] - '0')));
 #if DEBUG
                         if (HttpTraceHelper.InternalLog.TraceVerbose)
                         {
-                            HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                                      "::Parse() ProtocolVersion:" +
-                                                      _httpListenerWebRequest.ProtocolVersion);
+                            HttpTraceHelper.WriteLine(string.Format("ConnectionState#{0}::Parse() ProtocolVersion:{1}",
+                                                                    HttpTraceHelper.HashString(this),
+                                                                    Request.ProtocolVersion));
                         }
 #endif
-                        _parsedOffset = last + 2;
-                        _httpListenerWebRequest.Headers = new WebHeaderCollection();
-                        _parserState = ParseState.Headers;
+                        ParsedOffset = last + 2;
+                        Request.Headers = new WebHeaderCollection();
+                        ParserState = ParseState.Headers;
                         goto case ParseState.Headers;
                     case ParseState.Headers:
-                        first = SkipWhite(_parsedOffset);
+                        first = SkipWhite(ParsedOffset);
                         if (first == -1)
                         {
                             return ParseState.Continue;
@@ -402,64 +386,66 @@ namespace Terrarium.Net
                         {
                             return ParseState.Continue;
                         }
-                        header = Encoding.ASCII.GetString(_buffer, first, last - first);
-                        column = header.IndexOf(':');
+                        header = Encoding.ASCII.GetString(ConnectionBuffer, first, last - first);
+                        var column = header.IndexOf(':');
                         if (column == -1)
                         {
-                            _parserState = ParseState.Error;
+                            ParserState = ParseState.Error;
                             return ParseState.Error;
                         }
-                        headerName = header.Substring(0, column).Trim();
-                        headerValue = header.Substring(column + 1).Trim();
-                        _httpListenerWebRequest.Headers.Add(headerName, headerValue);
+                        var headerName = header.Substring(0, column).Trim();
+                        var headerValue = header.Substring(column + 1).Trim();
+                        Request.Headers.Add(headerName, headerValue);
 #if DEBUG
                         if (HttpTraceHelper.InternalLog.TraceVerbose)
                         {
-                            HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                                      "::Parse() headerName:[" + headerName + "] headerValue:[" +
-                                                      headerValue + "]");
+                            HttpTraceHelper.WriteLine(
+                                string.Format("ConnectionState#{0}::Parse() headerName:[{1}] headerValue:[{2}]",
+                                              HttpTraceHelper.HashString(this), headerName, headerValue));
                         }
 #endif
-                        if (_buffer[last + 2] == (byte) '\r' && _buffer[last + 3] == (byte) '\n')
+                        if (ConnectionBuffer[last + 2] == (byte) '\r' && ConnectionBuffer[last + 3] == (byte) '\n')
                         {
-                            bool valid = _httpListenerWebRequest.InterpretHeaders();
+                            var valid = Request.InterpretHeaders();
 #if DEBUG
                             if (HttpTraceHelper.InternalLog.TraceVerbose)
                             {
-                                HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                                          "::Parse() InterpretHeaders() returned:" + valid);
+                                HttpTraceHelper.WriteLine(
+                                    string.Format("ConnectionState#{0}::Parse() InterpretHeaders() returned:{1}",
+                                                  HttpTraceHelper.HashString(this), valid));
                             }
 #endif
                             if (!valid)
                             {
-                                _parserState = ParseState.Error;
+                                ParserState = ParseState.Error;
                                 return ParseState.Error;
                             }
 
                             if (Listener.Auto100Continue)
                             {
-                                _httpListenerWebRequest.Send100Continue();
+                                Request.Send100Continue();
                             }
 
-                            if (_parserState == ParseState.Headers)
+                            if (ParserState == ParseState.Headers)
                             {
-                                _parserState = ParseState.Done;
+                                ParserState = ParseState.Done;
                             }
-                            _parsedOffset = last + 4;
+                            ParsedOffset = last + 4;
 #if DEBUG
                             if (HttpTraceHelper.InternalLog.TraceVerbose)
                             {
-                                HttpTraceHelper.WriteLine("ConnectionState#" + HttpTraceHelper.HashString(this) +
-                                                          "::Parse() returning ParseState.Done _parsedOffset:" +
-                                                          _parsedOffset + " _eofOffset:" + _eofOffset);
+                                HttpTraceHelper.WriteLine(
+                                    string.Format(
+                                        "ConnectionState#{0}::Parse() returning ParseState.Done _parsedOffset:{1} _eofOffset:{2}",
+                                        HttpTraceHelper.HashString(this), ParsedOffset, EndOfOffset));
                             }
 #endif
                             return ParseState.Done;
                         }
-                        _parsedOffset = last + 2;
+                        ParsedOffset = last + 2;
                         break;
                     default:
-                        _parserState = ParseState.Error;
+                        ParserState = ParseState.Error;
                         return ParseState.Error;
                 }
             }

@@ -20,7 +20,6 @@ namespace Terrarium.Net
         private bool _closeCalled;
         private int _currentChunkSize;
         private long _leftToRead;
-        private bool _moreToRead;
         private long _read;
 
         public HttpListenerRequestStream(HttpConnectionState connectionState, long contentLength, bool readChunked)
@@ -37,7 +36,7 @@ namespace Terrarium.Net
             _leftToRead = contentLength;
             _chunkParserState = ParseState.ChunkSize;
             _readChunked = readChunked;
-            _moreToRead = _connectionState.Request.Uploading;
+            DataAvailable = _connectionState.Request.Uploading;
         }
 
         public override bool CanRead
@@ -55,10 +54,7 @@ namespace Terrarium.Net
             get { return false; }
         }
 
-        public bool DataAvailable
-        {
-            get { return _moreToRead; }
-        }
+        public bool DataAvailable { get; private set; }
 
         public override long Length
         {
@@ -112,19 +108,19 @@ namespace Terrarium.Net
             {
                 HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
                                           "::Read() count:" + count + " _readChunked:" + _readChunked +
-                                          " _leftToRead:" + _leftToRead + " _moreToRead:" + _moreToRead +
+                                          " _leftToRead:" + _leftToRead + " _moreToRead:" + DataAvailable +
                                           " _currentChunkSize:" + _currentChunkSize);
             }
 #endif
             //
             // if reading 0 or past EOF, just return 0
             //
-            if (count == 0 || !_moreToRead)
+            if (count == 0 || !DataAvailable)
             {
                 return 0;
             }
 
-            int read = 0;
+            var read = 0;
 
             if (!_readChunked)
             {
@@ -138,7 +134,7 @@ namespace Terrarium.Net
                 //
                 // make sure there's data in the buffer
                 //
-                int available = ReadMore(false);
+                var available = ReadMore(false);
                 //
                 // now we certainly have some data in the buffer
                 // copy as much as we can in the user's buffer
@@ -189,7 +185,7 @@ namespace Terrarium.Net
                     if (_leftToRead > 0)
                     {
                         _leftToRead -= read;
-                        _moreToRead = _leftToRead > 0;
+                        DataAvailable = _leftToRead > 0;
                     }
                 }
             }
@@ -210,7 +206,7 @@ namespace Terrarium.Net
                 // Chunk : we know the size of the current chunk, but we have more data to read from it
                 // Error : error while parsing chunks
                 //
-                while (read == 0 && _moreToRead && _chunkParserState != ParseState.Error)
+                while (read == 0 && DataAvailable && _chunkParserState != ParseState.Error)
                 {
 #if DEBUG
                     if (HttpTraceHelper.InternalLog.TraceVerbose)
@@ -239,9 +235,10 @@ namespace Terrarium.Net
                                                               _currentChunkSize);
                                 }
 #endif
-                                int thisChunkDigit = (thisByte <= '9')
+                                var thisChunkDigit = (thisByte <= '9')
                                                          ? (thisByte - '0')
-                                                         : (((thisByte <= 'F') ? (thisByte - 'A') : (thisByte - 'a')) + 10);
+                                                         : (((thisByte <= 'F') ? (thisByte - 'A') : (thisByte - 'a')) +
+                                                            10);
                                 if (thisChunkDigit < 0 || thisChunkDigit > 15)
                                 {
                                     _chunkParserState = ParseState.Error;
@@ -283,10 +280,10 @@ namespace Terrarium.Net
                                 //
                                 // this is the last chunk.
                                 //
-                                _moreToRead = false;
+                                DataAvailable = false;
                                 break;
                             }
-                            int available = _connectionState.EndOfOffset - _connectionState.ParsedOffset;
+                            var available = _connectionState.EndOfOffset - _connectionState.ParsedOffset;
 #if DEBUG
                             if (HttpTraceHelper.InternalLog.TraceVerbose)
                             {
@@ -347,7 +344,7 @@ namespace Terrarium.Net
                                 //
                                 // need to swallow the extra '\r\n' here.
                                 //
-                                int i = 0;
+                                var i = 0;
                                 available = _connectionState.EndOfOffset - _connectionState.ParsedOffset;
                                 while (available < 2)
                                 {
@@ -370,7 +367,7 @@ namespace Terrarium.Net
 
                 if (_chunkParserState == ParseState.Error)
                 {
-                    Exception exception = new Exception("Error parsing chunked request stream");
+                    var exception = new Exception("Error parsing chunked request stream");
 #if DEBUG
                     if (HttpTraceHelper.ExceptionThrown.TraceVerbose)
                     {
@@ -392,7 +389,7 @@ namespace Terrarium.Net
 
             _read += read;
 
-            if (!_moreToRead)
+            if (!DataAvailable)
             {
                 //
                 // if we read all the data, we'll call Close() so that we start
@@ -406,7 +403,7 @@ namespace Terrarium.Net
             {
                 HttpTraceHelper.WriteLine("ListenerRequestStream#" + HttpTraceHelper.HashString(this) +
                                           "::Read() returning read:" + read + " _leftToRead:" + _leftToRead +
-                                          " _moreToRead:" + _moreToRead);
+                                          " _moreToRead:" + DataAvailable);
             }
 #endif
 
@@ -423,7 +420,7 @@ namespace Terrarium.Net
             }
 #endif
 
-            int dataAvailable = _connectionState.EndOfOffset - _connectionState.ParsedOffset;
+            var dataAvailable = _connectionState.EndOfOffset - _connectionState.ParsedOffset;
 
             if (dataAvailable == 0)
             {
@@ -459,7 +456,7 @@ namespace Terrarium.Net
                 // these will be held in our public buffer and we will need to kick off parsing
                 // after we complete reading the stream.
                 //
-                int dataToRead = _connectionState.ConnectionBuffer.Length - _connectionState.EndOfOffset;
+                var dataToRead = _connectionState.ConnectionBuffer.Length - _connectionState.EndOfOffset;
 #if DEBUG
                 if (HttpTraceHelper.InternalLog.TraceVerbose)
                 {
@@ -467,11 +464,11 @@ namespace Terrarium.Net
                                               "::ReadMore() dataToRead:" + dataToRead);
                 }
 #endif
-                int dataRead = 0;
+                var dataRead = 0;
 
                 // we null out the Socket when we cleanup
                 // make a local copy to avoid null reference exceptions
-                Socket checkSocket = _connectionState.ConnectionSocket;
+                var checkSocket = _connectionState.ConnectionSocket;
                 if (checkSocket != null)
                 {
                     try
@@ -571,7 +568,7 @@ namespace Terrarium.Net
             }
 
             _closeCalled = true;
-            if (_moreToRead)
+            if (DataAvailable)
             {
                 //
                 // drain stream data

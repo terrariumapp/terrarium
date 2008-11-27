@@ -18,15 +18,15 @@ namespace Terrarium.Net
     // set up an environment that accepts requests for specific URL's and responds to them.
     public class HttpWebListener
     {
-        private const string ResponseTo100Continue = 
+        private const string ResponseTo100Continue =
             "HTTP/1.1 100 Continue\r\nServer: HttpWebListener\r\n\r\n";
 
         private const string ResponseToBadRequest =
             "HTTP/1.1 400 Bad Request\r\nServer: HttpWebListener\r\n\r\n<HTML><BODY>Bad Request<BODY></HTML>";
 
-        public static readonly byte[] ResponseTo100ContinueBytes = Encoding.ASCII.GetBytes(ResponseTo100Continue);
         private static readonly byte[] _responseToBadRequestBytes = Encoding.ASCII.GetBytes(ResponseToBadRequest);
         private static readonly AsyncCallback _staticAcceptCallback = AcceptCallback;
+        public static readonly byte[] ResponseTo100ContinueBytes = Encoding.ASCII.GetBytes(ResponseTo100Continue);
         public static AsyncCallback staticReceiveCallback = ReceiveCallback;
 
         private readonly ArrayList _acceptedConnections = new ArrayList();
@@ -119,7 +119,7 @@ namespace Terrarium.Net
 
         private static void ReceiveCallback(IAsyncResult asyncResult)
         {
-            HttpConnectionState connectionState = asyncResult.AsyncState as HttpConnectionState;
+            var connectionState = asyncResult.AsyncState as HttpConnectionState;
 #if DEBUG
             if (HttpTraceHelper.InternalLog.TraceVerbose)
             {
@@ -128,10 +128,10 @@ namespace Terrarium.Net
             }
 #endif
 
-            int read = 0;
+            var read = 0;
             // we null out the Socket when we cleanup
             // make a local copy to avoid null reference exceptions
-            Socket checkSocket = connectionState.ConnectionSocket;
+            var checkSocket = connectionState.ConnectionSocket;
             if (checkSocket != null)
             {
                 try
@@ -356,7 +356,7 @@ namespace Terrarium.Net
 
         private static void AcceptCallback(IAsyncResult asyncResult)
         {
-            HttpWebListener httpWebListener = asyncResult.AsyncState as HttpWebListener;
+            var httpWebListener = asyncResult.AsyncState as HttpWebListener;
             Socket acceptedSocket;
             try
             {
@@ -392,7 +392,7 @@ namespace Terrarium.Net
                 return;
             }
 
-            HttpConnectionState connectionState = new HttpConnectionState(acceptedSocket, 4096, httpWebListener);
+            var connectionState = new HttpConnectionState(acceptedSocket, 4096, httpWebListener);
             lock (httpWebListener._acceptedConnections)
             {
 #if DEBUG
@@ -525,12 +525,11 @@ namespace Terrarium.Net
                 HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) + "::BeginGetRequest()");
             }
 #endif
-            HttpListenerAsyncResult asyncResult = new HttpListenerAsyncResult(callback, stateObject, this);
+            var asyncResult = new HttpListenerAsyncResult(callback, stateObject, this) {Request = GetNextRequest()};
 
             //
             // check to see if there are requests in the queue
             //
-            asyncResult.Request = GetNextRequest();
 
             if (asyncResult.Request == null)
             {
@@ -564,7 +563,7 @@ namespace Terrarium.Net
                                           "::EndGetRequest() asyncResult#" + HttpTraceHelper.HashString(asyncResult));
             }
 #endif
-            HttpListenerAsyncResult castedAsyncResult = asyncResult as HttpListenerAsyncResult;
+            var castedAsyncResult = asyncResult as HttpListenerAsyncResult;
             if (!castedAsyncResult.IsCompleted)
             {
                 castedAsyncResult.AsyncWaitHandle.WaitOne(System.Threading.Timeout.Infinite, false);
@@ -580,13 +579,13 @@ namespace Terrarium.Net
                 HttpTraceHelper.WriteLine("HttpWebListener#" + HttpTraceHelper.HashString(this) + "::GetRequest()");
             }
 #endif
-            HttpListenerAsyncResult asyncResult = BeginGetRequest(null, null) as HttpListenerAsyncResult;
+            var asyncResult = BeginGetRequest(null, null) as HttpListenerAsyncResult;
             if (_timeout != System.Threading.Timeout.Infinite && !asyncResult.IsCompleted)
             {
                 asyncResult.AsyncWaitHandle.WaitOne(_timeout, false);
                 if (!asyncResult.IsCompleted)
                 {
-                    Exception exception = new Exception("Timeout");
+                    var exception = new Exception("Timeout");
 #if DEBUG
                     if (HttpTraceHelper.ExceptionThrown.TraceVerbose)
                     {
