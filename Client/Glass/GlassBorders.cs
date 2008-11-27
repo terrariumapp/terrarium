@@ -6,7 +6,7 @@ using System;
 
 namespace Terrarium.Glass
 {
-	[Flags()]
+	[Flags]
 	public enum GlassBorders
 	{
 		None = 0,

@@ -20,9 +20,7 @@ namespace Terrarium.Glass
         {
             // We only create it once so that we can change the colors
             // that clients will be referencing on the fly
-            _systemStyle = new GlassStyle();
-            _systemStyle.Name = "(System)";
-
+            _systemStyle = new GlassStyle {Name = "(System)"};
             _useStyles = true;
             _activeStyle = new GlassStyle();
         }
@@ -51,36 +49,34 @@ namespace Terrarium.Glass
 
         public static void Refresh()
         {
-            ArrayList styleFileList = new ArrayList();
+            var styleFileList = new ArrayList();
 
-            string[] styleFiles = Directory.GetFiles(Environment.CurrentDirectory, "*.style");
-            foreach (string styleFile in styleFiles)
+            var styleFiles = Directory.GetFiles(Environment.CurrentDirectory, "*.style");
+            foreach (var styleFile in styleFiles)
                 styleFileList.Add(styleFile);
 
             // The Terrarium directory may not exist...
             try
             {
-                string terrariumDocumentsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Personal) +
-                                                     "\\Terrarium";
+                var terrariumDocumentsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Personal) +
+                                                  "\\Terrarium";
                 styleFiles = Directory.GetFiles(terrariumDocumentsDirectory, "*.style");
-                foreach (string styleFile in styleFiles)
+                foreach (var styleFile in styleFiles)
                     styleFileList.Add(styleFile);
             }
             catch
             {
             }
 
-            ArrayList styleList = new ArrayList();
+            var styleList = new ArrayList();
 
-            GlassStyle defaultStyle = new GlassStyle();
-            defaultStyle.Name = "(Default)";
+            var defaultStyle = new GlassStyle {Name = "(Default)"};
             styleList.Add(defaultStyle);
-
             styleList.Add(_systemStyle);
 
             foreach (string styleFile in styleFileList)
             {
-                GlassStyle style = LoadStyle(styleFile);
+                var style = LoadStyle(styleFile);
                 styleList.Add(style);
             }
 
@@ -89,13 +85,11 @@ namespace Terrarium.Glass
 
         public static void SetStyle(string styleName)
         {
-            foreach (GlassStyle style in _loadedStyles)
+            foreach (var style in _loadedStyles)
             {
-                if (style.Name == styleName)
-                {
-                    _activeStyle = style;
-                    break;
-                }
+                if (style.Name != styleName) continue;
+                _activeStyle = style;
+                break;
             }
         }
 
@@ -103,10 +97,10 @@ namespace Terrarium.Glass
         {
             try
             {
-                XmlSerializer serializer = new XmlSerializer(typeof (GlassStyle));
+                var serializer = new XmlSerializer(typeof (GlassStyle));
 
                 Stream stream = File.OpenRead(fileName);
-                GlassStyle style = (GlassStyle) serializer.Deserialize(stream);
+                var style = (GlassStyle) serializer.Deserialize(stream);
                 stream.Close();
 
                 return style;
