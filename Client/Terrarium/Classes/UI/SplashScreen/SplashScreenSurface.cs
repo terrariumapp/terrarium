@@ -2,10 +2,9 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                               
 //------------------------------------------------------------------------------
 
-using System;
 using System.Drawing;
 
-namespace Terrarium.Client.SplashScreen 
+namespace Terrarium.Client.SplashScreen
 {
     /// <summary>
     ///  Represents a splash screen surface.  The surface is generated
@@ -13,8 +12,8 @@ namespace Terrarium.Client.SplashScreen
     /// </summary>
     internal class SplashScreenSurface
     {
-        internal Graphics graphics;
         internal Rectangle bounds;
+        internal Graphics graphics;
 
         /// <summary>
         ///  Creates a new SplashScreenSurface class.
