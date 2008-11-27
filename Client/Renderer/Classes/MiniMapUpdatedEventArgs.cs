@@ -5,7 +5,7 @@
 using System;
 using System.Drawing;
 
-namespace Terrarium.Renderer 
+namespace Terrarium.Renderer
 {
     /// <summary>
     ///  Provides access to information about an updated
@@ -15,29 +15,18 @@ namespace Terrarium.Renderer
     public class MiniMapUpdatedEventArgs : EventArgs
     {
         /// <summary>
-        ///  The updated miniMap
-        /// </summary>
-        Bitmap miniMap;
-
-        /// <summary>
         ///  Creates a new set of event arguments given the
         ///  new minimap bitmap.
         /// </summary>
         /// <param name="miniMap">The new minimap</param>
         public MiniMapUpdatedEventArgs(Bitmap miniMap)
         {
-            this.miniMap = miniMap;
+            MiniMap = miniMap;
         }
 
         /// <summary>
         ///  Provides access to the minimap.
         /// </summary>
-        public Bitmap MiniMap
-        {
-            get
-            {
-                return miniMap;
-            }
-        }
+        public Bitmap MiniMap { get; private set; }
     }
 }

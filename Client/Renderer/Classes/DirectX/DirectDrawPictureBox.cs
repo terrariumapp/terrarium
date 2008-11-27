@@ -2,11 +2,10 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                             
 //------------------------------------------------------------------------------
 
-using System;
 using System.Windows.Forms;
 using DxVBLib;
 
-namespace Terrarium.Renderer.DirectX 
+namespace Terrarium.Renderer.DirectX
 {
     /// <summary>
     ///  Contains the logic required to use a PictureBox
@@ -14,22 +13,32 @@ namespace Terrarium.Renderer.DirectX
     /// </summary>
     public class DirectDrawPictureBox : PictureBox
     {
-        DirectDrawClipper directDrawClipper;
-        DirectDrawSurface directDrawScreenSurface;
-        DirectDrawSurface directDrawBackBufferSurface;
-
         /// <summary>
         ///  Creates a new DirectDrawPictureBox and performs any
         ///  initial setup.
         /// </summary>
-        public DirectDrawPictureBox() : base()
+        public DirectDrawPictureBox()
         {
             InitializeComponent();
         }
 
+        /// <summary>
+        ///  The Clipper object assigned to the PictureBox
+        /// </summary>
+        protected DirectDrawClipper Clipper { get; set; }
+
+        /// <summary>
+        ///  The primary screen surface for the picture box.
+        /// </summary>
+        protected DirectDrawSurface ScreenSurface { get; set; }
+
+        /// <summary>
+        ///  The back buffer surface used with the picture box.
+        /// </summary>
+        protected DirectDrawSurface BackBufferSurface { get; set; }
+
         private void InitializeComponent()
         {
-
         }
 
         /// <summary>
@@ -40,9 +49,9 @@ namespace Terrarium.Renderer.DirectX
         /// <param name="e">Graphics context objects</param>
         protected override void OnPaint(PaintEventArgs e)
         {
-            if ( this.DesignMode )
+            if (DesignMode)
             {
-                e.Graphics.Clear(this.BackColor);
+                e.Graphics.Clear(BackColor);
             }
         }
 
@@ -53,54 +62,6 @@ namespace Terrarium.Renderer.DirectX
         /// <param name="e">Graphics context objects</param>
         protected override void OnPaintBackground(PaintEventArgs e)
         {
-        }
-
-        /// <summary>
-        ///  The Clipper object assigned to the PictureBox
-        /// </summary>
-        protected DirectDrawClipper Clipper
-        {
-            get 
-            {
-                return directDrawClipper;
-            }
-
-            set
-            {
-                directDrawClipper = value;
-            }
-        }
-
-        /// <summary>
-        ///  The primary screen surface for the picture box.
-        /// </summary>
-        protected DirectDrawSurface ScreenSurface
-        {
-            get
-            {
-                return directDrawScreenSurface;
-            }
-
-            set
-            {
-                directDrawScreenSurface = value;
-            }
-        }
-
-        /// <summary>
-        ///  The back buffer surface used with the picture box.
-        /// </summary>
-        protected DirectDrawSurface BackBufferSurface
-        {
-            get
-            {
-                return directDrawBackBufferSurface;
-            }
-
-            set
-            {
-                directDrawBackBufferSurface = value;
-            }
         }
     }
 }

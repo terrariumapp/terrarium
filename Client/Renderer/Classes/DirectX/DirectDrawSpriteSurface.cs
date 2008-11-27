@@ -6,7 +6,7 @@
 using System;
 using DxVBLib;
 
-namespace Terrarium.Renderer.DirectX 
+namespace Terrarium.Renderer.DirectX
 {
     /// <summary>
     ///  Encapsulate the logic for implementing a sprite surface capable
@@ -15,36 +15,36 @@ namespace Terrarium.Renderer.DirectX
     public class DirectDrawSpriteSurface
     {
         /// <summary>
-        ///  The real DirectDraw surface pointer
-        /// </summary>
-        private DirectDrawSurface ddsurface;
-
-        /// <summary>
-        ///  The name of this sprite sheet
-        /// </summary>
-        private string spriteName;
-        
-        /// <summary>
         ///  The number of animation frames on the
         ///  sheet.
         /// </summary>
-        private int animationFrames;
-        
+        private readonly int animationFrames;
+
         /// <summary>
         ///  The number of separate animation types
         ///  on the sheet.
         /// </summary>
-        private int animationTypes;
-        
+        private readonly int animationTypes;
+
+        /// <summary>
+        ///  The real DirectDraw surface pointer
+        /// </summary>
+        private readonly DirectDrawSurface ddsurface;
+
         /// <summary>
         ///  The height of a single frame of animation.
         /// </summary>
-        private int frameHeight;
-        
+        private readonly int frameHeight;
+
         /// <summary>
         ///  The width of a single frame of animation.
         /// </summary>
-        private int frameWidth;
+        private readonly int frameWidth;
+
+        /// <summary>
+        ///  The name of this sprite sheet
+        /// </summary>
+        private readonly string spriteName;
 
         /// <summary>
         ///  Creates a new sprite sheet with the given name from an image.
@@ -62,18 +62,18 @@ namespace Terrarium.Renderer.DirectX
 #endif
             this.spriteName = spriteName;
 
-            this.ddsurface = new DirectDrawSurface(spriteImagePath);
+            ddsurface = new DirectDrawSurface(spriteImagePath);
             if (ddsurface == null)
             {
-                this.ddsurface = new DirectDrawSurface(spriteImagePath, DirectDrawSurface.SystemMemorySurfaceDescription);
+                ddsurface = new DirectDrawSurface(spriteImagePath, DirectDrawSurface.SystemMemorySurfaceDescription);
             }
-            this.ddsurface.TransparencyKey = DirectDrawSurface.DefaultColorKey;
+            ddsurface.TransparencyKey = DirectDrawSurface.DefaultColorKey;
 
-            this.animationFrames = xFrames;
-            this.animationTypes = yFrames;
+            animationFrames = xFrames;
+            animationTypes = yFrames;
 
-            this.frameHeight = this.ddsurface.Rect.Bottom / this.animationTypes;
-            this.frameWidth = this.ddsurface.Rect.Right / this.animationFrames;
+            frameHeight = ddsurface.Rect.Bottom/animationTypes;
+            frameWidth = ddsurface.Rect.Right/animationFrames;
 #if TRACE
             ManagedDirectX.Profiler.End("DirectDrawSpriteSurface..ctor()");
 #endif
@@ -84,21 +84,15 @@ namespace Terrarium.Renderer.DirectX
         /// </summary>
         public int FrameHeight
         {
-            get
-            {
-                return frameHeight;
-            }
+            get { return frameHeight; }
         }
-        
+
         /// <summary>
         ///  The width of each from of animation.
         /// </summary>
         public int FrameWidth
         {
-            get
-            {
-                return frameWidth;
-            }
+            get { return frameWidth; }
         }
 
         /// <summary>
@@ -106,10 +100,7 @@ namespace Terrarium.Renderer.DirectX
         /// </summary>
         public DirectDrawSurface SpriteSurface
         {
-            get
-            {
-                return ddsurface;
-            }
+            get { return ddsurface; }
         }
 
         /// <summary>
@@ -117,10 +108,7 @@ namespace Terrarium.Renderer.DirectX
         /// </summary>
         public string SpriteName
         {
-            get
-            {
-                return spriteName;
-            }
+            get { return spriteName; }
         }
 
         /// <summary>
@@ -140,12 +128,14 @@ namespace Terrarium.Renderer.DirectX
                 throw new Exception("Sprite request is out of range");
             }
 
-            RECT spriteRect = new RECT();
-            spriteRect.Top = yFrame * frameHeight;
-            spriteRect.Bottom = spriteRect.Top; spriteRect.Bottom += frameHeight;
+            var spriteRect = new RECT();
+            spriteRect.Top = yFrame*frameHeight;
+            spriteRect.Bottom = spriteRect.Top;
+            spriteRect.Bottom += frameHeight;
 
-            spriteRect.Left = xFrame * frameWidth;
-            spriteRect.Right = spriteRect.Left; spriteRect.Right += frameWidth;
+            spriteRect.Left = xFrame*frameWidth;
+            spriteRect.Right = spriteRect.Left;
+            spriteRect.Right += frameWidth;
 
 #if TRACE
             ManagedDirectX.Profiler.End("DirectDrawSpriteSurface.GrabSprite(int, int)");
@@ -173,18 +163,21 @@ namespace Terrarium.Renderer.DirectX
                 throw new Exception("Sprite request is out of range");
             }
 
-            RECT spriteRect = new RECT();
-            spriteRect.Top = yFrame * frameHeight;
-            spriteRect.Bottom = spriteRect.Top; spriteRect.Bottom += frameHeight;
+            var spriteRect = new RECT();
+            spriteRect.Top = yFrame*frameHeight;
+            spriteRect.Bottom = spriteRect.Top;
+            spriteRect.Bottom += frameHeight;
 
-            spriteRect.Left = xFrame * frameWidth;
-            spriteRect.Right = spriteRect.Left; spriteRect.Right += frameWidth;
+            spriteRect.Left = xFrame*frameWidth;
+            spriteRect.Right = spriteRect.Left;
+            spriteRect.Right += frameWidth;
 
-            DirectDrawClippedRect ddClipRect = new DirectDrawClippedRect();
+            var ddClipRect = new DirectDrawClippedRect();
             ddClipRect.Destination = dest;
             ddClipRect.Source = spriteRect;
 
-            if (dest.Left >= bounds.Right || dest.Right <= bounds.Left || dest.Top >= bounds.Bottom || dest.Bottom <= bounds.Top)
+            if (dest.Left >= bounds.Right || dest.Right <= bounds.Left || dest.Top >= bounds.Bottom ||
+                dest.Bottom <= bounds.Top)
             {
                 ddClipRect.Invisible = true;
 #if TRACE
@@ -199,21 +192,21 @@ namespace Terrarium.Renderer.DirectX
                 ddClipRect.Destination.Left = bounds.Left;
                 ddClipRect.ClipLeft = true;
             }
-            
+
             if (dest.Top < bounds.Top)
             {
                 ddClipRect.Source.Top += (bounds.Top - dest.Top);
                 ddClipRect.Destination.Top = bounds.Top;
                 ddClipRect.ClipTop = true;
             }
-            
+
             if (dest.Right > bounds.Right)
             {
                 ddClipRect.Source.Right -= (dest.Right - bounds.Right);
                 ddClipRect.Destination.Right = bounds.Right;
                 ddClipRect.ClipRight = true;
             }
-            
+
             if (dest.Bottom > bounds.Bottom)
             {
                 ddClipRect.Source.Bottom += (bounds.Bottom - dest.Bottom);
@@ -249,18 +242,21 @@ namespace Terrarium.Renderer.DirectX
                 throw new Exception("Sprite request is out of range");
             }
 
-            RECT spriteRect = new RECT();
-            spriteRect.Top = yFrame * frameHeight;
-            spriteRect.Bottom = spriteRect.Top; spriteRect.Bottom += frameHeight;
+            var spriteRect = new RECT();
+            spriteRect.Top = yFrame*frameHeight;
+            spriteRect.Bottom = spriteRect.Top;
+            spriteRect.Bottom += frameHeight;
 
-            spriteRect.Left = xFrame * frameWidth;
-            spriteRect.Right = spriteRect.Left; spriteRect.Right += frameWidth;
+            spriteRect.Left = xFrame*frameWidth;
+            spriteRect.Right = spriteRect.Left;
+            spriteRect.Right += frameWidth;
 
-            DirectDrawClippedRect ddClipRect= new DirectDrawClippedRect();
+            var ddClipRect = new DirectDrawClippedRect();
             ddClipRect.Destination = dest;
             ddClipRect.Source = spriteRect;
 
-            if (dest.Left >= bounds.Right || dest.Right <= bounds.Left || dest.Top >= bounds.Bottom || dest.Bottom <= bounds.Top)
+            if (dest.Left >= bounds.Right || dest.Right <= bounds.Left || dest.Top >= bounds.Bottom ||
+                dest.Bottom <= bounds.Top)
             {
                 ddClipRect.Invisible = true;
 #if TRACE
@@ -275,21 +271,21 @@ namespace Terrarium.Renderer.DirectX
                 ddClipRect.Destination.Left = bounds.Left;
                 ddClipRect.ClipLeft = true;
             }
-            
+
             if (dest.Top < bounds.Top)
             {
                 ddClipRect.Source.Top += (bounds.Top - dest.Top) << factor;
                 ddClipRect.Destination.Top = bounds.Top;
                 ddClipRect.ClipTop = true;
             }
-            
+
             if (dest.Right > bounds.Right)
             {
                 ddClipRect.Source.Right -= (dest.Right - bounds.Right) << factor;
                 ddClipRect.Destination.Right = bounds.Right;
                 ddClipRect.ClipRight = true;
             }
-            
+
             if (dest.Bottom > bounds.Bottom)
             {
                 ddClipRect.Source.Bottom += (bounds.Bottom - dest.Bottom) << factor;
