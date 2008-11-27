@@ -2,10 +2,9 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                              
 //------------------------------------------------------------------------------
 
-
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -18,11 +17,6 @@ namespace OrganismBase
     public class AttackAction : Action
     {
         /// <summary>
-        ///  The target animal to attack.
-        /// </summary>
-        AnimalState targetAnimal;
-    
-        /// <summary>
         ///  Creates a new attack action targeting a specific creature.
         /// </summary>
         /// <param name="organismID">Attacking organism's ID</param>
@@ -30,9 +24,9 @@ namespace OrganismBase
         /// <param name="targetAnimal">The creature to attack.</param>
         internal AttackAction(string organismID, int actionID, AnimalState targetAnimal) : base(organismID, actionID)
         {
-            this.targetAnimal = targetAnimal;
+            TargetAnimal = targetAnimal;
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Returns information about the Animal your creature chose to attack by
@@ -42,13 +36,7 @@ namespace OrganismBase
         /// <returns>
         ///  AnimalState object for the creature you attacked using the BeginAttacking method.
         /// </returns>
-        public AnimalState TargetAnimal
-        {
-            get
-            {
-                return targetAnimal;
-            }
-        }
+        public AnimalState TargetAnimal { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -61,7 +49,7 @@ namespace OrganismBase
         /// </returns>
         public override string ToString()
         {
-            return "TargetAnimal=" + targetAnimal.ID;
+            return string.Format("TargetAnimal={0}", TargetAnimal.ID);
         }
     }
 }

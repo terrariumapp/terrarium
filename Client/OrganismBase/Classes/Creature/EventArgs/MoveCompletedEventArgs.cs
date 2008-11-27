@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -17,17 +17,15 @@ namespace OrganismBase
     /// </summary>
     [Serializable]
     public class MoveCompletedEventArgs : ActionResponseEventArgs
-    {    
-        ReasonForStop reason;
-        OrganismState blockingOrganism;
-
+    {
         /// <internal/>
-        public MoveCompletedEventArgs(int actionID, MoveToAction action, ReasonForStop reason, OrganismState blockingOrganism) : base(actionID, action)
+        public MoveCompletedEventArgs(int actionID, Action action, ReasonForStop reason,
+                                      OrganismState blockingOrganism) : base(actionID, action)
         {
-            this.reason = reason;
-            this.blockingOrganism = blockingOrganism;
+            Reason = reason;
+            BlockingOrganism = blockingOrganism;
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Provides the original MoveToAction created as a result of the
@@ -41,11 +39,8 @@ namespace OrganismBase
         /// </returns>
         public MoveToAction MoveToAction
         {
-            get
-            {
-                return (MoveToAction) Action;
-            }
-        }    
+            get { return (MoveToAction) Action; }
+        }
 
         /// <summary>
         ///  <para>
@@ -57,13 +52,7 @@ namespace OrganismBase
         /// <returns>
         ///  ReasonForStop enumeration presenting the reason for stopping a movement.
         /// </returns>
-        public ReasonForStop Reason
-        {
-            get
-            {
-                return reason;
-            }
-        }    
+        public ReasonForStop Reason { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -75,13 +64,7 @@ namespace OrganismBase
         /// <returns>
         ///  OrganismState of the blocking organism if Reason is equal to ReasonForStop.Blocked.
         /// </returns>
-        public OrganismState BlockingOrganism
-        {
-            get
-            {
-                return blockingOrganism;
-            }
-        }
+        public OrganismState BlockingOrganism { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -94,7 +77,7 @@ namespace OrganismBase
         /// </returns>
         public override string ToString()
         {
-            return "#MoveCompleted {Reason=" + reason.ToString() + ", " + base.ToString() + "}" ;
+            return string.Format("#MoveCompleted {{Reason={0}, {1}}}", Reason, base.ToString());
         }
     }
 }

@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     /// Determines how far your animal can see.
@@ -29,8 +29,8 @@ namespace OrganismBase
         {
             get
             {
-                return (int) ((float) EngineSettings.BaseEyesightRadius +
-                    PercentOfMaximum * (float) EngineSettings.MaximumEyesightRadius);
+                return (int) (EngineSettings.BaseEyesightRadius +
+                              PercentOfMaximum*EngineSettings.MaximumEyesightRadius);
             }
         }
     }

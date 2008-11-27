@@ -2,10 +2,9 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                              
 //------------------------------------------------------------------------------
 
-
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -13,15 +12,10 @@ namespace OrganismBase
     ///   by using the BeginEating method.  This class can be used to get the target
     ///   creature for the current eat action.
     ///  </para>
-   /// </summary>
+    /// </summary>
     [Serializable]
     public class EatAction : Action
     {
-        /// <summary>
-        ///  The target organism to eat.
-        /// </summary>
-        OrganismState targetOrganism;
-
         /// <summary>
         ///  Create a new eat action to eat a specific organism.
         /// </summary>
@@ -30,9 +24,9 @@ namespace OrganismBase
         /// <param name="targetOrganism">The state representing the organism to eat.</param>
         internal EatAction(string organismID, int actionID, OrganismState targetOrganism) : base(organismID, actionID)
         {
-            this.targetOrganism = targetOrganism;
+            TargetOrganism = targetOrganism;
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Returns the organism your creature chose to eat by
@@ -42,13 +36,7 @@ namespace OrganismBase
         /// <returns>
         ///  AnimalState object for the creature you're trying to eat.
         /// </returns>
-        public OrganismState TargetOrganism
-        {
-            get
-            {
-                return targetOrganism;
-            }
-        }
+        public OrganismState TargetOrganism { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -61,7 +49,7 @@ namespace OrganismBase
         /// </returns>
         public override string ToString()
         {
-            return "TargetOrganism=" + targetOrganism.ID;
+            return string.Format("TargetOrganism={0}", TargetOrganism.ID);
         }
     }
 }

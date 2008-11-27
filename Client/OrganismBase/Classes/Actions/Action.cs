@@ -2,10 +2,9 @@
 //      Copyright (c) Microsoft Corporation.  All rights reserved.                                                              
 //------------------------------------------------------------------------------
 
-
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -15,19 +14,8 @@ namespace OrganismBase
     ///  </para>
     /// </summary>
     [Serializable]
-    abstract public class Action
+    public abstract class Action
     {
-        /// <summary>
-        ///  The organism ID of the organism initiating the action
-        /// </summary>
-        string organismID;
-
-        /// <summary>
-        ///  An incremental action ID used to synchronize actions
-        ///  with events.
-        /// </summary>
-        int actionID;
-    
         /// <summary>
         ///  Creates a new action given an organism's ID and the
         ///  next action ID.  Note that action ID's shouldn't be
@@ -37,10 +25,10 @@ namespace OrganismBase
         /// <param name="actionID">Organism Unique ID for this action.</param>
         internal Action(string organismID, int actionID)
         {
-            this.organismID = organismID;
-            this.actionID = actionID;
+            OrganismID = organismID;
+            ActionID = actionID;
         }
-    
+
         /// <summary>
         ///  <para>
         ///   The ID of the creature requesting the action.  This will always be the
@@ -50,13 +38,7 @@ namespace OrganismBase
         /// <returns>
         ///  System.String of the GUID/ID for the organism requesting the action.
         /// </returns>
-        public string OrganismID
-        {
-            get
-            {
-                return organismID;
-            }
-        }
+        public string OrganismID { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -69,12 +51,6 @@ namespace OrganismBase
         /// <returns>
         ///  System.Int32 representing the incremental ID for this action.
         /// </returns>
-        public int ActionID
-        {
-            get
-            {
-                return actionID;
-            }
-        }
+        public int ActionID { get; private set; }
     }
 }

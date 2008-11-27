@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -16,13 +16,12 @@ namespace OrganismBase
     /// </summary>
     [Serializable]
     public class DefendCompletedEventArgs : ActionResponseEventArgs
-    {  
-
+    {
         /// <internal/>
-        public DefendCompletedEventArgs(int actionID, DefendAction action) : base(actionID, action)
+        public DefendCompletedEventArgs(int actionID, Action action) : base(actionID, action)
         {
         }
-    
+
         /// <summary>
         ///  <para>
         ///   The DefendAction object that holds information passed to the
@@ -35,11 +34,8 @@ namespace OrganismBase
         /// </returns>
         public DefendAction DefendAction
         {
-            get
-            { 
-                return (DefendAction) Action; 
-            }
-        }    
+            get { return (DefendAction) Action; }
+        }
 
         /// <summary>
         ///  <para>
@@ -52,7 +48,7 @@ namespace OrganismBase
         /// </returns>
         public override string ToString()
         {
-            return "#DefendCompleted {" + base.ToString() + "}" ;
+            return string.Format("#DefendCompleted {{{0}}}", base.ToString());
         }
     }
 }

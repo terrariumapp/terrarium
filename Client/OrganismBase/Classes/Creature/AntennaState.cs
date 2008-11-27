@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -26,10 +26,10 @@ namespace OrganismBase
     [Serializable]
     public class AntennaState
     {
+        private bool immutable;
         private AntennaPosition leftAntenna;
         private AntennaPosition rightAntenna;
-        private bool immutable = false;
-    
+
         /// <summary>
         ///  <para>
         ///   Constructs a new AntennaState given the initial values for
@@ -46,23 +46,8 @@ namespace OrganismBase
         /// </param>
         public AntennaState(AntennaPosition left, AntennaPosition right)
         {
-            if (VerifyAntenna(left))
-            {
-                leftAntenna = left;
-            }
-            else
-            {
-                leftAntenna = AntennaPosition.Left;
-            }
-
-            if (VerifyAntenna(right))
-            {
-                rightAntenna = right;
-            }
-            else
-            {
-                rightAntenna = AntennaPosition.Left;
-            }
+            leftAntenna = verifyAntenna(left) ? left : AntennaPosition.Left;
+            rightAntenna = verifyAntenna(right) ? right : AntennaPosition.Left;
         }
 
         /// <summary>
@@ -83,24 +68,18 @@ namespace OrganismBase
 
             if (state != null)
             {
-                if (VerifyAntenna(state.LeftAntenna))
+                if (verifyAntenna(state.LeftAntenna))
                 {
                     leftAntenna = state.LeftAntenna;
                 }
-            
-                if (VerifyAntenna(state.RightAntenna))
+
+                if (verifyAntenna(state.RightAntenna))
                 {
                     rightAntenna = state.RightAntenna;
                 }
             }
         }
-    
-        /// <internal />
-        public void MakeImmutable()
-        {
-            immutable = true;
-        }
-    
+
         /// <summary>
         ///  <para>
         ///   Used to get the position of the LeftAntenna.  You can also
@@ -120,23 +99,20 @@ namespace OrganismBase
         /// </returns>
         public AntennaPosition LeftAntenna
         {
-            get
-            {
-                return leftAntenna;
-            }
-        
+            get { return leftAntenna; }
+
             set
             {
                 if (!immutable)
                 {
-                    if (VerifyAntenna(value))
+                    if (verifyAntenna(value))
                     {
                         leftAntenna = value;
                     }
                 }
             }
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Used to get the position of the RightAntenna.  You can also
@@ -156,23 +132,20 @@ namespace OrganismBase
         /// </returns>
         public AntennaPosition RightAntenna
         {
-            get
-            {
-                return rightAntenna;
-            }
-        
+            get { return rightAntenna; }
+
             set
             {
                 if (!immutable)
                 {
-                    if (VerifyAntenna(value))
+                    if (verifyAntenna(value))
                     {
                         rightAntenna = value;
                     }
                 }
             }
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Used to get a numeric value between 0 and 99 that represents the
@@ -195,36 +168,35 @@ namespace OrganismBase
         {
             get
             {
-                int leftVal = (int) leftAntenna;
-                int rightVal = (int) rightAntenna;
-            
-                return leftVal * 10 + rightVal;
+                var leftVal = (int) leftAntenna;
+                var rightVal = (int) rightAntenna;
+
+                return leftVal*10 + rightVal;
             }
-        
+
             set
             {
                 if (!immutable)
                 {
                     if (value >= 0 && value < 100)
                     {
-                        leftAntenna = (AntennaPosition) (value / 10);
-                        rightAntenna = (AntennaPosition) (value % 10);
+                        leftAntenna = (AntennaPosition) (value/10);
+                        rightAntenna = (AntennaPosition) (value%10);
                     }
                 }
             }
         }
-    
-        private bool VerifyAntenna(AntennaPosition pos)
+
+        /// <internal />
+        public void MakeImmutable()
         {
-            int antennaValue = (int) pos;
-            if (antennaValue >= 0 && antennaValue < 10)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            immutable = true;
+        }
+
+        private static bool verifyAntenna(AntennaPosition pos)
+        {
+            var antennaValue = (int) pos;
+            return antennaValue >= 0 && antennaValue < 10;
         }
     }
 }

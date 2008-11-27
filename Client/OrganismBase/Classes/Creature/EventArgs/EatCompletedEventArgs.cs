@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -16,15 +16,13 @@ namespace OrganismBase
     /// </summary>
     [Serializable]
     public class EatCompletedEventArgs : ActionResponseEventArgs
-    {  
-        Boolean successful;  
-
+    {
         /// <internal/>
-        public EatCompletedEventArgs(int actionID, EatAction action, Boolean successful) : base(actionID, action)
+        public EatCompletedEventArgs(int actionID, Action action, Boolean successful) : base(actionID, action)
         {
-            this.successful = successful;
+            Successful = successful;
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Provides information about the original EatAction and
@@ -38,11 +36,8 @@ namespace OrganismBase
         /// </returns>
         public EatAction EatAction
         {
-            get
-            {
-                return (EatAction) Action;
-            }
-        }    
+            get { return (EatAction) Action; }
+        }
 
         /// <summary>
         ///  <para>
@@ -57,13 +52,7 @@ namespace OrganismBase
         /// <returns>
         ///  True if your creature gained energy from eating, False otherwise.
         /// </returns>
-        public Boolean Successful
-        {
-            get
-            {
-                return successful;
-            }
-        }
+        public bool Successful { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -76,8 +65,7 @@ namespace OrganismBase
         /// </returns>
         public override string ToString()
         {
-            return "#EatCompleted {Successful=" + successful.ToString() + 
-                ", " + base.ToString() + "}" ;
+            return string.Format("#EatCompleted {{Successful={0}, {1}}}", Successful, base.ToString());
         }
     }
 }

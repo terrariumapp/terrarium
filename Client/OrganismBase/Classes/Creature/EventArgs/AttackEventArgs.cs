@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -15,13 +15,8 @@ namespace OrganismBase
     ///  </para>
     /// </summary>
     [Serializable]
-    public class AttackedEventArgs : OrganismEventArgs 
-    {  
-        /// <summary>
-        ///  The state of the attacker.
-        /// </summary>
-        AnimalState attacker;
-
+    public class AttackedEventArgs : OrganismEventArgs
+    {
         /// <summary>
         ///  Creates a new set of event arguments that can be used to notify
         ///  a creature that another creature has completed an attack action
@@ -31,9 +26,9 @@ namespace OrganismBase
         /// <internal/>
         public AttackedEventArgs(AnimalState attacker)
         {
-            this.attacker = attacker;
+            Attacker = attacker;
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Provides the state of the creature attacking
@@ -44,13 +39,7 @@ namespace OrganismBase
         /// <returns>
         ///  AnimalState representing the state of the creature attacking you.
         /// </returns>
-        public AnimalState Attacker
-        {
-            get
-            { 
-                return attacker; 
-            }
-        }    
+        public AnimalState Attacker { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -64,7 +53,7 @@ namespace OrganismBase
         /// </returns>
         public override string ToString()
         {
-            return "#Attacked {Attacker = " + attacker.ID + "}";
+            return string.Format("#Attacked {{Attacker = {0}}}", Attacker.ID);
         }
     }
 }

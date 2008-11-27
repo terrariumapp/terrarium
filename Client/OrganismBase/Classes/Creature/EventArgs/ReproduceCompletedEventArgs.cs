@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -15,13 +15,12 @@ namespace OrganismBase
     /// </summary>
     [Serializable]
     public class ReproduceCompletedEventArgs : ActionResponseEventArgs
-    {  
-
+    {
         /// <internal/>
-        public ReproduceCompletedEventArgs(int actionID, ReproduceAction action) : base(actionID, action)
+        public ReproduceCompletedEventArgs(int actionID, Action action) : base(actionID, action)
         {
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Provides information about the original ReproduceAction and
@@ -35,11 +34,8 @@ namespace OrganismBase
         /// </returns>
         public ReproduceAction ReproduceAction
         {
-            get
-            {
-                return (ReproduceAction) Action;
-            }
-        }    
+            get { return (ReproduceAction) Action; }
+        }
 
         /// <summary>
         ///  <para>
@@ -52,7 +48,7 @@ namespace OrganismBase
         /// </returns>
         public override string ToString()
         {
-            return "#ReproduceCompleted {" + base.ToString() + "}" ;
+            return string.Format("#ReproduceCompleted {{{0}}}", base.ToString());
         }
     }
 }

@@ -243,15 +243,7 @@ namespace OrganismBase
         {
             get
             {
-                if (PendingActions.EatAction != null)
-                {
-                    return PendingActions.EatAction;
-                }
-                if (InProgressActions.EatAction != null)
-                {
-                    return InProgressActions.EatAction;
-                }
-                return null;
+                return PendingActions.EatAction ?? InProgressActions.EatAction;
             }
         }
 
@@ -576,8 +568,8 @@ namespace OrganismBase
                 throw new OutOfBoundsException();
             }
 
-            int actionID = GetNextActionID();
-            MoveToAction action = new MoveToAction(ID, actionID, vector);
+            var actionID = GetNextActionID();
+            var action = new MoveToAction(ID, actionID, vector);
             lock (PendingActions)
             {
                 PendingActions.SetMoveToAction(action);
@@ -611,8 +603,8 @@ namespace OrganismBase
                 throw new ArgumentNullException("targetAnimal", "The argument 'targetAnimal' cannot be null");
             }
 
-            int actionID = GetNextActionID();
-            DefendAction action = new DefendAction(ID, actionID, targetAnimal);
+            var actionID = GetNextActionID();
+            var action = new DefendAction(ID, actionID, targetAnimal);
             lock (PendingActions)
             {
                 PendingActions.SetDefendAction(action);
@@ -658,8 +650,8 @@ namespace OrganismBase
                 throw new NotHungryException();
             }
 
-            int actionID = GetNextActionID();
-            AttackAction action = new AttackAction(ID, actionID, targetAnimal);
+            var actionID = GetNextActionID();
+            var action = new AttackAction(ID, actionID, targetAnimal);
             lock (PendingActions)
             {
                 PendingActions.SetAttackAction(action);
@@ -780,7 +772,7 @@ namespace OrganismBase
             }
 
             // Get an up to date state -- this organism may be an old state
-            OrganismState currentOrganism = World.LookForNoCamouflage(targetOrganism);
+            var currentOrganism = World.LookForNoCamouflage(targetOrganism);
 
             if (currentOrganism == null)
             {
@@ -812,8 +804,8 @@ namespace OrganismBase
                 }
             }
 
-            int actionID = GetNextActionID();
-            EatAction action = new EatAction(ID, actionID, targetOrganism);
+            var actionID = GetNextActionID();
+            var action = new EatAction(ID, actionID, targetOrganism);
             lock (PendingActions)
             {
                 PendingActions.SetEatAction(action);
@@ -857,14 +849,12 @@ namespace OrganismBase
             }
 
             // You can attack back if you were just attacked
-            bool wasAttacked = false;
+            var wasAttacked = false;
             foreach (AttackedEventArgs attackEvent in State.OrganismEvents.AttackedEvents)
             {
-                if (attackEvent.Attacker.ID == targetAnimal.ID)
-                {
-                    wasAttacked = true;
-                    break;
-                }
+                if (attackEvent.Attacker.ID != targetAnimal.ID) continue;
+                wasAttacked = true;
+                break;
             }
 
             return wasAttacked || State.EnergyState <= EnergyState.Hungry;
@@ -894,7 +884,7 @@ namespace OrganismBase
             WriteTrace("#Load");
             OnLoad(new LoadEventArgs(), clearOnly);
 
-            OrganismEventResults events = State.OrganismEvents;
+            var events = State.OrganismEvents;
             if (events != null)
             {
                 if (events.MoveCompleted != null)

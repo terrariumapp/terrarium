@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     /// Determines how quickly your animal can eat.  The higher the value the faster food can be eaten.
@@ -21,7 +21,8 @@ namespace OrganismBase
         /// <param name="eatingSpeedPoints">
         /// Specify the number of points (from 1 to 100) to apply to this attribute.
         /// </param>
-        public EatingSpeedPointsAttribute(int eatingSpeedPoints) : base(eatingSpeedPoints, EngineSettings.MaximumEatingSpeedPerUnitOfRadius)
+        public EatingSpeedPointsAttribute(int eatingSpeedPoints)
+            : base(eatingSpeedPoints, EngineSettings.MaximumEatingSpeedPerUnitOfRadius)
         {
         }
 
@@ -31,7 +32,10 @@ namespace OrganismBase
         {
             get
             {
-                return (int) (EngineSettings.BaseEatingSpeedPerUnitOfRadius + PercentOfMaximum * EngineSettings.MaximumEatingSpeedPerUnitOfRadius);
+                return
+                    (int)
+                    (EngineSettings.BaseEatingSpeedPerUnitOfRadius +
+                     PercentOfMaximum*EngineSettings.MaximumEatingSpeedPerUnitOfRadius);
             }
         }
     }

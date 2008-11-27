@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>Chooses whether your animal is an herbivore or a carnivore.</summary>
     /// <remarks>
@@ -22,13 +22,8 @@ namespace OrganismBase
     /// </para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
-    public sealed class CarnivoreAttribute : System.Attribute
+    public sealed class CarnivoreAttribute : Attribute
     {
-        /// <summary>
-        ///  True if the creature is a carnivore, false otherwise.
-        /// </summary>
-        Boolean isCarnivore;
-
         /// <summary>
         ///  Creates a new carnivore attribute determining if the target creature
         ///  should be a carnivore or not.
@@ -36,19 +31,13 @@ namespace OrganismBase
         /// <param name="isCarnivore">True if your organism is a carnivore, false if they are an herbivore.</param>
         public CarnivoreAttribute(Boolean isCarnivore)
         {
-            this.isCarnivore = isCarnivore;
+            IsCarnivore = isCarnivore;
         }
 
         /// <summary>
         ///  Read-only access to whether or not the attribute is used to specify
         ///  a Carnivore type creature.
         /// </summary>
-        public Boolean IsCarnivore
-        {
-            get
-            {
-                return isCarnivore;
-            }
-        }
+        public bool IsCarnivore { get; private set; }
     }
 }

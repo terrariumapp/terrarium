@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -15,15 +15,13 @@ namespace OrganismBase
     /// </summary>
     [Serializable]
     public class TeleportedEventArgs : OrganismEventArgs
-    {    
-        private bool localOnly = false;
-
+    {
         /// <internal/>
         public TeleportedEventArgs(bool localOnly)
         {
-            this.localOnly = localOnly;
+            LocalTeleport = localOnly;
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Provides information on whether you were teleported
@@ -42,13 +40,7 @@ namespace OrganismBase
         /// <returns>
         ///  AnimalState representing the state of the creature attacking you.
         /// </returns>
-        public bool LocalTeleport
-        {
-            get
-            { 
-                return localOnly; 
-            }
-        }    
+        public bool LocalTeleport { get; private set; }
 
         /// <summary>
         ///  <para>
@@ -61,7 +53,7 @@ namespace OrganismBase
         /// </returns>
         public override string ToString()
         {
-            return "#Teleported - (Local = " + localOnly + ")";
+            return string.Format("#Teleported - (Local = {0})", LocalTeleport);
         }
     }
 }

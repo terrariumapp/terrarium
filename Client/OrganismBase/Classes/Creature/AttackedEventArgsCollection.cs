@@ -5,29 +5,30 @@
 using System;
 using System.Collections;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <internal/>
     [Serializable]
     public class AttackedEventArgsCollection : ReadOnlyCollectionBase
     {
-        Boolean isImmutable = false;
-
         internal AttackedEventArgsCollection()
         {
         }
 
+        internal Boolean IsImmutable { get; private set; }
+
+        /// <summary>
+        ///  Default indexed property to get at collection items
+        ///  by index.
+        /// </summary>
+        public AttackedEventArgs this[int index]
+        {
+            get { return (AttackedEventArgs) InnerList[index]; }
+        }
+
         internal void MakeImmutable()
         {
-            isImmutable = true;
-        }
-    
-        internal Boolean IsImmutable
-        {
-            get
-            {
-                return isImmutable;
-            }
+            IsImmutable = true;
         }
 
         /// <summary>
@@ -39,24 +40,12 @@ namespace OrganismBase
         /// <param name="attackedEventArgs">Represents the creature doing the attacking</param>
         public void Add(AttackedEventArgs attackedEventArgs)
         {
-            if (isImmutable)
+            if (IsImmutable)
             {
                 throw new ApplicationException("Object is immutable.");
             }
 
             InnerList.Add(attackedEventArgs);
-        }
-
-        /// <summary>
-        ///  Default indexed property to get at collection items
-        ///  by index.
-        /// </summary>
-        public AttackedEventArgs this[int index]
-        {
-            get
-            {
-                return (AttackedEventArgs) InnerList[index];
-            }
         }
     }
 }

@@ -5,7 +5,7 @@
 using System;
 using System.Drawing;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -16,9 +16,9 @@ namespace OrganismBase
     [Serializable]
     public class MovementVector
     {
-        Point destination;
-        int speed;
-    
+        private readonly int speed;
+        private Point destination;
+
         /// <summary>
         ///  <para>
         ///   Used to define a vector along which creatures can move.  The vector
@@ -42,7 +42,7 @@ namespace OrganismBase
             {
                 throw new ApplicationException("Speed must be positive and > 1.");
             }
-            
+
             if (!destination.IsEmpty)
             {
                 this.destination = new Point(destination.X, destination.Y);
@@ -54,11 +54,11 @@ namespace OrganismBase
                     throw new ApplicationException("Speed must be zero if destination is empty");
                 }
                 this.destination = Point.Empty;
-            }    
-        
+            }
+
             this.speed = speed;
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Used to determine the destination location for this MovementVector.
@@ -71,7 +71,7 @@ namespace OrganismBase
         {
             // Point is not immutable
             get
-            {   
+            {
                 if (destination.IsEmpty)
                 {
                     return Point.Empty;
@@ -82,7 +82,7 @@ namespace OrganismBase
                 }
             }
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Used to determine the speed defined for this MovementVector
@@ -93,12 +93,9 @@ namespace OrganismBase
         /// </returns>
         public int Speed
         {
-            get
-            {
-                return speed;
-            }
+            get { return speed; }
         }
-    
+
         /// <summary>
         ///  <para>
         ///   Used to determine if this MovementVector will stop movement.  This is
@@ -110,10 +107,7 @@ namespace OrganismBase
         /// </returns>
         public Boolean IsStopped
         {
-            get
-            {
-                return destination.IsEmpty;
-            }
+            get { return destination.IsEmpty; }
         }
 
         /// <summary>

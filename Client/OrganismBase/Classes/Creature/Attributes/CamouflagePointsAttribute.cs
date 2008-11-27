@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -22,7 +22,8 @@ namespace OrganismBase
         ///  put into the characteristic
         /// </summary>
         /// <param name="camouflagePoints">Specify the number of points (from 0 to 100) to apply to this attribute</param>
-        public CamouflagePointsAttribute(int camouflagePoints) : base(camouflagePoints, EngineSettings.InvisibleOddsMaximum)
+        public CamouflagePointsAttribute(int camouflagePoints)
+            : base(camouflagePoints, EngineSettings.InvisibleOddsMaximum)
         {
         }
 
@@ -36,8 +37,8 @@ namespace OrganismBase
         {
             get
             {
-                return (int) ((float) EngineSettings.InvisibleOddsBase +
-                    PercentOfMaximum * (float) EngineSettings.InvisibleOddsMaximum);
+                return (int) (EngineSettings.InvisibleOddsBase +
+                              PercentOfMaximum*EngineSettings.InvisibleOddsMaximum);
             }
         }
     }

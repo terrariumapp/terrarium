@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     /// Determines the skin used to display the organism on screen.</summary>
@@ -13,12 +13,8 @@ namespace OrganismBase
     /// </para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
-    public sealed class PlantSkinAttribute : System.Attribute
+    public sealed class PlantSkinAttribute : Attribute
     {
-        private PlantSkinFamily skinFamily = PlantSkinFamily.Plant;
-        private string skin = string.Empty;
-
-
         /// <summary>
         ///    <para>Use this constructor if you don't want to specify a Skin Family to use if
         ///       your custom skin doesn't exist.</para>
@@ -26,7 +22,8 @@ namespace OrganismBase
         /// <param name='skin'>The name of the assembly the contains the skin you want to use</param>
         public PlantSkinAttribute(string skin)
         {
-            this.skin = skin;
+            SkinFamily = PlantSkinFamily.Plant;
+            Skin = skin;
         }
 
         /// <summary>
@@ -36,7 +33,8 @@ namespace OrganismBase
         /// <param name='skinFamily'>A PlantSkinFamilyEnum value that specifies the skin to use for this organism.</param>
         public PlantSkinAttribute(PlantSkinFamily skinFamily)
         {
-            this.skinFamily = skinFamily;
+            Skin = string.Empty;
+            SkinFamily = skinFamily;
         }
 
         /// <summary>
@@ -48,26 +46,14 @@ namespace OrganismBase
         /// <param name='skin'>The name of the assembly the contains the skin you want to use.</param>
         public PlantSkinAttribute(PlantSkinFamily skinFamily, string skin)
         {
-            this.skinFamily = skinFamily;
-            this.skin = skin;
+            SkinFamily = skinFamily;
+            Skin = skin;
         }
 
         /// <internal/>
-        public string Skin
-        {
-            get
-            {
-                return skin;
-            }
-        }
+        public string Skin { get; private set; }
 
         /// <internal/>
-        public PlantSkinFamily SkinFamily
-        {
-            get
-            {
-                return skinFamily;
-            }
-        }
+        public PlantSkinFamily SkinFamily { get; private set; }
     }
 }

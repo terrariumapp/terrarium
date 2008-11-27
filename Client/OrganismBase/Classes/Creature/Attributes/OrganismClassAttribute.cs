@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -15,15 +15,8 @@ namespace OrganismBase
     ///  </para>
     /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = true, AllowMultiple = false)]
-    public sealed class OrganismClassAttribute : System.Attribute
+    public sealed class OrganismClassAttribute : Attribute
     {
-        /// <summary>
-        ///  The name of the class that should be loaded to represent the creature
-        ///  within the current assembly.  Only one creature per assembly may
-        ///  exist.
-        /// </summary>
-        string className;
-
         /// <summary>
         ///  <para>
         ///   Creates a new attribute that can be used to mark the creature class
@@ -38,19 +31,13 @@ namespace OrganismBase
         /// </param>
         public OrganismClassAttribute(string className)
         {
-            this.className = className;
+            ClassName = className;
         }
 
         /// <summary>
         ///  Provides read-only access to the name of the class that
         ///  represents the creature class within the assembly.
         /// </summary>
-        public string ClassName
-        {
-            get
-            {
-                return className;
-            }
-        }
+        public string ClassName { get; private set; }
     }
 }

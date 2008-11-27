@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     // This class represents all of the events that will get sent to an animal for a given tick.
     // The Terrarium engine fills it in and then hands it over when it is finished calculating a turn.
@@ -12,44 +12,27 @@ namespace OrganismBase
     [Serializable]
     public class OrganismEventResults
     {
-        TeleportedEventArgs teleported;
-        MoveCompletedEventArgs moveCompleted;
-        AttackCompletedEventArgs attackCompleted;
-        EatCompletedEventArgs eatCompleted;
-        ReproduceCompletedEventArgs reproduceCompleted;
-        DefendCompletedEventArgs defendCompleted;
-        AttackedEventArgsCollection attackedCollection = new AttackedEventArgsCollection();
-        BornEventArgs born;
+        private readonly AttackedEventArgsCollection attackedCollection = new AttackedEventArgsCollection();
+        private AttackCompletedEventArgs attackCompleted;
+        private BornEventArgs born;
+        private DefendCompletedEventArgs defendCompleted;
+        private EatCompletedEventArgs eatCompleted;
 
-        Boolean isImmutable = false;
+        private MoveCompletedEventArgs moveCompleted;
+        private ReproduceCompletedEventArgs reproduceCompleted;
+        private TeleportedEventArgs teleported;
 
         /// <internal/>
-        public void MakeImmutable()
-        {
-            isImmutable = true;
-            attackedCollection.MakeImmutable();
-        }
-    
-        /// <internal/>
-        public Boolean IsImmutable
-        {
-            get
-            {
-                return isImmutable;
-            }
-        }
+        public Boolean IsImmutable { get; private set; }
 
         /// <internal/>
         public BornEventArgs Born
         {
-            get
-            {
-                return born;
-            }
-        
+            get { return born; }
+
             set
             {
-                if (isImmutable)
+                if (IsImmutable)
                 {
                     throw new ApplicationException("Object is immutable.");
                 }
@@ -61,14 +44,11 @@ namespace OrganismBase
         /// <internal/>
         public ReproduceCompletedEventArgs ReproduceCompleted
         {
-            get
-            {
-                return reproduceCompleted;
-            }
-        
+            get { return reproduceCompleted; }
+
             set
             {
-                if (isImmutable)
+                if (IsImmutable)
                 {
                     throw new ApplicationException("Object is immutable.");
                 }
@@ -80,14 +60,11 @@ namespace OrganismBase
         /// <internal/>
         public TeleportedEventArgs Teleported
         {
-            get
-            {
-                return teleported;
-            }
-        
+            get { return teleported; }
+
             set
             {
-                if (isImmutable)
+                if (IsImmutable)
                 {
                     throw new ApplicationException("Object is immutable.");
                 }
@@ -95,31 +72,25 @@ namespace OrganismBase
                 teleported = value;
             }
         }
-    
+
         /// <internal/>
         public AttackedEventArgsCollection AttackedEvents
         {
-            get
-            {
-                return attackedCollection;
-            }
+            get { return attackedCollection; }
         }
-    
+
         /// <internal/>
         public MoveCompletedEventArgs MoveCompleted
         {
-            get
-            {
-                return moveCompleted;
-            }
-        
+            get { return moveCompleted; }
+
             set
             {
-                if (isImmutable)
+                if (IsImmutable)
                 {
                     throw new ApplicationException("Object is immutable.");
                 }
-            
+
                 moveCompleted = value;
             }
         }
@@ -127,18 +98,15 @@ namespace OrganismBase
         /// <internal/>
         public AttackCompletedEventArgs AttackCompleted
         {
-            get
-            {
-                return attackCompleted;
-            }
-        
+            get { return attackCompleted; }
+
             set
             {
-                if (isImmutable)
+                if (IsImmutable)
                 {
                     throw new ApplicationException("Object is immutable.");
                 }
-            
+
                 attackCompleted = value;
             }
         }
@@ -146,14 +114,11 @@ namespace OrganismBase
         /// <internal/>
         public EatCompletedEventArgs EatCompleted
         {
-            get
-            {
-                return eatCompleted;
-            }
-        
+            get { return eatCompleted; }
+
             set
             {
-                if (isImmutable)
+                if (IsImmutable)
                 {
                     throw new ApplicationException("Object is immutable.");
                 }
@@ -165,20 +130,24 @@ namespace OrganismBase
         /// <internal/>
         public DefendCompletedEventArgs DefendCompleted
         {
-            get
-            {
-                return defendCompleted;
-            }
-        
+            get { return defendCompleted; }
+
             set
             {
-                if (isImmutable)
+                if (IsImmutable)
                 {
                     throw new ApplicationException("Object is immutable.");
                 }
 
                 defendCompleted = value;
             }
+        }
+
+        /// <internal/>
+        public void MakeImmutable()
+        {
+            IsImmutable = true;
+            attackedCollection.MakeImmutable();
         }
     }
 }

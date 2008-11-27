@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     /// Maximum damage your animal can inflict with one attack
@@ -21,7 +21,8 @@ namespace OrganismBase
         ///  Initializes the attribute with an attack value in the range of 0 to 100
         /// </summary>
         /// <param name="attackPoints">Specify the number of points (from 0 to 100) to apply to this attribute.</param>
-        public AttackDamagePointsAttribute(int attackPoints) : base(attackPoints, EngineSettings.MaximumInflictedDamagePerUnitOfRadius)
+        public AttackDamagePointsAttribute(int attackPoints)
+            : base(attackPoints, EngineSettings.MaximumInflictedDamagePerUnitOfRadius)
         {
         }
 
@@ -33,8 +34,8 @@ namespace OrganismBase
         {
             get
             {
-                return (int) (((float) EngineSettings.BaseInflictedDamagePerUnitOfRadius +
-                    PercentOfMaximum * (float) EngineSettings.MaximumInflictedDamagePerUnitOfRadius) + 0.001f);
+                return (int) ((EngineSettings.BaseInflictedDamagePerUnitOfRadius +
+                               PercentOfMaximum*EngineSettings.MaximumInflictedDamagePerUnitOfRadius) + 0.001f);
             }
         }
     }

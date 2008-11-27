@@ -4,7 +4,7 @@
 
 using System;
 
-namespace OrganismBase 
+namespace OrganismBase
 {
     /// <summary>
     ///  <para>
@@ -16,18 +16,8 @@ namespace OrganismBase
     ///  </para>
     /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = true, AllowMultiple = false)]
-    public sealed class AuthorInformationAttribute : System.Attribute
+    public sealed class AuthorInformationAttribute : Attribute
     {
-        /// <summary>
-        ///  The string representing the name of the author.
-        /// </summary>
-        string authorName;
-
-        /// <summary>
-        ///  The string representing the author's email.
-        /// </summary>
-        string authorEmail;
-
         /// <summary>
         ///  <para>
         ///   This overload allows the user to set only the Author Name field.
@@ -40,8 +30,8 @@ namespace OrganismBase
         /// </param>
         public AuthorInformationAttribute(string authorName)
         {
-            this.authorName = authorName;
-            this.authorEmail = "";
+            AuthorName = authorName;
+            AuthorEmail = "";
         }
 
         /// <summary>
@@ -59,32 +49,20 @@ namespace OrganismBase
         /// </param>
         public AuthorInformationAttribute(string authorName, string authorEmail)
         {
-            this.authorName = authorName;
-            this.authorEmail = authorEmail;
+            AuthorName = authorName;
+            AuthorEmail = authorEmail;
         }
 
         /// <summary>
         ///  Read-only access to the name of the author as specified in the original
         ///  attribute.
         /// </summary>
-        public string AuthorName
-        {
-            get
-            {
-                return authorName;
-            }
-        }
+        public string AuthorName { get; private set; }
 
         /// <summary>
         ///  Read-only access to the email of the author as specified in the original
         ///  attribute.
         /// </summary>
-        public string AuthorEmail
-        {
-            get
-            {
-                return authorEmail;
-            }
-        }
+        public string AuthorEmail { get; private set; }
     }
 }
