@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 
@@ -11,45 +11,26 @@ namespace Terrarium.Glass
 {
     public static class GlassStyleManager
     {
-        private static readonly GlassStyle _systemStyle;
-        private static GlassStyle _activeStyle;
-        private static GlassStyle[] _loadedStyles;
-        private static bool _useStyles;
-
         static GlassStyleManager()
         {
             // We only create it once so that we can change the colors
             // that clients will be referencing on the fly
-            _systemStyle = new GlassStyle {Name = "(System)"};
-            _useStyles = true;
-            _activeStyle = new GlassStyle();
+            SystemStyle = new GlassStyle {Name = "(System)"};
+            UseStyles = true;
+            Active = new GlassStyle();
         }
 
-        public static bool UseStyles
-        {
-            get { return _useStyles; }
-            set { _useStyles = value; }
-        }
+        public static bool UseStyles { get; set; }
 
-        public static GlassStyle[] Styles
-        {
-            get { return _loadedStyles; }
-        }
+        public static GlassStyle[] Styles { get; private set; }
 
-        public static GlassStyle Active
-        {
-            get { return _activeStyle; }
-            set { _activeStyle = value; }
-        }
+        public static GlassStyle Active { get; set; }
 
-        public static GlassStyle SystemStyle
-        {
-            get { return _systemStyle; }
-        }
+        public static GlassStyle SystemStyle { get; private set; }
 
         public static void Refresh()
         {
-            var styleFileList = new ArrayList();
+            var styleFileList = new List<string>();
 
             var styleFiles = Directory.GetFiles(Environment.CurrentDirectory, "*.style");
             foreach (var styleFile in styleFiles)
@@ -68,27 +49,27 @@ namespace Terrarium.Glass
             {
             }
 
-            var styleList = new ArrayList();
+            var styleList = new List<GlassStyle>();
 
             var defaultStyle = new GlassStyle {Name = "(Default)"};
             styleList.Add(defaultStyle);
-            styleList.Add(_systemStyle);
+            styleList.Add(SystemStyle);
 
-            foreach (string styleFile in styleFileList)
+            foreach (var styleFile in styleFileList)
             {
                 var style = LoadStyle(styleFile);
                 styleList.Add(style);
             }
 
-            _loadedStyles = (GlassStyle[]) styleList.ToArray(typeof (GlassStyle));
+            Styles = styleList.ToArray();
         }
 
         public static void SetStyle(string styleName)
         {
-            foreach (var style in _loadedStyles)
+            foreach (var style in Styles)
             {
                 if (style.Name != styleName) continue;
-                _activeStyle = style;
+                Active = style;
                 break;
             }
         }

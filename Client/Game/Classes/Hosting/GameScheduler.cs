@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -40,7 +41,6 @@ namespace Terrarium.Hosting
         private const int AnimalDeadlockRetries = 3;
 
         private const int ReportInterval = 150;
-        private static WorldState _currentState;
         private readonly Thread _activationThread;
         private readonly ManualResetEvent _animalDone = new ManualResetEvent(false);
         private readonly ManualResetEvent _animalReady = new ManualResetEvent(false);
@@ -51,31 +51,30 @@ namespace Terrarium.Hosting
         private GameEngine _currentEngine;
         private bool _exitAnimalThread;
         private Int64 _lastReport;
-        private Int64 _maxAllowance = EngineSettings.OrganismSchedulingBlacklistOvertime;
-        private Int64 _maxOverage = EngineSettings.OrganismSchedulingMaximumOvertime;
         private GameObjectCollection _organisms;
         private int _organismsActivated;
         private IEnumerator _orgEnum;
         private PrivateAssemblyCache _pac;
         private Boolean _penalizeForTime = true;
-        private int _quantum = 5000;
         private bool _safeToAbort;
-        private bool _suspendBlacklisting;
         private IntPtr _threadHandle;
         private bool _threadHandleValid;
         private Timer _threadTimer;
         private int _tickCount;
-        private int _ticksPerSec = 5;
         private int _ticksToSuspendBlacklisting;
         private DateTime _timerStoppedTime = DateTime.MinValue;
         private Int64 _totalActivations;
 
         public GameScheduler()
         {
+            MaxAllowance = EngineSettings.OrganismSchedulingBlacklistOvertime;
+            TicksPerSec = 5;
+            Quantum = 5000;
+            MaxOverage = EngineSettings.OrganismSchedulingMaximumOvertime;
             _organisms = new GameObjectCollection();
             _orgEnum = _organisms.GetEnumerator();
 
-            Debug.Assert(_maxOverage > _quantum);
+            Debug.Assert(MaxOverage > Quantum);
 
             AppMgr.CurrentScheduler = this;
 
@@ -106,7 +105,7 @@ namespace Terrarium.Hosting
                 {
                     return false;
                 }
-                return !_suspendBlacklisting;
+                return !SuspendBlacklisting;
             }
         }
 
@@ -176,7 +175,7 @@ namespace Terrarium.Hosting
             _organismsActivated += activated;
             _tickCount++;
 
-            if (_organismsActivated == _organisms.Count && _tickCount == _ticksPerSec)
+            if (_organismsActivated == _organisms.Count && _tickCount == TicksPerSec)
             {
                 // Start over at the first animal once we've gone through them all 
                 // and we've gone through all the ticks required for a turn.
@@ -219,38 +218,20 @@ namespace Terrarium.Hosting
 
         public int OrganismsPerTick
         {
-            get { return (_organisms.Count/_ticksPerSec) + 1; }
+            get { return (_organisms.Count/TicksPerSec) + 1; }
         }
 
-        public int TicksPerSec
-        {
-            get { return _ticksPerSec; }
+        public int TicksPerSec { get; set; }
 
-            set { _ticksPerSec = value; }
-        }
+        public int Quantum { get; set; }
 
-        public int Quantum
-        {
-            get { return _quantum; }
+        public long MaxOverage { get; set; }
 
-            set { _quantum = value; }
-        }
-
-        public Int64 MaxOverage
-        {
-            get { return _maxOverage; }
-
-            set { _maxOverage = value; }
-        }
-
-        // in microseconds, time before component is removed
-        // default is 10,000,000 (10 secs)
-        public Int64 MaxAllowance
-        {
-            get { return _maxAllowance; }
-
-            set { _maxAllowance = value; }
-        }
+        /// <summary>
+        /// in microseconds, time before component is removed
+        /// default is 10,000,000 (10 secs)
+        /// </summary>
+        public long MaxAllowance { get; set; }
 
         // Going into power saving mode can cause threads to suck a bunch of time
         // This method gets called so animals don't get unnecessarily blacklisted in this case
@@ -260,14 +241,7 @@ namespace Terrarium.Hosting
             _ticksToSuspendBlacklisting = 2;
         }
 
-        public bool SuspendBlacklisting
-        {
-            get { return _suspendBlacklisting; }
-
-            set { _suspendBlacklisting = value; }
-        }
-
-        // Always detect Deadlock
+        public bool SuspendBlacklisting { get; set; }
 
         // This returns true if we should shutoff the simple Timeouts that don't hang the machine
         public Boolean PenalizeForTime
@@ -291,12 +265,12 @@ namespace Terrarium.Hosting
         {
             get
             {
-                var l = new ArrayList();
-                foreach (OrganismWrapper w in _organisms)
+                var list = new List<Organism>(_organisms.Count);
+                foreach (OrganismWrapper wrapper in _organisms)
                 {
-                    l.Add(w.Organism);
+                    list.Add(wrapper.Organism);   
                 }
-                return l;
+                return list;
             }
         }
 
@@ -368,12 +342,7 @@ namespace Terrarium.Hosting
             return act;
         }
 
-        public WorldState CurrentState
-        {
-            get { return _currentState; }
-
-            set { _currentState = value; }
-        }
+        public WorldState CurrentState { get; set; }
 
         public AppDomain OrganismAppDomain
         {
@@ -406,15 +375,15 @@ namespace Terrarium.Hosting
                 return "Inaccurate time due to debugging :" + w.LastTime + " microseconds";
             }
 
-            return w.LastTime > _quantum
+            return w.LastTime > Quantum
                        ?
                            string.Format(
                                "Warning: Time to execute last turn: {0} microseconds is over maxiumum allowed time of {1} microseconds.  Animal may be penalized by skipping a turn.",
-                               w.LastTime, _quantum)
+                               w.LastTime, Quantum)
                        :
                            string.Format(
                                "Time to execute last turn: {0} microseconds.  [less than maximum allowed time of {1} microseconds.]",
-                               w.LastTime, _quantum);
+                               w.LastTime, Quantum);
         }
 
         #endregion
@@ -600,7 +569,7 @@ namespace Terrarium.Hosting
                 // short circut inactive bugs
                 if (_bug.Active)
                 {
-                    var state = _currentState.GetOrganismState(_bug.Organism.ID);
+                    var state = CurrentState.GetOrganismState(_bug.Organism.ID);
                     if (!state.IsAlive)
                     {
                         _bug.Active = false;
@@ -613,18 +582,18 @@ namespace Terrarium.Hosting
                             {
                                 // See if the animal has consistently taken too much time and has finally
                                 // gone over the maxAllowance.
-                                if (_bug.Overage > _maxAllowance)
+                                if (_bug.Overage > MaxAllowance)
                                 {
                                     Trace.WriteLine("Organism blacklisted: bug.Overage > _maxAllowance");
                                     deathReason = PopulationChangeReason.Timeout;
                                     _bug.Active = false;
                                 }
-                                else if (_bug.Overage > _maxOverage)
+                                else if (_bug.Overage > MaxOverage)
                                 {
                                     // if the bug is overtime, don't schedule it
                                     // but deduce one quantum from its overage
                                     // until it's back under the allowable limit
-                                    _bug.Overage -= _quantum;
+                                    _bug.Overage -= Quantum;
                                     if (_bug.Overage < 0)
                                     {
                                         _bug.Overage = 0;
@@ -636,7 +605,7 @@ namespace Terrarium.Hosting
 
                                     _bug.Organism.WriteTrace(
                                         "Animal's turn was skipped because they took longer than " +
-                                        _quantum + " microseconds for their turn too many times.");
+                                        Quantum + " microseconds for their turn too many times.");
 
                                     // We didn't fail, we're just skipping them.  Don't remove them from the world.
                                     success = true;
@@ -796,15 +765,15 @@ namespace Terrarium.Hosting
                                 {
                                     _bug.TotalTime += duration;
                                     _bug.LastTime = duration;
-                                    if (duration > _quantum)
+                                    if (duration > Quantum)
                                     {
-                                        _bug.Overage += (duration - _quantum);
+                                        _bug.Overage += (duration - Quantum);
                                     }
                                     else if (_bug.Overage > 0 && !skippedTurn)
                                     {
                                         // If the animal ran under time, subtract this off of
                                         // their overage
-                                        _bug.Overage -= (_quantum - duration);
+                                        _bug.Overage -= (Quantum - duration);
                                         if (_bug.Overage < 0)
                                         {
                                             _bug.Overage = 0;
