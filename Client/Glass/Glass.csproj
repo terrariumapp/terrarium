@@ -151,6 +151,8 @@
     </Compile>
     <Compile Include="GlassStyle.cs" />
     <Compile Include="GlassStyleManager.cs" />
+    <Compile Include="GradientConverter.cs" />
+    <Compile Include="GradientEditor.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

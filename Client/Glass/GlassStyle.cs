@@ -131,6 +131,8 @@ namespace Terrarium.Glass
             set { buttonIsGlass = value; }
         }
 
+        #region IXmlSerializable Members
+
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteAttributeString("Name", name);
@@ -195,12 +197,12 @@ namespace Terrarium.Glass
             readGradient(reader, "ButtonDisabled", buttonDisabled);
             readGradient(reader, "ButtonHighlight", buttonHighlight);
 
-            string fontName = reader.GetAttribute("Name");
+            var fontName = reader.GetAttribute("Name");
 
             // Fixes regional number formatting problem
-            float fontSize = Single.Parse(reader.GetAttribute("Size"), NumberFormatInfo.InvariantInfo);
+            var fontSize = Single.Parse(reader.GetAttribute("Size"), NumberFormatInfo.InvariantInfo);
 
-            FontStyle fontStyle = (FontStyle) Convert.ToInt32(reader.GetAttribute("Style"));
+            var fontStyle = (FontStyle) Convert.ToInt32(reader.GetAttribute("Style"));
             ForeColor = parseColor(reader.GetAttribute("Color"));
             FontShadow = Convert.ToBoolean(reader.GetAttribute("Shadow"));
 
@@ -224,6 +226,8 @@ namespace Terrarium.Glass
 
             Font = new Font(fontName, fontSize, fontStyle);
         }
+
+        #endregion
 
         private static void writeGradient(XmlWriter writer, string gradientName, GlassGradient gradient)
         {
@@ -255,7 +259,7 @@ namespace Terrarium.Glass
             return Color.FromArgb(alpha, red, green, blue);
         }
 
-        private void readGradient(XmlReader reader, string gradientName, GlassGradient gradient)
+        private static void readGradient(XmlReader reader, string gradientName, GlassGradient gradient)
         {
             try
             {
