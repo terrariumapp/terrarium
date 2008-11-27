@@ -682,7 +682,7 @@ namespace Terrarium.Client
 
 			InitializeScreen();
 
-            this.titleBar.ShowBugButton = true;
+            this.titleBar.ShowBugButton = false;
 
 			// Post set-up of variables that aren't designed
 
