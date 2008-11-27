@@ -37,11 +37,11 @@ namespace Terrarium.Forms.Classes.Controls
 		{
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DeveloperPanel));
             this.panel3 = new System.Windows.Forms.Panel();
-            this.panel2 = new System.Windows.Forms.Panel();
             this.glassPanel2 = new Terrarium.Glass.GlassPanel();
             this.navigatePictureBox = new System.Windows.Forms.PictureBox();
             this.glassPanel3 = new Terrarium.Glass.GlassPanel();
             this.glassLabel3 = new Terrarium.Glass.GlassLabel();
+            this.panel2 = new System.Windows.Forms.Panel();
             this.webRootLabel = new Terrarium.Glass.GlassLabel();
             this.failedReceivesCountLabel = new Terrarium.Glass.GlassLabel();
             this.glassLabel11 = new Terrarium.Glass.GlassLabel();
@@ -57,17 +57,17 @@ namespace Terrarium.Forms.Classes.Controls
             this.glassLabel7 = new Terrarium.Glass.GlassLabel();
             this.gameModeLabel = new Terrarium.Glass.GlassLabel();
             this.glassLabel4 = new Terrarium.Glass.GlassLabel();
-            this.glassPanel1 = new Terrarium.Glass.GlassPanel();
-            this.glassLabel1 = new Terrarium.Glass.GlassLabel();
             this.ledFour = new Terrarium.Forms.TerrariumLed();
             this.ledThree = new Terrarium.Forms.TerrariumLed();
             this.ledTwo = new Terrarium.Forms.TerrariumLed();
             this.ledOne = new Terrarium.Forms.TerrariumLed();
+            this.glassPanel1 = new Terrarium.Glass.GlassPanel();
+            this.glassLabel1 = new Terrarium.Glass.GlassLabel();
             this.panel3.SuspendLayout();
-            this.panel2.SuspendLayout();
             this.glassPanel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.navigatePictureBox)).BeginInit();
             this.glassPanel3.SuspendLayout();
+            this.panel2.SuspendLayout();
             this.glassPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -80,34 +80,6 @@ namespace Terrarium.Forms.Classes.Controls
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(200, 220);
             this.panel3.TabIndex = 18;
-            // 
-            // panel2
-            // 
-            this.panel2.Controls.Add(this.webRootLabel);
-            this.panel2.Controls.Add(this.failedReceivesCountLabel);
-            this.panel2.Controls.Add(this.glassLabel11);
-            this.panel2.Controls.Add(this.failedSendsCountLabel);
-            this.panel2.Controls.Add(this.glassLabel5);
-            this.panel2.Controls.Add(this.teleportationsCountLabel);
-            this.panel2.Controls.Add(this.glassLabel13);
-            this.panel2.Controls.Add(this.maximumAnimalCountLabel);
-            this.panel2.Controls.Add(this.glassLabel15);
-            this.panel2.Controls.Add(this.animalCountLabel);
-            this.panel2.Controls.Add(this.glassLabel9);
-            this.panel2.Controls.Add(this.peerCountLabel);
-            this.panel2.Controls.Add(this.glassLabel7);
-            this.panel2.Controls.Add(this.gameModeLabel);
-            this.panel2.Controls.Add(this.glassLabel4);
-            this.panel2.Controls.Add(this.ledFour);
-            this.panel2.Controls.Add(this.ledThree);
-            this.panel2.Controls.Add(this.ledTwo);
-            this.panel2.Controls.Add(this.ledOne);
-            this.panel2.Controls.Add(this.glassPanel1);
-            this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel2.Location = new System.Drawing.Point(0, 0);
-            this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(200, 292);
-            this.panel2.TabIndex = 19;
             // 
             // glassPanel2
             // 
@@ -171,6 +143,34 @@ namespace Terrarium.Forms.Classes.Controls
             this.glassLabel3.TabIndex = 0;
             this.glassLabel3.Text = " Mini Map";
             this.glassLabel3.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // panel2
+            // 
+            this.panel2.Controls.Add(this.webRootLabel);
+            this.panel2.Controls.Add(this.failedReceivesCountLabel);
+            this.panel2.Controls.Add(this.glassLabel11);
+            this.panel2.Controls.Add(this.failedSendsCountLabel);
+            this.panel2.Controls.Add(this.glassLabel5);
+            this.panel2.Controls.Add(this.teleportationsCountLabel);
+            this.panel2.Controls.Add(this.glassLabel13);
+            this.panel2.Controls.Add(this.maximumAnimalCountLabel);
+            this.panel2.Controls.Add(this.glassLabel15);
+            this.panel2.Controls.Add(this.animalCountLabel);
+            this.panel2.Controls.Add(this.glassLabel9);
+            this.panel2.Controls.Add(this.peerCountLabel);
+            this.panel2.Controls.Add(this.glassLabel7);
+            this.panel2.Controls.Add(this.gameModeLabel);
+            this.panel2.Controls.Add(this.glassLabel4);
+            this.panel2.Controls.Add(this.ledFour);
+            this.panel2.Controls.Add(this.ledThree);
+            this.panel2.Controls.Add(this.ledTwo);
+            this.panel2.Controls.Add(this.ledOne);
+            this.panel2.Controls.Add(this.glassPanel1);
+            this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel2.Location = new System.Drawing.Point(0, 0);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(200, 292);
+            this.panel2.TabIndex = 19;
             // 
             // webRootLabel
             // 
@@ -366,6 +366,111 @@ namespace Terrarium.Forms.Classes.Controls
             this.glassLabel4.TabIndex = 20;
             this.glassLabel4.Text = "Game Mode:";
             this.glassLabel4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.glassLabel4.Click += new System.EventHandler(this.glassLabel4_Click);
+            // 
+            // ledFour
+            // 
+            this.ledFour.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.ledFour.BackColor = System.Drawing.Color.Transparent;
+            this.ledFour.BorderColor = System.Drawing.Color.Black;
+            this.ledFour.Depth = 4;
+            this.ledFour.DisabledGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
+            this.ledFour.DisabledGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.ledFour.Highlight = false;
+            this.ledFour.HighlightGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
+            this.ledFour.HighlightGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
+            this.ledFour.HoverGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
+            this.ledFour.HoverGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
+            this.ledFour.IsGlass = true;
+            this.ledFour.LedName = "Received Peer-to-Peer Request";
+            this.ledFour.LedState = Terrarium.Forms.LedStates.Waiting;
+            this.ledFour.Location = new System.Drawing.Point(138, 30);
+            this.ledFour.Name = "ledFour";
+            this.ledFour.PressedGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
+            this.ledFour.PressedGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
+            this.ledFour.Size = new System.Drawing.Size(32, 32);
+            this.ledFour.TabIndex = 19;
+            this.ledFour.TabStop = false;
+            this.ledFour.UseStyles = false;
+            this.ledFour.UseVisualStyleBackColor = false;
+            // 
+            // ledThree
+            // 
+            this.ledThree.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.ledThree.BackColor = System.Drawing.Color.Transparent;
+            this.ledThree.BorderColor = System.Drawing.Color.Black;
+            this.ledThree.Depth = 4;
+            this.ledThree.DisabledGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
+            this.ledThree.DisabledGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.ledThree.Highlight = false;
+            this.ledThree.HighlightGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
+            this.ledThree.HighlightGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
+            this.ledThree.HoverGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
+            this.ledThree.HoverGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
+            this.ledThree.IsGlass = true;
+            this.ledThree.LedName = "Sent Peer-to-Peer Request";
+            this.ledThree.LedState = Terrarium.Forms.LedStates.Waiting;
+            this.ledThree.Location = new System.Drawing.Point(100, 30);
+            this.ledThree.Name = "ledThree";
+            this.ledThree.PressedGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
+            this.ledThree.PressedGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
+            this.ledThree.Size = new System.Drawing.Size(32, 32);
+            this.ledThree.TabIndex = 18;
+            this.ledThree.TabStop = false;
+            this.ledThree.UseStyles = false;
+            this.ledThree.UseVisualStyleBackColor = false;
+            // 
+            // ledTwo
+            // 
+            this.ledTwo.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.ledTwo.BackColor = System.Drawing.Color.Transparent;
+            this.ledTwo.BorderColor = System.Drawing.Color.Black;
+            this.ledTwo.Depth = 4;
+            this.ledTwo.DisabledGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
+            this.ledTwo.DisabledGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.ledTwo.Highlight = false;
+            this.ledTwo.HighlightGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
+            this.ledTwo.HighlightGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
+            this.ledTwo.HoverGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
+            this.ledTwo.HoverGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
+            this.ledTwo.IsGlass = true;
+            this.ledTwo.LedName = "Peer-to-Peer Discovery Web Service";
+            this.ledTwo.LedState = Terrarium.Forms.LedStates.Waiting;
+            this.ledTwo.Location = new System.Drawing.Point(62, 30);
+            this.ledTwo.Name = "ledTwo";
+            this.ledTwo.PressedGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
+            this.ledTwo.PressedGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
+            this.ledTwo.Size = new System.Drawing.Size(32, 32);
+            this.ledTwo.TabIndex = 17;
+            this.ledTwo.TabStop = false;
+            this.ledTwo.UseStyles = false;
+            this.ledTwo.UseVisualStyleBackColor = false;
+            // 
+            // ledOne
+            // 
+            this.ledOne.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.ledOne.BackColor = System.Drawing.Color.Transparent;
+            this.ledOne.BorderColor = System.Drawing.Color.Black;
+            this.ledOne.Depth = 4;
+            this.ledOne.DisabledGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
+            this.ledOne.DisabledGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.ledOne.Highlight = false;
+            this.ledOne.HighlightGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
+            this.ledOne.HighlightGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
+            this.ledOne.HoverGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
+            this.ledOne.HoverGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
+            this.ledOne.IsGlass = true;
+            this.ledOne.LedName = "Reporting Web Service";
+            this.ledOne.LedState = Terrarium.Forms.LedStates.Waiting;
+            this.ledOne.Location = new System.Drawing.Point(24, 30);
+            this.ledOne.Name = "ledOne";
+            this.ledOne.PressedGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
+            this.ledOne.PressedGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
+            this.ledOne.Size = new System.Drawing.Size(32, 32);
+            this.ledOne.TabIndex = 16;
+            this.ledOne.TabStop = false;
+            this.ledOne.UseStyles = false;
+            this.ledOne.UseVisualStyleBackColor = false;
             // 
             // glassPanel1
             // 
@@ -397,110 +502,6 @@ namespace Terrarium.Forms.Classes.Controls
             this.glassLabel1.Text = " Status";
             this.glassLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // ledFour
-            // 
-            this.ledFour.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.ledFour.BackColor = System.Drawing.Color.Transparent;
-            this.ledFour.BorderColor = System.Drawing.Color.Black;
-            this.ledFour.Depth = 4;
-            this.ledFour.DisabledGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.ledFour.DisabledGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
-            this.ledFour.Highlight = false;
-            this.ledFour.HighlightGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
-            this.ledFour.HighlightGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
-            this.ledFour.HoverGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
-            this.ledFour.HoverGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
-            this.ledFour.IsGlass = true;
-            this.ledFour.LedName = "Received Peer-to-Peer Request";
-            this.ledFour.LedState = Terrarium.Forms.LedStates.Waiting;
-            this.ledFour.Location = new System.Drawing.Point(138, 30);
-            this.ledFour.Name = "ledFour";
-            this.ledFour.PressedGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
-            this.ledFour.PressedGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
-            this.ledFour.Size = new System.Drawing.Size(32, 32);
-            this.ledFour.TabIndex = 19;
-            this.ledFour.TabStop = false;
-            this.ledFour.UseStyles = false;
-            this.ledFour.UseVisualStyleBackColor = false;
-            // 
-            // ledThree
-            // 
-            this.ledThree.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.ledThree.BackColor = System.Drawing.Color.Transparent;
-            this.ledThree.BorderColor = System.Drawing.Color.Black;
-            this.ledThree.Depth = 4;
-            this.ledThree.DisabledGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.ledThree.DisabledGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
-            this.ledThree.Highlight = false;
-            this.ledThree.HighlightGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
-            this.ledThree.HighlightGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
-            this.ledThree.HoverGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
-            this.ledThree.HoverGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
-            this.ledThree.IsGlass = true;
-            this.ledThree.LedName = "Sent Peer-to-Peer Request";
-            this.ledThree.LedState = Terrarium.Forms.LedStates.Waiting;
-            this.ledThree.Location = new System.Drawing.Point(100, 30);
-            this.ledThree.Name = "ledThree";
-            this.ledThree.PressedGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
-            this.ledThree.PressedGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
-            this.ledThree.Size = new System.Drawing.Size(32, 32);
-            this.ledThree.TabIndex = 18;
-            this.ledThree.TabStop = false;
-            this.ledThree.UseStyles = false;
-            this.ledThree.UseVisualStyleBackColor = false;
-            // 
-            // ledTwo
-            // 
-            this.ledTwo.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.ledTwo.BackColor = System.Drawing.Color.Transparent;
-            this.ledTwo.BorderColor = System.Drawing.Color.Black;
-            this.ledTwo.Depth = 4;
-            this.ledTwo.DisabledGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.ledTwo.DisabledGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
-            this.ledTwo.Highlight = false;
-            this.ledTwo.HighlightGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
-            this.ledTwo.HighlightGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
-            this.ledTwo.HoverGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
-            this.ledTwo.HoverGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
-            this.ledTwo.IsGlass = true;
-            this.ledTwo.LedName = "Peer-to-Peer Discovery Web Service";
-            this.ledTwo.LedState = Terrarium.Forms.LedStates.Waiting;
-            this.ledTwo.Location = new System.Drawing.Point(62, 30);
-            this.ledTwo.Name = "ledTwo";
-            this.ledTwo.PressedGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
-            this.ledTwo.PressedGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
-            this.ledTwo.Size = new System.Drawing.Size(32, 32);
-            this.ledTwo.TabIndex = 17;
-            this.ledTwo.TabStop = false;
-            this.ledTwo.UseStyles = false;
-            this.ledTwo.UseVisualStyleBackColor = false;
-            // 
-            // ledOne
-            // 
-            this.ledOne.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.ledOne.BackColor = System.Drawing.Color.Transparent;
-            this.ledOne.BorderColor = System.Drawing.Color.Black;
-            this.ledOne.Depth = 4;
-            this.ledOne.DisabledGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.ledOne.DisabledGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
-            this.ledOne.Highlight = false;
-            this.ledOne.HighlightGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
-            this.ledOne.HighlightGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
-            this.ledOne.HoverGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
-            this.ledOne.HoverGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
-            this.ledOne.IsGlass = true;
-            this.ledOne.LedName = "Reporting Web Service";
-            this.ledOne.LedState = Terrarium.Forms.LedStates.Waiting;
-            this.ledOne.Location = new System.Drawing.Point(24, 30);
-            this.ledOne.Name = "ledOne";
-            this.ledOne.PressedGradient.Bottom = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(216)))), ((int)(((byte)(0)))));
-            this.ledOne.PressedGradient.Top = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
-            this.ledOne.Size = new System.Drawing.Size(32, 32);
-            this.ledOne.TabIndex = 16;
-            this.ledOne.TabStop = false;
-            this.ledOne.UseStyles = false;
-            this.ledOne.UseVisualStyleBackColor = false;
-            // 
             // DeveloperPanel
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -511,10 +512,10 @@ namespace Terrarium.Forms.Classes.Controls
             this.Name = "DeveloperPanel";
             this.Size = new System.Drawing.Size(200, 512);
             this.panel3.ResumeLayout(false);
-            this.panel2.ResumeLayout(false);
             this.glassPanel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.navigatePictureBox)).EndInit();
             this.glassPanel3.ResumeLayout(false);
+            this.panel2.ResumeLayout(false);
             this.glassPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
 
