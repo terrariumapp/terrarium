@@ -3,77 +3,74 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     >
     <UserControl.Resources>
-        <Style x:Key="GlassLabel" TargetType="{x:Type TextBlock}">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontFamily" Value="Verdana"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="6.75"/>
-            <Setter Property="HorizontalAlignment" Value="Left"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/ControlsWPF;component/ResourceDictionary.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </UserControl.Resources>
-    <StackPanel Background="Navy" Width="200">
-        <TextBlock Style="{StaticResource GlassLabel}">Status</TextBlock>
-        <StackPanel Orientation="Horizontal">
-            <Button/>
-            <Button/>
-            <Button/>
-            <Button/>
+    <StackPanel Width="200" Background="#202020">
+        <Label Background="{StaticResource GlassGradient}" Style="{StaticResource GlassLabel}" Content="Status"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,10">
+            <Button Width="32" Height="32"/>
+            <Button Width="32" Height="32"/>
+            <Button Width="32" Height="32"/>
+            <Button Width="32" Height="32"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal">
-            <TextBlock Style="{StaticResource GlassLabel}">Game Mode:</TextBlock>
-            <TextBlock Style="{StaticResource GlassLabel}">xxxxx</TextBlock>
+            <Label Style="{StaticResource GlassLabel}" Content="Game Mode:"/>
+            <Label Style="{StaticResource GlassLabel}" Content="xxxxxx"/>
         </StackPanel>
-        <TextBlock HorizontalAlignment="Center" Style="{StaticResource GlassLabel}">XXXXX</TextBlock>
+        <Label Padding="10,0,0,10" Style="{StaticResource GlassLabel}" Content="XXXXX"/>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Style="{StaticResource GlassLabel}">Current Animals:</TextBlock>
-            <TextBlock Grid.Column="1" HorizontalAlignment="Right" Style="{StaticResource GlassLabel}">0</TextBlock>
+            <Label Grid.Column="0" Style="{StaticResource GlassLabel}" Content="Current Animals:"/>
+            <Label Grid.Column="1" Style="{StaticResource GlassLabel}" HorizontalContentAlignment="Right" Content="0"/>
         </Grid>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Style="{StaticResource GlassLabel}">Maximum Animals:</TextBlock>
-            <TextBlock Grid.Column="1" HorizontalAlignment="Right" Style="{StaticResource GlassLabel}">0</TextBlock>
+            <Label Grid.Column="0" Style="{StaticResource GlassLabel}" Content="Maximum Animals:"/>
+            <Label Grid.Column="1" Style="{StaticResource GlassLabel}" HorizontalContentAlignment="Right" Content="0"/>
         </Grid>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Style="{StaticResource GlassLabel}">Peers:</TextBlock>
-            <TextBlock Grid.Column="1" HorizontalAlignment="Right" Style="{StaticResource GlassLabel}">0</TextBlock>
+            <Label Grid.Column="0" Style="{StaticResource GlassLabel}" Content="Peers:"/>
+            <Label Grid.Column="1" Style="{StaticResource GlassLabel}" HorizontalContentAlignment="Right" Content="0"/>
         </Grid>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Style="{StaticResource GlassLabel}">Teleportations:</TextBlock>
-            <TextBlock Grid.Column="1" HorizontalAlignment="Right" Style="{StaticResource GlassLabel}">0</TextBlock>
+            <Label Grid.Column="0" Style="{StaticResource GlassLabel}" Content="Teleportations:"/>
+            <Label Grid.Column="1" Style="{StaticResource GlassLabel}" HorizontalContentAlignment="Right" Content="0"/>
         </Grid>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Style="{StaticResource GlassLabel}">Failed Sends:</TextBlock>
-            <TextBlock Grid.Column="1" HorizontalAlignment="Right" Style="{StaticResource GlassLabel}">0</TextBlock>
+            <Label Grid.Column="0" Style="{StaticResource GlassLabel}" Content="Failed Sends:"/>
+            <Label Grid.Column="1" Style="{StaticResource GlassLabel}" HorizontalContentAlignment="Right" Content="0"/>
         </Grid>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Style="{StaticResource GlassLabel}">Failed Receives:</TextBlock>
-            <TextBlock Grid.Column="1" HorizontalAlignment="Right" Style="{StaticResource GlassLabel}">0</TextBlock>
+            <Label Grid.Column="0" Style="{StaticResource GlassLabel}" Content="Failed Receives:"/>
+            <Label Grid.Column="1" Style="{StaticResource GlassLabel}" HorizontalContentAlignment="Right" Content="0"/>
         </Grid>
-        <TextBlock Style="{StaticResource GlassLabel}">Mini Map</TextBlock>
+        <Label Background="{StaticResource GlassGradient}" Style="{StaticResource GlassLabel}" Content="Mini Map"/>
         <Image></Image>
     </StackPanel>
 </UserControl>
