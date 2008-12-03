@@ -71,6 +71,10 @@
             <Label Grid.Column="1" Style="{StaticResource GlassLabel}" HorizontalContentAlignment="Right" Content="0"/>
         </Grid>
         <Label Background="{StaticResource GlassGradient}" Style="{StaticResource GlassLabel}" Content="Mini Map"/>
-        <Image></Image>
+        <Label Padding="10" Background="{StaticResource GlassGradient}" Style="{StaticResource GlassLabel}">
+            <Label.Content>
+                <Image Source="/ControlsWPF;component/Images/navigatePictureBox.png"></Image>
+            </Label.Content>
+        </Label>
     </StackPanel>
 </UserControl>

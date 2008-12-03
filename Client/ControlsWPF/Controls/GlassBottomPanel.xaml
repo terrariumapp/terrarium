@@ -1,8 +1,74 @@
 ﻿<UserControl x:Class="ControlsWPF.Controls.GlassBottomPanel"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    >
-    <Grid>
-        <TextBlock>GlassBottomPanel</TextBlock>      
+    xmlns:Controls="clr-namespace:ControlsWPF.Controls">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/ControlsWPF;component/ResourceDictionary.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid Background="{StaticResource GlassGradient}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="44"/>
+            <ColumnDefinition Width="44"/>
+            <ColumnDefinition Width="44"/>
+            <ColumnDefinition Width="44"/>
+            <ColumnDefinition Width="44"/>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="44"/>
+            <ColumnDefinition Width="44"/>
+            <ColumnDefinition Width="44"/>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="44"/>
+            <ColumnDefinition Width="44"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Controls:TickerBar Grid.Column="0"/>
+        <Button Template="{StaticResource GlassButtonTemplate}" Grid.Column="1">
+            <Image Width="16" Height="16" Source="/ControlsWPF;component/Images/developerPanelButton.png" />
+        </Button>
+        <Button Template="{StaticResource GlassButtonTemplate}" Grid.Column="2">
+            <Image Width="16" Height="16" Source="/ControlsWPF;component/Images/settingsButton.png" />
+        </Button>
+        <Button Template="{StaticResource GlassButtonTemplate}" Grid.Column="3">
+            <Image Width="16" Height="16" Source="/ControlsWPF;component/Images/infoicon.png" />
+        </Button>
+        <Button Template="{StaticResource GlassButtonTemplate}" Grid.Column="4">
+            <Image Width="16" Height="16" Source="/ControlsWPF;component/Images/statisticsButton.png" />
+        </Button>
+        <Button Template="{StaticResource GlassButtonTemplate}" Grid.Column="5">
+            <Image Width="16" Height="16" Source="/ControlsWPF;component/Images/traceButton.png" />
+        </Button>
+
+        <Button Template="{StaticResource GlassButtonTemplate}" Grid.Column="7">
+            <Image Width="16" Height="16" Source="/ControlsWPF;component/Images/joinEcosystemButton.png" />
+        </Button>
+        <Button Template="{StaticResource GlassButtonTemplate}" Grid.Column="8">
+            <Image Width="16" Height="16" Source="/ControlsWPF;component/Images/newTerrariumButton.png" />
+        </Button>
+        <Button Template="{StaticResource GlassButtonTemplate}" Grid.Column="9">
+            <Image Width="16" Height="16" Source="/ControlsWPF;component/Images/loadTerrariumButton.png" />
+        </Button>
+        <Button Template="{StaticResource GlassButtonTemplate}" Grid.Column="11">
+            <Image Width="16" Height="16" Source="/ControlsWPF;component/Images/introduceAnimalButton.png" />
+        </Button>
+        <Button Template="{StaticResource GlassButtonTemplate}" Grid.Column="12">
+            <Image Width="16" Height="16" Source="/ControlsWPF;component/Images/reintroduceAnimalButton.png" />
+        </Button>
+        <StackPanel Grid.Column="13" Orientation="Horizontal">
+            <Button Template="{StaticResource GlassButtonTemplate}" Width="44">
+                <Image Width="16" Height="16" Source="/ControlsWPF;component/Images/introduceAnimalButton.png" />
+            </Button>
+            <ComboBox Width="96" Margin="10"/>
+            <Button Template="{StaticResource GlassButtonTemplate}" Width="44">
+                <Image Width="16" Height="16" Source="/ControlsWPF;component/Images/addAnimalButton.png" />
+            </Button>
+            <Button Template="{StaticResource GlassButtonTemplate}" Width="44">
+                <Image Width="16" Height="16" Source="/ControlsWPF;component/Images/pauseButton.png" />
+            </Button>
+        </StackPanel>
     </Grid>
 </UserControl>
