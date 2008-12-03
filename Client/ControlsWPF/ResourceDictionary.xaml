@@ -19,4 +19,19 @@
         <GradientStop Offset="0" Color="Blue"/>
         <GradientStop Offset="1" Color="Black"/>
     </LinearGradientBrush>
+    <ControlTemplate x:Key="GlassButtonTemplate" TargetType="{x:Type Button}">
+        <Grid>
+            <Ellipse>
+                <Ellipse.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Offset="0" Color="Gray"/>
+                        <GradientStop Offset="1" Color="Black"/>
+                    </LinearGradientBrush>
+                </Ellipse.Fill>
+            </Ellipse>
+            <Viewbox>
+                <ContentControl Margin="5" Content="{TemplateBinding Content}"/>
+            </Viewbox>
+        </Grid>
+    </ControlTemplate>
 </ResourceDictionary>
