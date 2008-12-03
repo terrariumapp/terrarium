@@ -30,15 +30,14 @@
     <UpdateUrlEnabled>false</UpdateUrlEnabled>
     <WebPageEnabled>true</WebPageEnabled>
     <SignManifests>true</SignManifests>
-    <ManifestCertificateThumbprint>150FC1BAABF46D48B36BA2D8A9E6071669EF0737</ManifestCertificateThumbprint>
-    <ManifestKeyFile>
-    </ManifestKeyFile>
+    <ManifestCertificateThumbprint>EC13F3640926A078D6C271D9EE6E18AF1E387164</ManifestCertificateThumbprint>
+    <ManifestKeyFile>Terrarium_TemporaryKey.pfx</ManifestKeyFile>
     <TargetZone>LocalIntranet</TargetZone>
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <OldToolsVersion>2.0</OldToolsVersion>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <PublishUrl>\\localhost\C%24\Inetpub\wwwroot\Terrrarium 2.0\Publish\</PublishUrl>
+    <PublishUrl>C:\Inetpub\wwwroot\Terrarium\Publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -50,13 +49,15 @@
     <MapFileExtensions>true</MapFileExtensions>
     <InstallUrl>http://localhost/Terrarium/</InstallUrl>
     <SupportUrl>http://www.codeplex.com/terrarium2</SupportUrl>
-    <ProductName>Terrarium</ProductName>
-    <PublisherName>Terrarium</PublisherName>
+    <ProductName>.NET Terrarium 2.0</ProductName>
+    <PublisherName>Microsoft</PublisherName>
+    <SuiteName>Terrarium</SuiteName>
     <WebPage>default.aspx</WebPage>
     <TrustUrlParameters>true</TrustUrlParameters>
-    <ApplicationRevision>6</ApplicationRevision>
-    <ApplicationVersion>2.0.50522.8</ApplicationVersion>
+    <ApplicationRevision>10</ApplicationRevision>
+    <ApplicationVersion>2.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -376,7 +377,7 @@
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
       <Visible>False</Visible>
       <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
-      <Install>true</Install>
+      <Install>false</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
       <Visible>False</Visible>
@@ -391,13 +392,19 @@
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
       <Visible>False</Visible>
       <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
     <None Include="development.snk" />
+    <None Include="Terrarium_TemporaryKey.pfx" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>
