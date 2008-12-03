@@ -3,29 +3,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Width="640" Height="32">
     <UserControl.Resources>
-        <Style x:Key="GlassLabel" TargetType="{x:Type Label}">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Height" Value="32"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="FontFamily" Value="Verdana"/>
-            <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Padding" Value="5"/>
-        </Style>
-        <Style x:Key="GlassButton" TargetType="{x:Type Button}">
-            <Setter Property="Background" Value="Blue"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Margin" Value="4"/>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/ControlsWPF;component/ResourceDictionary.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </UserControl.Resources>
-    <Grid>
-        <Grid.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                <GradientStop Offset="0" Color="Blue"/>
-                <GradientStop Offset="1" Color="Black"/>
-            </LinearGradientBrush>
-        </Grid.Background>
+    <Grid Background="{StaticResource GlassGradient}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="32"/>
             <ColumnDefinition Width="*"/>
