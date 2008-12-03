@@ -10,7 +10,9 @@ using System.Reflection;
 [assembly : AssemblyCopyright("")]
 [assembly : AssemblyTrademark("")]
 [assembly : AssemblyCulture("")]
-[assembly : AssemblyVersion("2.1.0.*")]
-[assembly : AssemblyDelaySign(false)]
 
+[assembly : AssemblyDelaySign(false)]
 [assembly : AssemblyKeyName("")]
+
+[assembly: AssemblyVersion("2.1.0.*")]
+[assembly: AssemblyFileVersion("2.1.0.0")]

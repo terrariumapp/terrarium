@@ -112,6 +112,27 @@
     </None>
     <AppDesigner Include="Properties\" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\addAnimalButton.png" />
+    <Resource Include="Images\closeButton.png" />
+    <Resource Include="Images\developerPanelButton.png" />
+    <Resource Include="Images\infoicon.png" />
+    <Resource Include="Images\introduceAnimalButton.png" />
+    <Resource Include="Images\joinEcosystemButton.png" />
+    <Resource Include="Images\loadTerrariumButton.png" />
+    <Resource Include="Images\maximizeButton.png" />
+    <Resource Include="Images\minimizeButton.png" />
+    <Resource Include="Images\navigatePictureBox.png" />
+    <Resource Include="Images\newTerrariumButton.png" />
+    <Resource Include="Images\pauseButton.png" />
+    <Resource Include="Images\reintroduceAnimalButton.png" />
+    <Resource Include="Images\resizebar.png" />
+    <Resource Include="Images\settingsButton.png" />
+    <Resource Include="Images\statisticsButton.png" />
+    <Resource Include="Images\titleBar.png" />
+    <Resource Include="Images\titleBarImage.png" />
+    <Resource Include="Images\traceButton.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
