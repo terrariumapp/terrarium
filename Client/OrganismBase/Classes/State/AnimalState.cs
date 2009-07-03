@@ -28,7 +28,8 @@ namespace OrganismBase
         private AntennaState state = new AntennaState(null);
 
         /// <internal/>
-        public AnimalState(string id, ISpecies species, int generation) : base(id, species, generation)
+        public AnimalState(string id, ISpecies species, int generation, EnergyState initialEnergyState, int initialRadius)
+            : base(id, species, generation, initialEnergyState, initialRadius)
         {
         }
 
@@ -180,7 +181,7 @@ namespace OrganismBase
         /// <returns></returns>
         public override OrganismState CloneMutable()
         {
-            var newInstance = new AnimalState(ID, AnimalSpecies, Generation);
+            var newInstance = new AnimalState(ID, AnimalSpecies, Generation, EnergyState, Radius);
             CopyStateInto(newInstance);
 
             return newInstance;
@@ -253,7 +254,7 @@ namespace OrganismBase
             double maxHealing = EngineSettings.AnimalMaxHealingPerTickPerRadius*Radius;
             Debug.Assert(maxHealing > 0);
 
-            var usableEnergy = StoredEnergy - UpperBoundaryForEnergyState(EnergyState.Hungry);
+            var usableEnergy = StoredEnergy - UpperBoundaryForEnergyState(Species, EnergyState.Hungry, Radius);
             if (usableEnergy > 0)
             {
                 var availableHealing = usableEnergy/

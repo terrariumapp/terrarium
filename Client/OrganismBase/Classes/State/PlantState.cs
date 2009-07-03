@@ -42,7 +42,8 @@ namespace OrganismBase
         ///  Creates a brand new state object for a plant.
         /// </summary>
         /// <internal/>
-        public PlantState(string id, ISpecies species, int generation) : base(id, species, generation)
+        public PlantState(string id, ISpecies species, int generation, EnergyState initialEnergyState, int initialRadius) 
+            : base(id, species, generation, initialEnergyState, initialRadius)
         {
         }
 
@@ -101,7 +102,7 @@ namespace OrganismBase
         /// <internal/>
         public override OrganismState CloneMutable()
         {
-            var newInstance = new PlantState(ID, Species, Generation);
+            var newInstance = new PlantState(ID, Species, Generation, EnergyState, Radius);
             CopyStateInto(newInstance);
 
             return newInstance;
@@ -224,7 +225,7 @@ namespace OrganismBase
 
             var maxHealingChunks = EngineSettings.PlantMaxHealingPerTickPerRadius*Radius;
 
-            var usableEnergy = StoredEnergy - UpperBoundaryForEnergyState(EnergyState.Deterioration);
+            var usableEnergy = StoredEnergy - UpperBoundaryForEnergyState(Species, EnergyState.Deterioration, Radius);
             if (usableEnergy <= 0) return;
 
             var availableHealingChunks = (int) (usableEnergy/

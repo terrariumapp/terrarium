@@ -58,7 +58,7 @@ namespace OrganismBase
         /// <summary>
         ///  The amount of energy the creature currently has.
         /// </summary>
-        private double energy;
+        private double energy = 1;
 
         /// <summary>
         ///  The results of any actions are stored here.  During a creature's
@@ -83,12 +83,16 @@ namespace OrganismBase
         /// <param name="id">The GUID ID representing this organism in the world.</param>
         /// <param name="species">The species which defines the basic properties of the organism.</param>
         /// <param name="generation">The familial generation number.</param>
-        internal OrganismState(string id, ISpecies species, int generation)
+        /// <param name="initialEnergyState">The initial EnergyState of the organism.</param>
+        /// <param name="initialRadius">The initial Radius of the organism.</param>
+        internal OrganismState(string id, ISpecies species, int generation, EnergyState initialEnergyState, int initialRadius)
         {
             DeathReason = PopulationChangeReason.NotDead;
             ID = id;
             Species = species;
             Generation = generation;
+            SetStoredEnergyInternal(OrganismState.UpperBoundaryForEnergyState(species, initialEnergyState, initialRadius));
+            Radius = initialRadius;
             events = new OrganismEventResults();
         }
 
@@ -361,6 +365,11 @@ namespace OrganismBase
             }
         }
 
+        private void SetStoredEnergyInternal(double newEnergy)
+        {
+            energy = newEnergy;
+        }
+
         /// <summary>
         ///  <para>
         ///   Determines how much energy a creature has stored.  This is used to
@@ -450,10 +459,10 @@ namespace OrganismBase
         {
             get
             {
-                Debug.Assert(((energy/(Species.MaximumEnergyPerUnitRadius*Radius))*100)
+                Debug.Assert(((energy/(Species.MaximumEnergyPerUnitRadius*Math.Max(1,Radius)))*100)
                              <= 100);
 
-                return ((energy/(Species.MaximumEnergyPerUnitRadius*Radius)));
+                return ((energy/(Species.MaximumEnergyPerUnitRadius*Math.Max(1,Radius))));
             }
         }
 
@@ -903,15 +912,15 @@ namespace OrganismBase
         ///   the current energy bucket a creature is in.
         ///  </para>
         /// </summary>
-        /// <param name="energyState">
-        ///  EnergyState enum value for the bucket to get the upper energy bounding for.
-        /// </param>
+        /// <param name="species">The species for which to calculate</param>
+        /// <param name="energyState">EnergyState enum value for the bucket to get the upper energy bounding for.</param>
+        /// <param name="radius">The radius of the organism to use in calculation</param>
         /// <returns>
         ///  System.Double representing the amount of energy to be at the top of a given energy state.
         /// </returns>
-        public double UpperBoundaryForEnergyState(EnergyState energyState)
+        public static double UpperBoundaryForEnergyState(ISpecies species, EnergyState energyState, int radius)
         {
-            var energyBuckets = (Species.MaximumEnergyPerUnitRadius*(double) Radius)/5;
+            var energyBuckets = (species.MaximumEnergyPerUnitRadius*(double) radius)/5;
 
             switch (energyState)
             {
@@ -924,7 +933,7 @@ namespace OrganismBase
                 case EnergyState.Normal:
                     return energyBuckets*4;
                 case EnergyState.Full:
-                    return Species.MaximumEnergyPerUnitRadius*(double) Radius;
+                    return species.MaximumEnergyPerUnitRadius*(double) radius;
                 default:
                     throw new ApplicationException("Unknown EnergyState.");
             }
