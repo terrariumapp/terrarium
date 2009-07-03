@@ -297,13 +297,12 @@ namespace Terrarium.Game
         /// <returns>A new state to represent the creature.</returns>
         public override OrganismState InitializeNewState(Point position, int generation)
         {
-            var newState = new AnimalState(Guid.NewGuid().ToString(), this, generation) {Position = position};
-            newState.IncreaseRadiusTo(InitialRadius);
-
             // Need to start out hungry so they can't reproduce immediately and just populate the world
-            newState.StoredEnergy = newState.UpperBoundaryForEnergyState(EnergyState.Hungry);
-            newState.ResetGrowthWait();
+            var initialEnergy = EnergyState.Hungry;
 
+            var newState = new AnimalState(Guid.NewGuid().ToString(), this, generation, initialEnergy, InitialRadius) { Position = position };
+
+            newState.ResetGrowthWait();
             return newState;
         }
     }
